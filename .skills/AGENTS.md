@@ -29,6 +29,7 @@ Location: `.skills/custom/`
 | **input-sanitisation**   | XSS, SQL injection, and command injection prevention patterns                   | "XSS", "injection", "sanitise", "security", "escape", "OWASP" |
 | **structured-logging**   | JSON-structured logging with correlation IDs and log levels                     | "logging", "logs", "observability", "tracing", "monitoring" |
 | **api-contract**         | Typed API contracts between FastAPI (Pydantic) and Next.js (Zod)               | "API contract", "endpoint", "response type", "OpenAPI", "schema" |
+| **state-machine**        | Finite state machine patterns for complex flows and status enums               | "state machine", "status", "workflow state", "transitions", "FSM" |
 
 ### Identified Gaps
 
@@ -51,10 +52,11 @@ When multiple skills could apply, use this priority order:
 5. **input-sanitisation** - For injection prevention and security
 6. **structured-logging** - For observability and log patterns
 7. **api-contract** - For typed frontend/backend API contracts
-8. **genesis-orchestrator** - For workflow and phase management
-9. **scientific-luxury** - For UI/design decisions
-10. **react-best-practices** - For React-specific optimisations
-11. **web-design-guidelines** - For accessibility and UX audits
+8. **state-machine** - For finite state machines and status transitions
+9. **genesis-orchestrator** - For workflow and phase management
+10. **scientific-luxury** - For UI/design decisions
+11. **react-best-practices** - For React-specific optimisations
+12. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
