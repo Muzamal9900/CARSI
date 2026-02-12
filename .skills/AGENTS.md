@@ -25,6 +25,7 @@ Location: `.skills/custom/`
 | **scientific-luxury**    | Design system enforcement for Scientific Luxury tier UI                         | "design", "UI", "component", "styling", "animation"         |
 | **skill-manager**        | Analyse skill gaps, generate new skills, browse catalogue, validate health      | "skill gap", "generate skill", "skill health", "missing skills" |
 | **error-taxonomy**       | Structured error codes, categories, and user-facing messages                    | "error handling", "error codes", "error messages", "error response" |
+| **data-validation**      | Zod and Pydantic validation patterns for input sanitisation                     | "validation", "Zod", "Pydantic", "schema", "sanitise", "input" |
 
 ### Identified Gaps
 
@@ -43,10 +44,11 @@ When multiple skills could apply, use this priority order:
 1. **council-of-logic** - Always validate code quality first
 2. **skill-manager** - For skill lifecycle and gap analysis
 3. **error-taxonomy** - For structured error handling patterns
-4. **genesis-orchestrator** - For workflow and phase management
-5. **scientific-luxury** - For UI/design decisions
-6. **react-best-practices** - For React-specific optimisations
-7. **web-design-guidelines** - For accessibility and UX audits
+4. **data-validation** - For input sanitisation and schema patterns
+5. **genesis-orchestrator** - For workflow and phase management
+6. **scientific-luxury** - For UI/design decisions
+7. **react-best-practices** - For React-specific optimisations
+8. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
