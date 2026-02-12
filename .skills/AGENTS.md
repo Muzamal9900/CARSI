@@ -26,6 +26,7 @@ Location: `.skills/custom/`
 | **skill-manager**        | Analyse skill gaps, generate new skills, browse catalogue, validate health      | "skill gap", "generate skill", "skill health", "missing skills" |
 | **error-taxonomy**       | Structured error codes, categories, and user-facing messages                    | "error handling", "error codes", "error messages", "error response" |
 | **data-validation**      | Zod and Pydantic validation patterns for input sanitisation                     | "validation", "Zod", "Pydantic", "schema", "sanitise", "input" |
+| **input-sanitisation**   | XSS, SQL injection, and command injection prevention patterns                   | "XSS", "injection", "sanitise", "security", "escape", "OWASP" |
 
 ### Identified Gaps
 
@@ -45,10 +46,11 @@ When multiple skills could apply, use this priority order:
 2. **skill-manager** - For skill lifecycle and gap analysis
 3. **error-taxonomy** - For structured error handling patterns
 4. **data-validation** - For input sanitisation and schema patterns
-5. **genesis-orchestrator** - For workflow and phase management
-6. **scientific-luxury** - For UI/design decisions
-7. **react-best-practices** - For React-specific optimisations
-8. **web-design-guidelines** - For accessibility and UX audits
+5. **input-sanitisation** - For injection prevention and security
+6. **genesis-orchestrator** - For workflow and phase management
+7. **scientific-luxury** - For UI/design decisions
+8. **react-best-practices** - For React-specific optimisations
+9. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
