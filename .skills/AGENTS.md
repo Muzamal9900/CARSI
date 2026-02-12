@@ -31,6 +31,7 @@ Location: `.skills/custom/`
 | **api-contract**         | Typed API contracts between FastAPI (Pydantic) and Next.js (Zod)               | "API contract", "endpoint", "response type", "OpenAPI", "schema" |
 | **state-machine**        | Finite state machine patterns for complex flows and status enums               | "state machine", "status", "workflow state", "transitions", "FSM" |
 | **cron-scheduler**       | Scheduled task management with overlap protection and CRON_SECRET auth         | "cron", "schedule", "periodic", "interval", "timer", "background job" |
+| **csv-processor**        | Streaming CSV parse and generate with Zod/Pydantic row validation              | "CSV", "import", "export", "spreadsheet", "download data", "upload file" |
 
 ### Identified Gaps
 
@@ -55,10 +56,11 @@ When multiple skills could apply, use this priority order:
 7. **api-contract** - For typed frontend/backend API contracts
 8. **state-machine** - For finite state machines and status transitions
 9. **cron-scheduler** - For scheduled tasks and periodic jobs
-10. **genesis-orchestrator** - For workflow and phase management
-11. **scientific-luxury** - For UI/design decisions
-12. **react-best-practices** - For React-specific optimisations
-13. **web-design-guidelines** - For accessibility and UX audits
+10. **csv-processor** - For CSV import, export, and streaming parse
+11. **genesis-orchestrator** - For workflow and phase management
+12. **scientific-luxury** - For UI/design decisions
+13. **react-best-practices** - For React-specific optimisations
+14. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
