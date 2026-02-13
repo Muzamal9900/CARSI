@@ -44,6 +44,7 @@ Location: `.skills/custom/`
 | **ci-cd-patterns**       | GitHub Actions workflow optimisation, caching strategies, security scanning pipelines     | "CI/CD", "GitHub Actions", "workflow", "pipeline", "deploy", "cache", "actions" |
 | **retry-strategy**       | Exponential backoff, circuit breaker, and retry policies for httpx and fetch clients       | "retry", "backoff", "circuit breaker", "timeout", "resilience", "transient error" |
 | **queue-worker**         | Redis-backed background job processing with arq (Python) and BullMQ (TypeScript)           | "queue", "worker", "background job", "Redis queue", "job processing", "BullMQ", "arq" |
+| **changelog-generator**  | Automated changelog from Conventional Commits with semantic versioning and GitHub Releases  | "changelog", "release notes", "version bump", "conventional commits", "release" |
 
 ### Identified Gaps
 
@@ -80,11 +81,12 @@ When multiple skills could apply, use this priority order:
 19. **cron-scheduler** - For scheduled tasks and periodic jobs
 20. **csv-processor** - For CSV import, export, and streaming parse
 21. **email-template** - For transactional email design and delivery
-22. **genesis-orchestrator** - For workflow and phase management
-23. **dashboard-patterns** - For real-time dashboard visualisation and layout
-24. **scientific-luxury** - For UI/design decisions
-25. **react-best-practices** - For React-specific optimisations
-26. **web-design-guidelines** - For accessibility and UX audits
+22. **changelog-generator** - For automated changelog and release notes from commits
+23. **genesis-orchestrator** - For workflow and phase management
+24. **dashboard-patterns** - For real-time dashboard visualisation and layout
+25. **scientific-luxury** - For UI/design decisions
+26. **react-best-practices** - For React-specific optimisations
+27. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
