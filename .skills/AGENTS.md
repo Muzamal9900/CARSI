@@ -72,16 +72,11 @@ Location: `.skills/custom/`
 | **infrastructure-as-code** | Terraform and Pulumi patterns for cloud provisioning, state management, and environment parity | "Terraform", "Pulumi", "IaC", "provision", "infrastructure", "cloud" |
 | **report-generator**  | Data aggregation, multi-format report output, scheduled reporting, and template-driven documents | "report", "generate report", "audit report", "export", "summary", "daily report" |
 | **slack-integration**  | Slack bot commands, webhook notifications, interactive messages, and team alerting              | "Slack", "webhook", "bot", "notification", "channel", "Block Kit" |
+| **xaem-theme-ui**  | Two-pass theme generation and code translation pipeline (colour palettes, glow, timing, tokens)   | "theme", "palette", "colour scheme", "design tokens", "generate theme" |
 
 ### Identified Gaps
 
-| Skill             | Description                                                                  | Status        |
-| ----------------- | ---------------------------------------------------------------------------- | ------------- |
-| **xaem-theme-ui** | Two-pass theme generation → code UI translation (high-entropy design themes) | Not installed |
-
-**XAEM Gap Analysis**: The existing `scientific-luxury` skill enforces design constraints but does not generate themes. An XAEM-style skill would add a two-pass pipeline: (1) generate high-entropy visual themes (colour palettes, typography, spacing, animation curves), then (2) translate those themes into implementable code (CSS variables, Tailwind config, component styles). This complements `scientific-luxury` by handling the creative generation pass before constraint enforcement.
-
-**Note**: Use `/skill-manager analyse` to run automated gap analysis across all installed skills and detect missing capabilities.
+No gaps identified. All 55 skills are installed. Use `/skill-manager analyse` to run automated gap analysis across all installed skills and detect missing capabilities.
 
 ## Skill Priority
 
@@ -139,8 +134,9 @@ When multiple skills could apply, use this priority order:
 50. **dashboard-patterns** - For real-time dashboard visualisation and layout
 51. **status-page** - For public status page with incident management and uptime
 52. **scientific-luxury** - For UI/design decisions
-53. **react-best-practices** - For React-specific optimisations
-54. **web-design-guidelines** - For accessibility and UX audits
+53. **xaem-theme-ui** - For theme generation and design token translation
+54. **react-best-practices** - For React-specific optimisations
+55. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
