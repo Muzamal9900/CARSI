@@ -47,6 +47,7 @@ Location: `.skills/custom/`
 | **changelog-generator**  | Automated changelog from Conventional Commits with semantic versioning and GitHub Releases  | "changelog", "release notes", "version bump", "conventional commits", "release" |
 | **audit-trail**          | Structured audit event logging for compliance, forensics, and activity tracking              | "audit trail", "audit log", "activity log", "compliance", "forensics", "who did what" |
 | **webhook-handler**      | Idempotent webhook processing with HMAC signature verification and delivery tracking        | "webhook", "callback", "signature", "HMAC", "idempotent", "event delivery" |
+| **rate-limiter**         | Token bucket, sliding window, and tiered rate limiting for FastAPI and Next.js               | "rate limit", "throttle", "429", "token bucket", "sliding window", "quota" |
 
 ### Identified Gaps
 
@@ -66,31 +67,32 @@ When multiple skills could apply, use this priority order:
 2. **skill-manager** - For skill lifecycle and gap analysis
 3. **error-taxonomy** - For structured error handling patterns
 4. **retry-strategy** - For exponential backoff, circuit breaker, and retry policies
-5. **data-validation** - For input sanitisation and schema patterns
-6. **input-sanitisation** - For injection prevention and security
-7. **audit-trail** - For structured audit event logging and compliance
-8. **structured-logging** - For observability and log patterns
-9. **metrics-collector** - For metrics instrumentation and analytics data
-10. **tracing-patterns** - For distributed tracing and span context propagation
-11. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
-12. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
-13. **vector-search** - For pgvector embedding queries and similarity search
-14. **health-check** - For liveness, readiness, and dependency health probes
-15. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
-16. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
-17. **api-contract** - For typed frontend/backend API contracts
-18. **webhook-handler** - For idempotent webhook processing with signature verification
-19. **state-machine** - For finite state machines and status transitions
-20. **queue-worker** - For Redis-backed background job processing
-21. **cron-scheduler** - For scheduled tasks and periodic jobs
-22. **csv-processor** - For CSV import, export, and streaming parse
-23. **email-template** - For transactional email design and delivery
-24. **changelog-generator** - For automated changelog and release notes from commits
-25. **genesis-orchestrator** - For workflow and phase management
-26. **dashboard-patterns** - For real-time dashboard visualisation and layout
-27. **scientific-luxury** - For UI/design decisions
-28. **react-best-practices** - For React-specific optimisations
-29. **web-design-guidelines** - For accessibility and UX audits
+5. **rate-limiter** - For token bucket, sliding window, and tiered rate limiting
+6. **data-validation** - For input sanitisation and schema patterns
+7. **input-sanitisation** - For injection prevention and security
+8. **audit-trail** - For structured audit event logging and compliance
+9. **structured-logging** - For observability and log patterns
+10. **metrics-collector** - For metrics instrumentation and analytics data
+11. **tracing-patterns** - For distributed tracing and span context propagation
+12. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
+13. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
+14. **vector-search** - For pgvector embedding queries and similarity search
+15. **health-check** - For liveness, readiness, and dependency health probes
+16. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
+17. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
+18. **api-contract** - For typed frontend/backend API contracts
+19. **webhook-handler** - For idempotent webhook processing with signature verification
+20. **state-machine** - For finite state machines and status transitions
+21. **queue-worker** - For Redis-backed background job processing
+22. **cron-scheduler** - For scheduled tasks and periodic jobs
+23. **csv-processor** - For CSV import, export, and streaming parse
+24. **email-template** - For transactional email design and delivery
+25. **changelog-generator** - For automated changelog and release notes from commits
+26. **genesis-orchestrator** - For workflow and phase management
+27. **dashboard-patterns** - For real-time dashboard visualisation and layout
+28. **scientific-luxury** - For UI/design decisions
+29. **react-best-practices** - For React-specific optimisations
+30. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
