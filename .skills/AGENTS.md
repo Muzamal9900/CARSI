@@ -35,6 +35,7 @@ Location: `.skills/custom/`
 | **email-template**       | Responsive transactional emails with React Email and Scientific Luxury design  | "email", "template", "notification", "transactional", "welcome email" |
 | **metrics-collector**    | Database-backed metrics instrumentation with counters, gauges, and histograms  | "metrics", "KPI", "instrumentation", "analytics", "monitoring", "dashboard data" |
 | **dashboard-patterns**   | Real-time dashboard patterns with Status Command Centre, timeline layout, Supabase Realtime | "dashboard", "metrics display", "real-time", "monitoring UI", "command centre" |
+| **vector-search**        | pgvector embedding queries, similarity search, hybrid search, multi-provider embeddings | "vector", "embedding", "semantic search", "similarity", "RAG", "pgvector", "cosine" |
 
 ### Identified Gaps
 
@@ -57,16 +58,17 @@ When multiple skills could apply, use this priority order:
 5. **input-sanitisation** - For injection prevention and security
 6. **structured-logging** - For observability and log patterns
 7. **metrics-collector** - For metrics instrumentation and analytics data
-8. **api-contract** - For typed frontend/backend API contracts
-9. **state-machine** - For finite state machines and status transitions
-10. **cron-scheduler** - For scheduled tasks and periodic jobs
-11. **csv-processor** - For CSV import, export, and streaming parse
-12. **email-template** - For transactional email design and delivery
-13. **genesis-orchestrator** - For workflow and phase management
-14. **dashboard-patterns** - For real-time dashboard visualisation and layout
-15. **scientific-luxury** - For UI/design decisions
-16. **react-best-practices** - For React-specific optimisations
-17. **web-design-guidelines** - For accessibility and UX audits
+8. **vector-search** - For pgvector embedding queries and similarity search
+9. **api-contract** - For typed frontend/backend API contracts
+10. **state-machine** - For finite state machines and status transitions
+11. **cron-scheduler** - For scheduled tasks and periodic jobs
+12. **csv-processor** - For CSV import, export, and streaming parse
+13. **email-template** - For transactional email design and delivery
+14. **genesis-orchestrator** - For workflow and phase management
+15. **dashboard-patterns** - For real-time dashboard visualisation and layout
+16. **scientific-luxury** - For UI/design decisions
+17. **react-best-practices** - For React-specific optimisations
+18. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
