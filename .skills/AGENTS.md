@@ -48,6 +48,11 @@ Location: `.skills/custom/`
 | **audit-trail**          | Structured audit event logging for compliance, forensics, and activity tracking              | "audit trail", "audit log", "activity log", "compliance", "forensics", "who did what" |
 | **webhook-handler**      | Idempotent webhook processing with HMAC signature verification and delivery tracking        | "webhook", "callback", "signature", "HMAC", "idempotent", "event delivery" |
 | **rate-limiter**         | Token bucket, sliding window, and tiered rate limiting for FastAPI and Next.js               | "rate limit", "throttle", "429", "token bucket", "sliding window", "quota" |
+| **api-client**           | Type-safe fetch wrapper with interceptors, retry, and snake/camel case transforms           | "API client", "fetch", "interceptor", "httpx", "request", "response" |
+| **search-indexer**       | Full-text search indexing with tsvector, GIN indexes, and hybrid search                     | "search", "index", "tsvector", "full-text", "GIN", "autocomplete" |
+| **secret-management**    | Environment variable validation, secret redaction, rotation, and leak prevention            | "secret", "env", "API key", "rotation", "redact", "credential" |
+| **resilience-patterns**  | Bulkhead isolation, timeout policies, fallback chains, and hedged requests                   | "bulkhead", "timeout", "fallback", "resilience", "degrade", "hedging" |
+| **notification-system**  | Multi-channel notification dispatch with queue-backed delivery and user preferences         | "notification", "notify", "alert", "email", "in-app", "push" |
 
 ### Identified Gaps
 
@@ -67,32 +72,37 @@ When multiple skills could apply, use this priority order:
 2. **skill-manager** - For skill lifecycle and gap analysis
 3. **error-taxonomy** - For structured error handling patterns
 4. **retry-strategy** - For exponential backoff, circuit breaker, and retry policies
-5. **rate-limiter** - For token bucket, sliding window, and tiered rate limiting
-6. **data-validation** - For input sanitisation and schema patterns
-7. **input-sanitisation** - For injection prevention and security
-8. **audit-trail** - For structured audit event logging and compliance
-9. **structured-logging** - For observability and log patterns
-10. **metrics-collector** - For metrics instrumentation and analytics data
-11. **tracing-patterns** - For distributed tracing and span context propagation
-12. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
-13. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
-14. **vector-search** - For pgvector embedding queries and similarity search
-15. **health-check** - For liveness, readiness, and dependency health probes
-16. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
-17. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
-18. **api-contract** - For typed frontend/backend API contracts
-19. **webhook-handler** - For idempotent webhook processing with signature verification
-20. **state-machine** - For finite state machines and status transitions
-21. **queue-worker** - For Redis-backed background job processing
-22. **cron-scheduler** - For scheduled tasks and periodic jobs
-23. **csv-processor** - For CSV import, export, and streaming parse
-24. **email-template** - For transactional email design and delivery
-25. **changelog-generator** - For automated changelog and release notes from commits
-26. **genesis-orchestrator** - For workflow and phase management
-27. **dashboard-patterns** - For real-time dashboard visualisation and layout
-28. **scientific-luxury** - For UI/design decisions
-29. **react-best-practices** - For React-specific optimisations
-30. **web-design-guidelines** - For accessibility and UX audits
+5. **resilience-patterns** - For bulkhead isolation, timeout policies, and fallback chains
+6. **rate-limiter** - For token bucket, sliding window, and tiered rate limiting
+7. **data-validation** - For input sanitisation and schema patterns
+8. **input-sanitisation** - For injection prevention and security
+9. **secret-management** - For environment variable validation, redaction, and rotation
+10. **audit-trail** - For structured audit event logging and compliance
+11. **structured-logging** - For observability and log patterns
+12. **metrics-collector** - For metrics instrumentation and analytics data
+13. **tracing-patterns** - For distributed tracing and span context propagation
+14. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
+15. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
+16. **vector-search** - For pgvector embedding queries and similarity search
+17. **search-indexer** - For full-text search indexing with tsvector and GIN indexes
+18. **health-check** - For liveness, readiness, and dependency health probes
+19. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
+20. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
+21. **api-contract** - For typed frontend/backend API contracts
+22. **api-client** - For type-safe fetch wrappers with interceptors and retry
+23. **webhook-handler** - For idempotent webhook processing with signature verification
+24. **state-machine** - For finite state machines and status transitions
+25. **queue-worker** - For Redis-backed background job processing
+26. **notification-system** - For multi-channel notification dispatch with preferences
+27. **cron-scheduler** - For scheduled tasks and periodic jobs
+28. **csv-processor** - For CSV import, export, and streaming parse
+29. **email-template** - For transactional email design and delivery
+30. **changelog-generator** - For automated changelog and release notes from commits
+31. **genesis-orchestrator** - For workflow and phase management
+32. **dashboard-patterns** - For real-time dashboard visualisation and layout
+33. **scientific-luxury** - For UI/design decisions
+34. **react-best-practices** - For React-specific optimisations
+35. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
