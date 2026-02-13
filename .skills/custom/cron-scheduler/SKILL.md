@@ -14,10 +14,6 @@ metadata:
 
 # Cron Scheduler - Scheduled Task Management
 
-## Description
-
-Enforces consistent patterns for all scheduled tasks across the NodeJS-Starter-V1 stack. Codifies the project's existing Vercel cron jobs and ScheduledAuditRunner, covering cron expression conventions, CRON_SECRET authentication, overlap protection, idempotency, and timezone-aware scheduling for AEST/AEDT.
-
 ---
 
 ## When to Apply

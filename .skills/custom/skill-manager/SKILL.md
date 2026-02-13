@@ -3,7 +3,7 @@ name: skill-manager
 description: >-
   Analyse project skill gaps, generate new skills, browse skill catalogues,
   and validate skill health. Triggers on "skill gap", "generate skill",
-  "skill catalog", "skill health", "missing skills", or when the project
+  "skill catalogue", "skill health", "missing skills", or when the project
   needs new agent capabilities.
 license: MIT
 metadata:
@@ -146,7 +146,7 @@ User provides one of:
 
 ```
 If catalogue reference provided:
-  → Load entry from references/catalog.md
+  → Load entry from references/catalogue.md
   → Extract: name, description, complexity, complements
 
 If free-form description:
@@ -237,7 +237,7 @@ If the skill passes health check:
 
 **Trigger**: "browse skills", "skill catalogue", "what skills are available?"
 
-Load and present data from `references/catalog.md`.
+Load and present data from `references/catalogue.md`.
 
 Supports filtering by:
 
