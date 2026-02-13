@@ -46,6 +46,7 @@ Location: `.skills/custom/`
 | **queue-worker**         | Redis-backed background job processing with arq (Python) and BullMQ (TypeScript)           | "queue", "worker", "background job", "Redis queue", "job processing", "BullMQ", "arq" |
 | **changelog-generator**  | Automated changelog from Conventional Commits with semantic versioning and GitHub Releases  | "changelog", "release notes", "version bump", "conventional commits", "release" |
 | **audit-trail**          | Structured audit event logging for compliance, forensics, and activity tracking              | "audit trail", "audit log", "activity log", "compliance", "forensics", "who did what" |
+| **webhook-handler**      | Idempotent webhook processing with HMAC signature verification and delivery tracking        | "webhook", "callback", "signature", "HMAC", "idempotent", "event delivery" |
 
 ### Identified Gaps
 
@@ -78,17 +79,18 @@ When multiple skills could apply, use this priority order:
 15. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
 16. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
 17. **api-contract** - For typed frontend/backend API contracts
-18. **state-machine** - For finite state machines and status transitions
-19. **queue-worker** - For Redis-backed background job processing
-20. **cron-scheduler** - For scheduled tasks and periodic jobs
-21. **csv-processor** - For CSV import, export, and streaming parse
-22. **email-template** - For transactional email design and delivery
-23. **changelog-generator** - For automated changelog and release notes from commits
-24. **genesis-orchestrator** - For workflow and phase management
-25. **dashboard-patterns** - For real-time dashboard visualisation and layout
-26. **scientific-luxury** - For UI/design decisions
-27. **react-best-practices** - For React-specific optimisations
-28. **web-design-guidelines** - For accessibility and UX audits
+18. **webhook-handler** - For idempotent webhook processing with signature verification
+19. **state-machine** - For finite state machines and status transitions
+20. **queue-worker** - For Redis-backed background job processing
+21. **cron-scheduler** - For scheduled tasks and periodic jobs
+22. **csv-processor** - For CSV import, export, and streaming parse
+23. **email-template** - For transactional email design and delivery
+24. **changelog-generator** - For automated changelog and release notes from commits
+25. **genesis-orchestrator** - For workflow and phase management
+26. **dashboard-patterns** - For real-time dashboard visualisation and layout
+27. **scientific-luxury** - For UI/design decisions
+28. **react-best-practices** - For React-specific optimisations
+29. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
