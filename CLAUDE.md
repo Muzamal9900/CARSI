@@ -2,11 +2,11 @@
 
 > **Self-Contained AI Starter Template**: Next.js 15 + FastAPI/LangGraph + PostgreSQL
 
-## 🎯 Quick Overview
+## Quick Overview
 
 This is a **self-contained AI application template** designed to work completely offline without API keys or cloud dependencies. Everything runs locally in Docker.
 
-## 📋 Quick Commands
+## Quick Commands
 
 ```bash
 # Setup (one-time)
@@ -49,7 +49,7 @@ claude --debug              # Debug hook execution
 powershell -ExecutionPolicy Bypass -File .claude/hooks/install-hooks.ps1  # Install hooks
 ```
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ### Frontend (Next.js 15)
 
@@ -117,7 +117,7 @@ powershell -ExecutionPolicy Bypass -File .claude/hooks/install-hooks.ps1  # Inst
 - `apps/backend/src/models/anthropic.py` - Cloud AI
 - `apps/backend/src/models/selector.py` - Auto-detection
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 NodeJS-Starter-V1/
@@ -139,23 +139,29 @@ NodeJS-Starter-V1/
 ├── .beads/                     # AI agent memory (Beads tasks)
 ├── .bin/                       # Binary tools (bd.exe)
 ├── .claude/                    # Claude Code configuration
+│   ├── agents/                 # Agent definitions
+│   ├── commands/               # Slash commands
 │   ├── hooks/scripts/          # Automation hook scripts
+│   ├── primers/                # Agent primers
 │   ├── rules/                  # Agent rules and profiles
 │   └── settings.json           # Hook configuration
-├── .skills/                    # Agent skills (Vercel format)
+├── .skills/                    # Agent skills (55 installed)
+│   ├── custom/                 # Custom skills
+│   ├── vercel-labs-agent-skills/ # Vercel skills
+│   └── AGENTS.md               # Full skill registry
 ├── docs/                       # Documentation
-│   ├── MULTI_AGENT_ARCHITECTURE.md  # Agent workflow spec
-│   ├── DESIGN_SYSTEM.md        # Scientific Luxury design
-│   ├── BEADS.md                # Agent memory system
-│   ├── LOCAL_SETUP.md          # Setup guide
-│   ├── AI_PROVIDERS.md         # Ollama vs Claude
-│   └── OPTIONAL_SERVICES.md    # Deployment guides
+│   ├── guides/                 # Setup and deployment guides
+│   ├── internal/               # Framework reference docs
+│   ├── features/               # Feature specifications
+│   ├── reference/              # API documentation
+│   ├── releases/               # Release notes
+│   └── reports/                # Test and verification reports
 ├── scripts/                    # Setup scripts
 ├── docker-compose.yml          # PostgreSQL + Redis
 └── .env.example                # Environment template
 ```
 
-## 🔄 Development Workflow
+## Development Workflow
 
 ### 1. Initial Setup
 
@@ -198,7 +204,7 @@ uv run alembic upgrade head
 pnpm run docker:reset
 ```
 
-## 🔐 Authentication Flow
+## Authentication Flow
 
 ### JWT-Based (No External Auth Service)
 
@@ -223,7 +229,7 @@ pnpm run docker:reset
 - Frontend: `apps/web/lib/api/auth.ts`
 - Middleware: `apps/web/middleware.ts`
 
-## 🤖 AI Provider System
+## AI Provider System
 
 ### How It Works
 
@@ -264,7 +270,7 @@ All providers implement:
 - `chat()` - Chat messages
 - `generate_embeddings()` - Vector embeddings
 
-## 📊 Database Architecture
+## Database Architecture
 
 ### Connection Strategy
 
@@ -304,7 +310,7 @@ async with AsyncSessionLocal() as session:
 - Availability tracking
 - Document associations
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 ### Backend Tests (Pytest)
 
@@ -345,97 +351,9 @@ GitHub Actions runs:
 
 **No secrets required!** The CI works out of the box.
 
-## 🚀 Optional Upgrades
+## Design System - Scientific Luxury Tier
 
-### When You're Ready for Production
-
-See [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md) for:
-
-**Frontend Hosting**:
-
-- Vercel (recommended)
-- Netlify
-- Cloudflare Pages
-
-**Backend Hosting**:
-
-- DigitalOcean App Platform
-- Railway
-- Fly.io
-- Render
-
-**Database Hosting**:
-
-- Keep Docker (works fine)
-- Upgrade to managed PostgreSQL
-
-**Cloud AI**:
-
-- Claude API ($3-75/1M tokens)
-- Better quality than local
-
-**External Services**:
-
-- Codecov (coverage tracking)
-- Snyk (security scanning)
-- Sentry (error monitoring)
-- PostHog (analytics)
-
-## 🎯 Key Principles
-
-### 1. Local-First
-
-Everything runs on your machine. No cloud required for development.
-
-### 2. Zero Barriers
-
-No API keys, accounts, or configuration needed to start.
-
-### 3. Production Ready
-
-Real authentication, testing, CI/CD included.
-
-### 4. Optional Upgrades
-
-Easy path to cloud services when ready.
-
-## 📝 Spec Generation System ✅ NEW
-
-**Principle**: Every feature and project phase requires a specification document before implementation.
-
-### Automatic Detection
-
-The system automatically detects when you start new work and prompts for spec.md generation if one doesn't exist.
-
-### Spec Types
-
-- **Project Phase Spec**: For architectural changes (Phase 0-9 style)
-  - Location: `docs/phases/phase-X-spec.md`
-  - Links to PROGRESS.md
-- **Feature Spec**: For focused features
-  - Location: `docs/features/[feature-name]/spec.md`
-  - Links to feature branch
-
-### Generation Modes
-
-- **Interview Mode**: Spec Builder Agent conducts 6-phase interactive interview (comprehensive)
-- **Template Mode**: Pre-filled template for quick start (fast)
-- **Validation Mode**: Reviews existing specs for completeness and compliance
-
-### Verification
-
-Specs must be ≥80% complete before implementation:
-
-- ✅ All 6 phases have content
-- ✅ Australian context specified (en-AU, DD/MM/YYYY, AUD)
-- ✅ Design system compliance (NO Lucide icons, design tokens)
-- ✅ Verification criteria defined
-
-**See**: `docs/SPEC_GENERATION.md` for full documentation and workflows
-
-## 🎨 Design System - Scientific Luxury Tier
-
-This framework implements a **Scientific Luxury** design system. All UI components must follow these rules:
+All UI components must follow the **Scientific Luxury** design system. Full enforcement is handled by the `scientific-luxury` skill; theme generation by the `xaem-theme-ui` skill.
 
 ### Mandatory Elements
 
@@ -471,289 +389,121 @@ This framework implements a **Scientific Luxury** design system. All UI componen
 **Full Documentation**: [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)
 **Design Tokens**: `apps/web/lib/design-tokens.ts`
 
-## 🧠 Agent Skills System
+## Agent Skills System
 
-This project includes a skills system compatible with Vercel's Agent Skills format.
+This project includes **55 installed skills** compatible with Vercel's Agent Skills format, covering 12 categories with full coverage.
 
 **Location**: `.skills/`
+**Full Registry**: [`.skills/AGENTS.md`](.skills/AGENTS.md)
 
-### Installed Skills
+### Key Skills
 
-| Skill                   | Trigger                         | Purpose                                                        |
-| ----------------------- | ------------------------------- | -------------------------------------------------------------- |
-| `genesis-orchestrator`  | "build", "implement", "plan"    | Phase-locked workflow execution                                |
-| `council-of-logic`      | "optimise", "algorithm", "O(n)" | Mathematical validation (Turing, Von Neumann, Bezier, Shannon) |
-| `scientific-luxury`     | "design", "UI", "component"     | Design system enforcement                                      |
-| `react-best-practices`  | "React performance", "bundle"   | 57 Vercel React optimisation rules                             |
-| `web-design-guidelines` | "accessibility", "UX audit"     | 100+ accessibility & UX rules                                  |
-| `skill-manager`         | "skill gap", "generate skill"   | Analyse gaps, generate skills, validate health                 |
+| Category                | Skills | Examples                                                    |
+| ----------------------- | ------ | ----------------------------------------------------------- |
+| Error Handling          | 5      | `error-taxonomy`, `error-boundary`, `retry-strategy`        |
+| Security & Auth         | 9      | `input-sanitisation`, `rbac-patterns`, `oauth-flow`         |
+| API & Integration       | 6      | `api-contract`, `api-client`, `webhook-handler`             |
+| Observability           | 6      | `structured-logging`, `tracing-patterns`, `metrics-collector`|
+| Infrastructure          | 4      | `docker-patterns`, `ci-cd-patterns`, `infrastructure-as-code`|
+| Workflow & Orchestration| 6      | `state-machine`, `saga-pattern`, `workflow-engine`          |
+| UI & Design             | 4      | `scientific-luxury`, `xaem-theme-ui`, `react-best-practices`|
+| Meta / Orchestration    | 3      | `genesis-orchestrator`, `council-of-logic`, `skill-manager` |
+| Content & Communication | 6      | `email-template`, `pdf-generator`, `slack-integration`      |
+| Data & Search           | 5      | `vector-search`, `search-indexer`, `data-transform`         |
+| Caching & Resilience    | 3      | `cache-strategy`, `resilience-patterns`, `rate-limiter`     |
+| Other                   | 3      | `i18n-patterns`, `changelog-generator`, `feature-flag`      |
 
-### Installation
+### Skill Manager
 
 ```bash
-# Windows
-.\.skills\install.ps1
-
-# Unix/macOS
-bash .skills/install.sh
+/skill-manager analyse      # Run gap analysis
+/skill-manager generate X   # Generate new skill
+/skill-manager health X     # Validate skill quality
+/skill-manager browse       # Browse catalogue
 ```
 
-### Creating Custom Skills
+## Multi-Agent Architecture
 
-See `.skills/AGENTS.md` for the full skills registry and creation guide.
+Hierarchical agent workflow for AI-assisted development.
 
-## 🤝 Multi-Agent Architecture
+```
+Developer (Human) -> Senior PM -> Orchestrator -> Specialists (A/B/C/D)
+```
 
-This project implements a **hierarchical multi-agent workflow** for AI-assisted development. All AI agents must follow these protocols.
+| Agent              | Domain                              |
+| ------------------ | ----------------------------------- |
+| **Orchestrator**   | Task decomposition, synthesis       |
+| **Specialist A**   | Architecture, design, API contracts |
+| **Specialist B**   | Implementation, coding, refactoring |
+| **Specialist C**   | Testing, validation, coverage       |
+| **Specialist D**   | Documentation, review, knowledge    |
+
+**Protocols**: Context isolation, quality gates, escalation path.
 
 **Full Documentation**: [`docs/MULTI_AGENT_ARCHITECTURE.md`](docs/MULTI_AGENT_ARCHITECTURE.md)
+**Rules**: `.claude/rules/genesis-hive-mind.md`, `.claude/rules/council-of-logic.md`
 
-### Hierarchy
+## Beads - AI Agent Memory
 
-```
-Developer (Human) → Senior PM → Orchestrator → Specialists (A/B/C/D)
-```
-
-### Agent Roles
-
-| Agent | Domain | Context Focus |
-|-------|--------|---------------|
-| **Orchestrator** | Task decomposition, work distribution, synthesis | All coordination |
-| **Specialist A** | Architecture, design, ADRs, API contracts | Design docs only |
-| **Specialist B** | Implementation, coding, refactoring | Code only |
-| **Specialist C** | Testing, validation, coverage | Tests only |
-| **Specialist D** | Documentation, review, knowledge | Docs only |
-
-### Core Protocols
-
-1. **Linear Integration**: Every task tracked in Linear with full audit trail
-2. **Context Isolation**: Each specialist operates in isolated context
-3. **Quality Gates**: No phase advances without verification
-4. **Escalation Path**: Specialist → Orchestrator → PM → Developer
-
-### Quick Triggers
-
-```
-@orchestrator decompose: [task]
-@specialist-a design: [component]
-@specialist-b implement: [feature]
-@specialist-c test: [component]
-@specialist-d document: [feature]
-```
-
-### Integration Points
-
-| System | Connection |
-|--------|------------|
-| Genesis Hive Mind | Orchestrator = GENESIS_DEV |
-| Council of Logic | Quality gates invoke council validation |
-| Beads | Tasks sync to `.beads/` |
-| Linear | Primary task tracking |
-
-## 🧵 Beads - AI Agent Memory System
-
-This project uses **Beads** (`bd`) for persistent, git-backed task tracking across AI coding sessions.
+Persistent, git-backed task tracking across AI coding sessions.
 
 **Location**: `.bin/bd.exe` (Windows) | `.beads/` (data)
 
-### Why Beads?
-
-| Problem | Beads Solution |
-|---------|----------------|
-| Tasks forgotten between sessions | Git-backed persistence |
-| No dependency tracking | `bd ready` shows unblocked tasks |
-| Merge conflicts in shared projects | Collision-free hash IDs |
-| No audit trail | Full git history |
-
-### Essential Commands
-
 ```bash
-# View actionable tasks
-.bin/bd.exe ready
-
-# Create task with priority
-.bin/bd.exe create "Implement feature" -p 0
-
-# Create subtask
-.bin/bd.exe create "Write tests" --parent bd-abc1
-
-# Update status
-.bin/bd.exe update bd-abc1 --status in_progress
-
-# Close task
-.bin/bd.exe close bd-abc1 --reason "Completed"
-
-# Sync to git (always before session end)
-.bin/bd.exe sync
+.bin/bd.exe ready                          # Show unblocked tasks
+.bin/bd.exe create "Task title" -p 0       # Create task with priority
+.bin/bd.exe close bd-xxx --reason "Done"   # Close task
+.bin/bd.exe sync                           # Sync to git
 ```
 
-### Session End Protocol ("Land the Plane")
+### Session End Protocol
 
-**CRITICAL**: Before ending any session:
-
-```bash
-# 1. File remaining work
-.bin/bd.exe create "TODO: Remaining work" -p 2
-
-# 2. Update statuses
-.bin/bd.exe close bd-xxx --reason "Done"
-
-# 3. Sync and push
-git pull --rebase
-.bin/bd.exe sync
-git push
-
-# 4. Verify
-git status  # Must show "up to date with origin/main"
-```
+Before ending any session: file remaining work as Beads tasks, close completed tasks, sync and push.
 
 **Full Documentation**: [`docs/BEADS.md`](docs/BEADS.md)
 
----
+## Claude Code Hooks
 
-## 🪝 Claude Code Hooks - Automated Workflows
-
-This project uses **Claude Code Hooks** for automated shell command execution at key lifecycle points.
+Automated shell commands at key lifecycle points.
 
 **Location**: `.claude/hooks/scripts/` | Configuration: `.claude/settings.json`
 
-### Installed Hooks
+| Hook Event       | Script                      | Purpose                                          |
+| ---------------- | --------------------------- | ------------------------------------------------ |
+| **SessionStart** | `session-start-context.ps1` | Loads git status, Beads tasks, Australian locale  |
+| **PostToolUse**  | `post-edit-format.ps1`      | Auto-formats files after Edit/Write               |
+| **PreToolUse**   | `pre-bash-validate.py`      | Validates bash commands, blocks dangerous ones    |
+| **Notification** | `notification-alert.ps1`    | Windows toast notifications when input needed     |
+| **Stop**         | `stop-verify-todos.py`      | Verifies work completion before allowing stop     |
 
-| Hook Event | Script | Purpose |
-|------------|--------|---------|
-| **SessionStart** | `session-start-context.ps1` | Loads git status, Beads tasks, PROGRESS.md, Australian locale |
-| **PostToolUse** | `post-edit-format.ps1` | Auto-formats files after Edit/Write (Prettier, Black) |
-| **PreToolUse** | `pre-bash-validate.py` | Validates bash commands, blocks dangerous ones, suggests alternatives |
-| **Notification** | `notification-alert.ps1` | Windows toast notifications when Claude needs input |
-| **Stop** | `stop-verify-todos.py` | Verifies work completion before allowing stop |
+## Spec Generation
 
-### Quick Commands
+Every feature and project phase requires a specification document before implementation.
 
-```powershell
-# Install/verify hooks (one-time)
-powershell -ExecutionPolicy Bypass -File .claude/hooks/install-hooks.ps1
+- **Project Phase Spec**: `docs/phases/phase-X-spec.md`
+- **Feature Spec**: `docs/features/[feature-name]/spec.md`
+- **Modes**: Interview (comprehensive), Template (fast), Validation (review)
 
-# View configured hooks in Claude Code
-claude /hooks
+**Full Documentation**: [`docs/SPEC_GENERATION.md`](docs/SPEC_GENERATION.md)
 
-# Debug mode - see hook execution
-claude --debug
+## Optional Upgrades
 
-# Toggle verbose mode (during session)
-# Press Ctrl+O
-```
+See [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md) for production deployment:
 
-### How Hooks Work
+- **Frontend**: Vercel, Netlify, Cloudflare Pages
+- **Backend**: DigitalOcean, Railway, Fly.io, Render
+- **Database**: Managed PostgreSQL
+- **Cloud AI**: Claude API
+- **Services**: Codecov, Snyk, Sentry, PostHog
 
-1. **SessionStart** - Fires when Claude Code starts, loads project context automatically
-2. **PostToolUse (Edit|Write)** - After any file edit, auto-runs Prettier/Black
-3. **PreToolUse (Bash)** - Before bash commands, validates for safety
-4. **Notification** - On permission prompts, shows Windows toast alert
-5. **Stop** - Before Claude stops, checks for uncommitted work
+## Key Principles
 
-### Blocked Commands
+1. **Local-First** - Everything runs on your machine. No cloud required for development.
+2. **Zero Barriers** - No API keys, accounts, or configuration needed to start.
+3. **Production Ready** - Real authentication, testing, CI/CD included.
+4. **Optional Upgrades** - Easy path to cloud services when ready.
 
-The `pre-bash-validate.py` hook blocks dangerous commands:
-
-- `rm -rf /` - Filesystem destruction
-- `sudo rm -rf` - Elevated destructive commands
-- Fork bombs and disk writes
-- Direct device access
-
-**Suggestions** are provided for:
-
-- `grep` → `rg` (ripgrep)
-- `find -name` → `fd`
-- `cat` → `bat` (syntax highlighting)
-
-### Configuration
-
-Hooks are configured in `.claude/settings.json` under the `"hooks"` key. Each hook specifies:
-
-- **matcher**: Tool pattern to match (e.g., `"Edit|Write"`, `"Bash"`)
-- **type**: `"command"` for shell execution
-- **command**: The script to run
-- **timeout**: Maximum execution time in seconds
-
-### Creating Custom Hooks
-
-1. Create script in `.claude/hooks/scripts/`
-2. Add configuration to `.claude/settings.json`
-3. Test with `claude --debug`
-
-**Hook Input**: JSON via stdin with `tool_name`, `tool_input`, `session_id`
-**Hook Output**: Exit code 0 (success), 2 (block), or JSON with decisions
-
-**Full Documentation**: [Claude Code Hooks Reference](https://code.claude.com/docs/en/hooks)
-
----
-
-## 📚 Documentation
-
-| Document                                                                       | Purpose                           |
-| ------------------------------------------------------------------------------ | --------------------------------- |
-| [`README.md`](README.md)                                                       | Overview and quick start          |
-| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)                                   | Complete setup guide              |
-| [`docs/AI_PROVIDERS.md`](docs/AI_PROVIDERS.md)                                 | Ollama vs Claude                  |
-| [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md)                       | Deployment guides                 |
-| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)                               | Scientific Luxury design system   |
-| [`docs/MULTI_AGENT_ARCHITECTURE.md`](docs/MULTI_AGENT_ARCHITECTURE.md)         | Multi-agent workflow specification|
-| [`docs/BEADS.md`](docs/BEADS.md)                                               | AI agent memory system            |
-| [Claude Code Hooks](https://code.claude.com/docs/en/hooks)                     | Automated workflow hooks          |
-| [`docs/new-project-checklist.md`](docs/new-project-checklist.md)               | 3-step setup                      |
-
-## 🔧 Troubleshooting
-
-### Docker Services Not Starting
-
-```bash
-# Check Docker is running
-docker ps
-
-# Restart services
-docker compose down && docker compose up -d
-
-# View logs
-docker compose logs -f postgres
-```
-
-### Ollama Not Working
-
-```bash
-# Install Ollama
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Pull models
-ollama pull llama3.1:8b
-ollama pull nomic-embed-text
-
-# Start Ollama
-ollama serve
-```
-
-### Port Conflicts
-
-```bash
-# Check what's using ports
-lsof -i :3000  # Frontend
-lsof -i :8000  # Backend
-lsof -i :5432  # PostgreSQL
-
-# Change ports in .env if needed
-```
-
-### Dependencies Not Installing
-
-```bash
-# Clear and reinstall
-rm -rf node_modules apps/*/node_modules
-pnpm install
-
-# Backend
-cd apps/backend && rm -rf .venv && uv sync
-```
-
-## 📝 Environment Variables
+## Environment Variables
 
 ### Required (All Have Defaults)
 
@@ -791,37 +541,30 @@ SENTRY_DSN=xxx
 POSTHOG_API_KEY=xxx
 ```
 
-## 🎓 Learning Resources
+## Documentation
 
-**Frameworks**:
+| Document                                                               | Purpose                            |
+| ---------------------------------------------------------------------- | ---------------------------------- |
+| [`README.md`](README.md)                                              | Overview and quick start           |
+| [`PROGRESS.md`](PROGRESS.md)                                          | Project status and phase tracking  |
+| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)                          | Complete setup guide               |
+| [`docs/AI_PROVIDERS.md`](docs/AI_PROVIDERS.md)                        | Ollama vs Claude                   |
+| [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md)              | Deployment guides                  |
+| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)                      | Scientific Luxury design system    |
+| [`docs/MULTI_AGENT_ARCHITECTURE.md`](docs/MULTI_AGENT_ARCHITECTURE.md)| Multi-agent workflow specification |
+| [`docs/BEADS.md`](docs/BEADS.md)                                      | AI agent memory system             |
+| [`docs/SPEC_GENERATION.md`](docs/SPEC_GENERATION.md)                  | Spec generation workflows          |
+| [`docs/new-project-checklist.md`](docs/new-project-checklist.md)      | 3-step setup checklist             |
+| [`.skills/AGENTS.md`](.skills/AGENTS.md)                              | Full 55-skill registry             |
 
-- [Next.js Docs](https://nextjs.org/docs) - Frontend
-- [FastAPI Docs](https://fastapi.tiangolo.com/) - Backend
-- [LangGraph Docs](https://langchain-ai.github.io/langgraph/) - Agents
-
-**Tools**:
-
-- [Ollama Docs](https://ollama.com/) - Local AI
-- [PostgreSQL Docs](https://www.postgresql.org/docs/) - Database
-- [shadcn/ui](https://ui.shadcn.com/) - UI Components
-
-**Concepts**:
-
-- [JWT Authentication](https://jwt.io/introduction)
-- [RAG (Retrieval Augmented Generation)](https://www.pinecone.io/learn/retrieval-augmented-generation/)
-- [Vector Embeddings](https://www.pinecone.io/learn/vector-embeddings/)
-
----
-
-## 🚀 Quick Reference
+## Quick Reference
 
 **Start Development**: `pnpm dev`
 **Run Tests**: `pnpm turbo run test`
 **Check Health**: `pnpm run verify`
 **Reset Database**: `pnpm run docker:reset`
-
 **Default Credentials**: admin@local.dev / admin123
 
 ---
 
-**Built for developers who want to build AI apps without barriers** ❤️
+**Built for developers who want to build AI apps without barriers.**
