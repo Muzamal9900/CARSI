@@ -45,6 +45,7 @@ Location: `.skills/custom/`
 | **retry-strategy**       | Exponential backoff, circuit breaker, and retry policies for httpx and fetch clients       | "retry", "backoff", "circuit breaker", "timeout", "resilience", "transient error" |
 | **queue-worker**         | Redis-backed background job processing with arq (Python) and BullMQ (TypeScript)           | "queue", "worker", "background job", "Redis queue", "job processing", "BullMQ", "arq" |
 | **changelog-generator**  | Automated changelog from Conventional Commits with semantic versioning and GitHub Releases  | "changelog", "release notes", "version bump", "conventional commits", "release" |
+| **audit-trail**          | Structured audit event logging for compliance, forensics, and activity tracking              | "audit trail", "audit log", "activity log", "compliance", "forensics", "who did what" |
 
 ### Identified Gaps
 
@@ -66,27 +67,28 @@ When multiple skills could apply, use this priority order:
 4. **retry-strategy** - For exponential backoff, circuit breaker, and retry policies
 5. **data-validation** - For input sanitisation and schema patterns
 6. **input-sanitisation** - For injection prevention and security
-7. **structured-logging** - For observability and log patterns
-8. **metrics-collector** - For metrics instrumentation and analytics data
-9. **tracing-patterns** - For distributed tracing and span context propagation
-10. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
-11. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
-12. **vector-search** - For pgvector embedding queries and similarity search
-13. **health-check** - For liveness, readiness, and dependency health probes
-14. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
-15. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
-16. **api-contract** - For typed frontend/backend API contracts
-17. **state-machine** - For finite state machines and status transitions
-18. **queue-worker** - For Redis-backed background job processing
-19. **cron-scheduler** - For scheduled tasks and periodic jobs
-20. **csv-processor** - For CSV import, export, and streaming parse
-21. **email-template** - For transactional email design and delivery
-22. **changelog-generator** - For automated changelog and release notes from commits
-23. **genesis-orchestrator** - For workflow and phase management
-24. **dashboard-patterns** - For real-time dashboard visualisation and layout
-25. **scientific-luxury** - For UI/design decisions
-26. **react-best-practices** - For React-specific optimisations
-27. **web-design-guidelines** - For accessibility and UX audits
+7. **audit-trail** - For structured audit event logging and compliance
+8. **structured-logging** - For observability and log patterns
+9. **metrics-collector** - For metrics instrumentation and analytics data
+10. **tracing-patterns** - For distributed tracing and span context propagation
+11. **docker-patterns** - For multi-stage builds, layer caching, and Docker Compose
+12. **ci-cd-patterns** - For GitHub Actions workflows, caching, and security scanning
+13. **vector-search** - For pgvector embedding queries and similarity search
+14. **health-check** - For liveness, readiness, and dependency health probes
+15. **graceful-shutdown** - For signal handling, connection draining, and clean teardown
+16. **cache-strategy** - For caching patterns (lru_cache, Redis, Next.js fetch cache)
+17. **api-contract** - For typed frontend/backend API contracts
+18. **state-machine** - For finite state machines and status transitions
+19. **queue-worker** - For Redis-backed background job processing
+20. **cron-scheduler** - For scheduled tasks and periodic jobs
+21. **csv-processor** - For CSV import, export, and streaming parse
+22. **email-template** - For transactional email design and delivery
+23. **changelog-generator** - For automated changelog and release notes from commits
+24. **genesis-orchestrator** - For workflow and phase management
+25. **dashboard-patterns** - For real-time dashboard visualisation and layout
+26. **scientific-luxury** - For UI/design decisions
+27. **react-best-practices** - For React-specific optimisations
+28. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
