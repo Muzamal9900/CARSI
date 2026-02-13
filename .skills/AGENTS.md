@@ -36,6 +36,7 @@ Location: `.skills/custom/`
 | **metrics-collector**    | Database-backed metrics instrumentation with counters, gauges, and histograms  | "metrics", "KPI", "instrumentation", "analytics", "monitoring", "dashboard data" |
 | **dashboard-patterns**   | Real-time dashboard patterns with Status Command Centre, timeline layout, Supabase Realtime | "dashboard", "metrics display", "real-time", "monitoring UI", "command centre" |
 | **vector-search**        | pgvector embedding queries, similarity search, hybrid search, multi-provider embeddings | "vector", "embedding", "semantic search", "similarity", "RAG", "pgvector", "cosine" |
+| **health-check**         | Liveness, readiness, and deep dependency health endpoints with Docker healthchecks | "health check", "liveness", "readiness", "probe", "heartbeat", "service health" |
 
 ### Identified Gaps
 
@@ -59,16 +60,17 @@ When multiple skills could apply, use this priority order:
 6. **structured-logging** - For observability and log patterns
 7. **metrics-collector** - For metrics instrumentation and analytics data
 8. **vector-search** - For pgvector embedding queries and similarity search
-9. **api-contract** - For typed frontend/backend API contracts
-10. **state-machine** - For finite state machines and status transitions
-11. **cron-scheduler** - For scheduled tasks and periodic jobs
-12. **csv-processor** - For CSV import, export, and streaming parse
-13. **email-template** - For transactional email design and delivery
-14. **genesis-orchestrator** - For workflow and phase management
-15. **dashboard-patterns** - For real-time dashboard visualisation and layout
-16. **scientific-luxury** - For UI/design decisions
-17. **react-best-practices** - For React-specific optimisations
-18. **web-design-guidelines** - For accessibility and UX audits
+9. **health-check** - For liveness, readiness, and dependency health probes
+10. **api-contract** - For typed frontend/backend API contracts
+11. **state-machine** - For finite state machines and status transitions
+12. **cron-scheduler** - For scheduled tasks and periodic jobs
+13. **csv-processor** - For CSV import, export, and streaming parse
+14. **email-template** - For transactional email design and delivery
+15. **genesis-orchestrator** - For workflow and phase management
+16. **dashboard-patterns** - For real-time dashboard visualisation and layout
+17. **scientific-luxury** - For UI/design decisions
+18. **react-best-practices** - For React-specific optimisations
+19. **web-design-guidelines** - For accessibility and UX audits
 
 ## Skill Activation
 
