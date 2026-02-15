@@ -25,7 +25,7 @@
     "verify:fix": "bash scripts/verify.sh --fix",
     "verify:windows": "powershell -ExecutionPolicy Bypass -File scripts/verify.ps1",
     "verify:windows:fix": "powershell -ExecutionPolicy Bypass -File scripts/verify.ps1 -Fix",
-    "deps:check": "node -e \"require('./scripts/dependency-checks.sh')\"",
+    "deps:check": "bash scripts/dependency-checks.sh",
     "deps:sync": "pnpm install && pnpm verify:deps",
     "deps:clean": "pnpm prune && pnpm install",
     "prepare": "husky"

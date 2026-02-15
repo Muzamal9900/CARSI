@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { useEffect, useState, useRef } from 'react';
+
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
 /**
  * Agent Run Status Types
@@ -33,86 +33,45 @@ export interface AgentRun {
   status: AgentRunStatus;
   current_step: string | null;
   progress_percent: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
-  result: Record<string, any>;
+  result: Record<string, unknown>;
   error: string | null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   verification_attempts: number;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
-  verification_evidence: Record<string, any>[];
+  verification_evidence: Record<string, unknown>[];
   started_at: string;
   completed_at: string | null;
   updated_at: string;
 }
 
 /**
- * Realtime Event Types
- */
-type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE';
-
-interface RealtimePayload {
-  eventType: RealtimeEvent;
-  new: AgentRun;
-  old: AgentRun;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase realtime payload
-  errors: any;
-}
-
-/**
- * Hook to subscribe to agent run updates in real-time
+ * Hook to subscribe to agent run updates via polling
  *
  * @param taskId - Optional task ID to filter runs
  * @param agentName - Optional agent name to filter runs
- *
- * @example
- * ```tsx
- * function AgentMonitor() {
- *   const { runs, loading, error } = useAgentRuns();
- *
- *   return (
- *     <div>
- *       {runs.map(run => (
- *         <div key={run.id}>
- *           {run.agent_name}: {run.status} - {run.progress_percent}%
- *         </div>
- *       ))}
- *     </div>
- *   );
- * }
- * ```
  */
 export function useAgentRuns(taskId?: string, agentName?: string) {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch initial runs
   useEffect(() => {
     const fetchRuns = async () => {
       try {
-        setLoading(true);
-        const supabase = createClient();
+        const params = new URLSearchParams();
+        if (taskId) params.set('task_id', taskId);
+        if (agentName) params.set('agent_name', agentName);
 
-        let query = supabase
-          .from('agent_runs')
-          .select('*')
-          .order('started_at', { ascending: false });
+        const url = `${BACKEND_URL}/api/agents/runs${params.toString() ? `?${params}` : ''}`;
+        const response = await fetch(url, {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-        if (taskId) {
-          query = query.eq('task_id', taskId);
-        }
+        if (!response.ok) throw new Error(`Failed to fetch agent runs: ${response.statusText}`);
 
-        if (agentName) {
-          query = query.eq('agent_name', agentName);
-        }
-
-        const { data, error: fetchError } = await query;
-
-        if (fetchError) throw fetchError;
-
-        setRuns(data || []);
+        const data: AgentRun[] = await response.json();
+        setRuns(data);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch agent runs'));
@@ -122,91 +81,26 @@ export function useAgentRuns(taskId?: string, agentName?: string) {
     };
 
     fetchRuns();
-  }, [taskId, agentName]);
 
-  // Subscribe to real-time updates
-  useEffect(() => {
-    const supabase = createClient();
+    // Poll every 3 seconds for updates
+    intervalRef.current = setInterval(fetchRuns, 3000);
 
-    // Create channel for realtime subscription
-    const realtimeChannel = supabase
-      .channel('agent_runs_changes')
-      .on(
-        'postgres_changes' as const,
-        {
-          event: '*',
-          schema: 'public',
-          table: 'agent_runs',
-          filter: taskId ? `task_id=eq.${taskId}` : undefined,
-        },
-        (payload) => {
-          const { eventType, new: newRun, old: oldRun } = payload as unknown as RealtimePayload;
-
-          // Apply filters
-          if (agentName && newRun.agent_name !== agentName) {
-            return;
-          }
-
-          setRuns((prevRuns) => {
-            switch (eventType) {
-              case 'INSERT':
-                // Add new run to the beginning
-                return [newRun, ...prevRuns];
-
-              case 'UPDATE':
-                // Update existing run
-                return prevRuns.map((run) => (run.id === newRun.id ? newRun : run));
-
-              case 'DELETE':
-                // Remove deleted run
-                return prevRuns.filter((run) => run.id !== oldRun.id);
-
-              default:
-                return prevRuns;
-            }
-          });
-        }
-      )
-      .subscribe();
-
-    setChannel(realtimeChannel);
-
-    // Cleanup subscription
     return () => {
-      realtimeChannel.unsubscribe();
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [taskId, agentName]);
 
-  return { runs, loading, error, channel };
+  return { runs, loading, error };
 }
 
 /**
  * Hook to subscribe to a single agent run by ID
- *
- * @param runId - Agent run ID to monitor
- *
- * @example
- * ```tsx
- * function AgentRunMonitor({ runId }: { runId: string }) {
- *   const { run, loading } = useAgentRun(runId);
- *
- *   if (loading) return <div>Loading...</div>;
- *   if (!run) return <div>Run not found</div>;
- *
- *   return (
- *     <div>
- *       <h2>{run.agent_name}</h2>
- *       <progress value={run.progress_percent} max={100} />
- *       <p>{run.current_step}</p>
- *     </div>
- *   );
- * }
- * ```
  */
 export function useAgentRun(runId: string | null) {
   const [run, setRun] = useState<AgentRun | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!runId) {
@@ -217,17 +111,14 @@ export function useAgentRun(runId: string | null) {
 
     const fetchRun = async () => {
       try {
-        setLoading(true);
-        const supabase = createClient();
+        const response = await fetch(`${BACKEND_URL}/api/agents/runs/${runId}`, {
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+        });
 
-        const { data, error: fetchError } = await supabase
-          .from('agent_runs')
-          .select('*')
-          .eq('id', runId)
-          .single();
+        if (!response.ok) throw new Error('Failed to fetch agent run');
 
-        if (fetchError) throw fetchError;
-
+        const data: AgentRun = await response.json();
         setRun(data);
         setError(null);
       } catch (err) {
@@ -238,27 +129,10 @@ export function useAgentRun(runId: string | null) {
     };
 
     fetchRun();
-
-    // Subscribe to updates for this specific run
-    const supabase = createClient();
-    const channel = supabase
-      .channel(`agent_run_${runId}`)
-      .on<AgentRun>(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'agent_runs',
-          filter: `id=eq.${runId}`,
-        },
-        (payload) => {
-          setRun(payload.new);
-        }
-      )
-      .subscribe();
+    intervalRef.current = setInterval(fetchRun, 3000);
 
     return () => {
-      channel.unsubscribe();
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [runId]);
 
@@ -267,22 +141,6 @@ export function useAgentRun(runId: string | null) {
 
 /**
  * Hook to get only active (in-progress) agent runs
- *
- * @example
- * ```tsx
- * function ActiveAgentsWidget() {
- *   const { activeRuns } = useActiveAgentRuns();
- *
- *   return (
- *     <div>
- *       <h3>Active Agents ({activeRuns.length})</h3>
- *       {activeRuns.map(run => (
- *         <AgentRunCard key={run.id} run={run} />
- *       ))}
- *     </div>
- *   );
- * }
- * ```
  */
 export function useActiveAgentRuns() {
   const { runs, loading, error } = useAgentRuns();
@@ -298,34 +156,15 @@ export function useActiveAgentRuns() {
 
 /**
  * Utility function to trigger an agent run from the frontend
- *
- * @param taskDescription - Description of the task
- * @param backendUrl - URL of the FastAPI backend
- *
- * @example
- * ```tsx
- * async function handleRunAgent() {
- *   const runId = await triggerAgentRun(
- *     "Build a new feature",
- *     "http://localhost:8000"
- *   );
- *
- *   console.log("Started agent run:", runId);
- * }
- * ```
  */
 export async function triggerAgentRun(
   taskDescription: string,
-  backendUrl: string = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'
+  backendUrl: string = BACKEND_URL
 ): Promise<string> {
   const response = await fetch(`${backendUrl}/api/agents/run`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      task_description: taskDescription,
-    }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ task_description: taskDescription }),
   });
 
   if (!response.ok) {

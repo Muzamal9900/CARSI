@@ -257,7 +257,7 @@ export interface UseStatusTransitionsResult {
 }
 
 // ============================================================================
-// Supabase Realtime Types
+// Realtime Types
 // ============================================================================
 
 export type RealtimeEvent = 'INSERT' | 'UPDATE' | 'DELETE';

@@ -2,8 +2,8 @@
  * Hook for managing PRD generation with real-time progress tracking.
  */
 
-import { useEffect, useState } from "react";
-import { useAgentRun } from "./use-agent-runs";
+import { useEffect, useState } from 'react';
+import { useAgentRun } from './use-agent-runs';
 
 export interface PRDGenerationRequest {
   requirements: string;
@@ -67,7 +67,7 @@ export function usePRDGeneration() {
     prdId: null,
   });
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
   /**
    * Start PRD generation
@@ -76,7 +76,7 @@ export function usePRDGeneration() {
     setState({
       isGenerating: true,
       progress: 0,
-      currentStep: "Starting PRD generation...",
+      currentStep: 'Starting PRD generation...',
       error: null,
       result: null,
       runId: null,
@@ -85,9 +85,9 @@ export function usePRDGeneration() {
 
     try {
       const response = await fetch(`${backendUrl}/api/prd/generate`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
       });
@@ -103,13 +103,13 @@ export function usePRDGeneration() {
         ...prev,
         runId: data.run_id,
         prdId: data.prd_id,
-        currentStep: "PRD generation started",
+        currentStep: 'PRD generation started',
       }));
     } catch (error) {
       setState((prev) => ({
         ...prev,
         isGenerating: false,
-        error: error instanceof Error ? error.message : "Failed to start PRD generation",
+        error: error instanceof Error ? error.message : 'Failed to start PRD generation',
       }));
     }
   };
@@ -132,12 +132,12 @@ export function usePRDGeneration() {
         result,
         isGenerating: false,
         progress: 100,
-        currentStep: "PRD generation complete",
+        currentStep: 'PRD generation complete',
       }));
     } catch (error) {
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : "Failed to fetch PRD result",
+        error: error instanceof Error ? error.message : 'Failed to fetch PRD result',
         isGenerating: false,
       }));
     }
@@ -180,7 +180,7 @@ export function usePRDGenerationWithProgress() {
     prdId: null,
   });
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
   const { run: agentRun } = useAgentRun(state.runId);
 
   /**
@@ -190,7 +190,7 @@ export function usePRDGenerationWithProgress() {
     setState({
       isGenerating: true,
       progress: 0,
-      currentStep: "Starting PRD generation...",
+      currentStep: 'Starting PRD generation...',
       error: null,
       result: null,
       runId: null,
@@ -199,9 +199,9 @@ export function usePRDGenerationWithProgress() {
 
     try {
       const response = await fetch(`${backendUrl}/api/prd/generate`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(request),
       });
@@ -217,13 +217,13 @@ export function usePRDGenerationWithProgress() {
         ...prev,
         runId: data.run_id,
         prdId: data.prd_id,
-        currentStep: "PRD generation started",
+        currentStep: 'PRD generation started',
       }));
     } catch (error) {
       setState((prev) => ({
         ...prev,
         isGenerating: false,
-        error: error instanceof Error ? error.message : "Failed to start PRD generation",
+        error: error instanceof Error ? error.message : 'Failed to start PRD generation',
       }));
     }
   };
@@ -246,12 +246,12 @@ export function usePRDGenerationWithProgress() {
         result,
         isGenerating: false,
         progress: 100,
-        currentStep: "PRD generation complete",
+        currentStep: 'PRD generation complete',
       }));
     } catch (error) {
       setState((prev) => ({
         ...prev,
-        error: error instanceof Error ? error.message : "Failed to fetch PRD result",
+        error: error instanceof Error ? error.message : 'Failed to fetch PRD result',
         isGenerating: false,
       }));
     }
@@ -287,16 +287,20 @@ export function usePRDGenerationWithProgress() {
       }));
 
       // Auto-fetch result when completed
-      if (status === "completed" && state.prdId && !state.result) {
+      if (status === 'completed' && state.prdId && !state.result) {
         fetchResult(state.prdId);
       }
 
       // Handle failure
-      if (status === "failed") {
+      if (status === 'failed') {
+        const errorMsg =
+          typeof agentRun.metadata?.error === 'string'
+            ? agentRun.metadata.error
+            : 'PRD generation failed';
         setState((prev) => ({
           ...prev,
           isGenerating: false,
-          error: agentRun.metadata?.error || "PRD generation failed",
+          error: errorMsg,
         }));
       }
     }
@@ -318,7 +322,7 @@ export function usePRDResult(prdId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 
   useEffect(() => {
     if (!prdId) {
@@ -338,7 +342,7 @@ export function usePRDResult(prdId: string) {
         setResult(data);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load PRD");
+        setError(err instanceof Error ? err.message : 'Failed to load PRD');
         setResult(null);
       } finally {
         setLoading(false);

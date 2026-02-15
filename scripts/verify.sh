@@ -290,7 +290,7 @@ else
 fi
 
 # Check each workspace
-WORKSPACES=("." "apps/web" "packages/shared" "packages/config")
+WORKSPACES=("." "apps/web" "packages/config")
 for WORKSPACE in "${WORKSPACES[@]}"; do
     if [ ! -f "$WORKSPACE/package.json" ]; then
         continue

@@ -1,37 +1,44 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Read JWT from httpOnly cookie
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // Verify token by calling backend /api/auth/me
+    const meResponse = await fetch(`${BACKEND_URL}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
+    });
+
+    if (!meResponse.ok) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await meResponse.json();
 
     const body = await request.json();
     const { message, conversationId } = body;
 
     if (!message) {
-      return NextResponse.json(
-        { error: "Message is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
     // Forward to LangGraph backend
-    const backendUrl = process.env.BACKEND_URL || "http://localhost:8000";
-    const response = await fetch(`${backendUrl}/api/chat`, {
-      method: "POST",
+    const response = await fetch(`${BACKEND_URL}/api/chat`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.BACKEND_API_KEY}`,
-        "X-User-Id": user.id,
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        'X-User-Id': user.id,
       },
       body: JSON.stringify({
         message,
@@ -43,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       return NextResponse.json(
-        { error: errorData.detail || "Backend error" },
+        { error: errorData.detail || 'Backend error' },
         { status: response.status }
       );
     }
@@ -51,10 +58,9 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Chat API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Chat API error:', error);
+    }
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

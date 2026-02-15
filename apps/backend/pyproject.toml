@@ -26,9 +26,6 @@ dependencies = [
     "openai>=1.50.0",  # Optional - OpenAI API
     # Note: Ollama provider uses httpx (already included) for local AI
 
-    # Supabase
-    "supabase>=2.0.0",  # Supabase client for state management
-
     # Core
     "pydantic>=2.9.0",
     "pydantic-settings>=2.6.0",

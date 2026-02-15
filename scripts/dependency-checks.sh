@@ -267,7 +267,7 @@ const fs = require('fs');
 const path = require('path');
 
 try {
-    const workspaces = ['.', 'apps/web', 'apps/backend', 'packages/shared', 'packages/config'];
+    const workspaces = ['.', 'apps/web', 'packages/config'];
     const depMatrix = {};
 
     // Collect all dependencies from all workspaces

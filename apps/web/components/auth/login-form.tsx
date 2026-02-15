@@ -15,7 +15,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { OAuthProviders } from './oauth-providers';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -78,7 +77,12 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" autoComplete="email" aria-describedby={error ? "login-error" : undefined} {...field} />
+                <Input
+                  placeholder="name@example.com"
+                  autoComplete="email"
+                  aria-describedby={error ? 'login-error' : undefined}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -91,20 +95,31 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input type="password" autoComplete="current-password" aria-describedby={error ? "login-error" : undefined} {...field} />
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  aria-describedby={error ? 'login-error' : undefined}
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {error && <p className="text-destructive text-sm" role="alert" aria-live="assertive" id="login-error">{error}</p>}
+        {error && (
+          <p
+            className="text-destructive text-sm"
+            role="alert"
+            aria-live="assertive"
+            id="login-error"
+          >
+            {error}
+          </p>
+        )}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign in'}
         </Button>
       </form>
-
-      {/* OAuth Providers */}
-      <OAuthProviders redirectTo="/dashboard" />
     </Form>
   );
 }

@@ -8,12 +8,7 @@ const nextConfig: NextConfig = {
     // typedRoutes: true,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.supabase.co',
-      },
-    ],
+    remotePatterns: [],
   },
   async headers() {
     return [
@@ -44,7 +39,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co http://localhost:8000 http://127.0.0.1:54321 http://localhost:54321",
+              `connect-src 'self' ${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}`,
               "frame-ancestors 'none'",
             ].join('; '),
           },

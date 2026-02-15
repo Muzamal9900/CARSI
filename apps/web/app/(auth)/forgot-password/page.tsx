@@ -1,40 +1,31 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import Link from 'next/link';
+import { authApi } from '@/lib/api/auth';
 
 export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setMessage("");
+    setMessage('');
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`,
-    });
-
-    if (error) {
-      setMessage(error.message);
-    } else {
-      setMessage("Check your email for a password reset link.");
+    try {
+      const result = await authApi.requestPasswordReset(email);
+      setMessage(result.message || 'Check your email for a password reset link.');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : 'Failed to send reset link');
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
@@ -58,11 +49,9 @@ export default function ForgotPasswordPage() {
               required
             />
           </div>
-          {message && (
-            <p className="text-sm text-muted-foreground">{message}</p>
-          )}
+          {message && <p className="text-muted-foreground text-sm">{message}</p>}
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Sending..." : "Send reset link"}
+            {isLoading ? 'Sending...' : 'Send reset link'}
           </Button>
         </form>
         <div className="mt-4 text-center text-sm">

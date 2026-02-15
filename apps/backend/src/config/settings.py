@@ -53,12 +53,6 @@ class Settings(BaseSettings):
         description="HMAC secret for verifying webhook signatures"
     )
 
-    # Legacy Supabase (deprecated - kept for migration compatibility)
-    supabase_url: str = Field(default="", alias="NEXT_PUBLIC_SUPABASE_URL")
-    supabase_anon_key: str = Field(default="", alias="NEXT_PUBLIC_SUPABASE_ANON_KEY")
-    supabase_service_role_key: str = Field(default="")
-    supabase_jwt_secret: str = Field(default="")
-
     @model_validator(mode="after")
     def _reject_unsafe_defaults_in_production(self) -> "Settings":
         """Reject insecure default secrets when running in production."""

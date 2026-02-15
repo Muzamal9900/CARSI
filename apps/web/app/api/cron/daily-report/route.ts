@@ -1,95 +1,45 @@
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { logger } from "@/lib/logger";
+import { NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
 /**
  * Daily Agent Report Cron Job
  *
  * Runs daily at 9:00 AM (0 9 * * *)
- * Generates a summary report of yesterday's agent activity
+ * Fetches yesterday's agent activity summary from the backend
  */
 export async function GET(request: Request) {
   try {
     // Verify cron secret for security
-    const authHeader = request.headers.get("authorization");
+    const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new NextResponse("Unauthorized", { status: 401 });
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const supabase = await createClient();
+    // Fetch report from FastAPI backend
+    const response = await fetch(`${BACKEND_URL}/api/agents/performance/trends?days=1`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.BACKEND_API_KEY}`,
+      },
+    });
 
-    // Calculate yesterday's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    // Fetch yesterday's agent runs
-    const { data: runs, error } = await supabase
-      .from("agent_runs")
-      .select("*")
-      .gte("started_at", yesterday.toISOString())
-      .lt("started_at", today.toISOString());
-
-    if (error) {
-      logger.error("Error fetching daily report data", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error('Backend report fetch failed', errorData);
+      return NextResponse.json({ error: 'Backend report failed' }, { status: 500 });
     }
 
-    // Calculate statistics
-    const total = runs?.length || 0;
-    const completed = runs?.filter((r) => r.status === "completed").length || 0;
-    const failed = runs?.filter((r) => r.status === "failed").length || 0;
-    const escalated = runs?.filter((r) => r.status === "escalated_to_human").length || 0;
-
-    const successRate = total > 0 ? ((completed / total) * 100).toFixed(1) : "0.0";
-
-    // Calculate average duration for completed runs
-    const completedRuns = runs?.filter((r) => r.status === "completed" && r.completed_at) || [];
-    const avgDuration =
-      completedRuns.length > 0
-        ? completedRuns.reduce((acc, run) => {
-            const duration =
-              new Date(run.completed_at!).getTime() - new Date(run.started_at).getTime();
-            return acc + duration;
-          }, 0) / completedRuns.length
-        : 0;
-
-    const avgDurationSeconds = Math.round(avgDuration / 1000);
-
-    // Agent breakdown
-    const agentStats = runs?.reduce((acc: Record<string, number>, run) => {
-      acc[run.agent_name] = (acc[run.agent_name] || 0) + 1;
-      return acc;
-    }, {});
+    const trends = await response.json();
 
     const report = {
-      date: yesterday.toISOString().split("T")[0],
-      summary: {
-        total,
-        completed,
-        failed,
-        escalated,
-        successRate: `${successRate}%`,
-        avgDurationSeconds,
-      },
-      byAgent: agentStats || {},
-      topFailures: runs
-        ?.filter((r) => r.status === "failed")
-        .slice(0, 5)
-        .map((r) => ({
-          agent: r.agent_name,
-          error: r.error,
-          timestamp: r.started_at,
-        })),
+      date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+      trends,
     };
 
-    logger.info("Daily report generated", { report });
-
-    // TODO: Send report via email, Slack, or save to database
-    // Example: await sendSlackNotification(report);
-    // Example: await saveReportToDatabase(report);
+    logger.info('Daily report generated', { report });
 
     return NextResponse.json({
       success: true,
@@ -97,9 +47,9 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    logger.error("Daily report cron error", error);
+    logger.error('Daily report cron error', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Unknown error" },
+      { error: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

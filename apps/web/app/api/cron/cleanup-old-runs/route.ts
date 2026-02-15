@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { logger } from '@/lib/logger';
+
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8000';
 
 /**
  * Cleanup Old Agent Runs Cron Job
  *
  * Runs daily at 2:00 AM (0 2 * * *)
- * Deletes completed agent runs older than 30 days
+ * Delegates cleanup to the FastAPI backend
  */
 export async function GET(request: Request) {
   try {
@@ -16,33 +17,29 @@ export async function GET(request: Request) {
       return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    const supabase = await createClient();
+    // Delegate cleanup to FastAPI backend
+    const response = await fetch(`${BACKEND_URL}/api/agents/cleanup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.BACKEND_API_KEY}`,
+      },
+      body: JSON.stringify({ older_than_days: 30 }),
+    });
 
-    // Calculate cutoff date (30 days ago)
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - 30);
-
-    // Delete old completed runs and return count
-    const { data, error } = await supabase
-      .from('agent_runs')
-      .delete()
-      .in('status', ['completed', 'failed'])
-      .lt('completed_at', cutoffDate.toISOString())
-      .select('id');
-
-    if (error) {
-      logger.error('Error deleting old runs', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      logger.error('Backend cleanup failed', errorData);
+      return NextResponse.json({ error: 'Backend cleanup failed' }, { status: 500 });
     }
 
-    const deletedCount = data?.length ?? 0;
+    const result = await response.json();
 
-    logger.info('Cleanup cron: Deleted old agent runs', { deletedCount });
+    logger.info('Cleanup cron: Delegated to backend', { result });
 
     return NextResponse.json({
       success: true,
-      deletedCount,
-      cutoffDate: cutoffDate.toISOString(),
+      ...result,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
