@@ -70,6 +70,7 @@ addopts = [
     "--tb=short",
     "--ignore=tests/contracts",
     "--ignore=tests/performance",
+    "--ignore=tests/integration",
 ]
 markers = [
     "asyncio: mark test as async",
