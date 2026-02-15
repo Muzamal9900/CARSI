@@ -7,6 +7,8 @@ from src.api.main import app
 
 client = TestClient(app)
 
+AUTH_HEADERS = {"X-User-Id": "00000000-0000-0000-0000-000000000001"}
+
 
 class TestAgentDashboardAPI:
     """Tests for agent dashboard endpoints."""
@@ -27,7 +29,7 @@ class TestAgentDashboardAPI:
             }
         })
 
-        response = client.get("/api/agents/stats")
+        response = client.get("/api/agents/stats", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -56,7 +58,7 @@ class TestAgentDashboardAPI:
             "by_agent_type": {}
         })
 
-        response = client.get("/api/agents/stats?time_range=30")
+        response = client.get("/api/agents/stats?time_range=30", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -65,7 +67,7 @@ class TestAgentDashboardAPI:
     def test_list_agents(self):
         """Test GET /api/agents/list endpoint."""
         # This endpoint returns hardcoded data, no mocking needed
-        response = client.get("/api/agents/list")
+        response = client.get("/api/agents/list", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         agents = response.json()
@@ -83,7 +85,7 @@ class TestAgentDashboardAPI:
 
     def test_list_agents_filtered_by_type(self):
         """Test listing agents with type filter."""
-        response = client.get("/api/agents/list?agent_type=frontend")
+        response = client.get("/api/agents/list?agent_type=frontend", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         agents = response.json()
@@ -95,7 +97,7 @@ class TestAgentDashboardAPI:
     def test_get_recent_tasks(self):
         """Test GET /api/agents/tasks/recent endpoint."""
         # This endpoint returns hardcoded data, no mocking needed
-        response = client.get("/api/agents/tasks/recent?limit=5")
+        response = client.get("/api/agents/tasks/recent?limit=5", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         tasks = response.json()
@@ -115,7 +117,8 @@ class TestAgentDashboardAPI:
     def test_get_recent_tasks_filtered(self):
         """Test recent tasks with filters."""
         response = client.get(
-            "/api/agents/tasks/recent?agent_type=backend&status=completed&limit=10"
+            "/api/agents/tasks/recent?agent_type=backend&status=completed&limit=10",
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 200
@@ -129,7 +132,7 @@ class TestAgentDashboardAPI:
     def test_get_performance_trends(self):
         """Test GET /api/agents/performance/trends endpoint."""
         # This endpoint returns hardcoded data, no mocking needed
-        response = client.get("/api/agents/performance/trends?days=7")
+        response = client.get("/api/agents/performance/trends?days=7", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()

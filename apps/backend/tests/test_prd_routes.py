@@ -9,6 +9,8 @@ from src.api.main import app
 
 client = TestClient(app)
 
+AUTH_HEADERS = {"X-User-Id": "00000000-0000-0000-0000-000000000001"}
+
 
 @pytest.fixture
 def sample_prd_request():
@@ -82,7 +84,7 @@ class TestPRDGenerateEndpoint:
         mock_pub_instance.start_run.return_value = "run-123"
         mock_publisher.return_value = mock_pub_instance
 
-        response = client.post("/api/prd/generate", json=sample_prd_request)
+        response = client.post("/api/prd/generate", json=sample_prd_request, headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -95,7 +97,7 @@ class TestPRDGenerateEndpoint:
 
     def test_generate_prd_missing_requirements(self):
         """Test PRD generation with missing requirements."""
-        response = client.post("/api/prd/generate", json={"context": {}})
+        response = client.post("/api/prd/generate", json={"context": {}}, headers=AUTH_HEADERS)
 
         assert response.status_code == 422  # Validation error
 
@@ -103,7 +105,8 @@ class TestPRDGenerateEndpoint:
         """Test PRD generation with requirements too short."""
         response = client.post(
             "/api/prd/generate",
-            json={"requirements": "Short", "context": {}}
+            json={"requirements": "Short", "context": {}},
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422  # Validation error
@@ -115,7 +118,8 @@ class TestPRDGenerateEndpoint:
             json={
                 "requirements": "Build a task management app for remote teams with real-time collaboration",
                 "context": "invalid",  # Should be dict
-            }
+            },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422
@@ -138,7 +142,7 @@ class TestPRDStatusEndpoint:
             "metadata": {},
         }
 
-        response = client.get("/api/prd/status/run-123")
+        response = client.get("/api/prd/status/run-123", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -161,7 +165,7 @@ class TestPRDStatusEndpoint:
             "metadata": {"prd_result": sample_prd_result},
         }
 
-        response = client.get("/api/prd/status/run-123")
+        response = client.get("/api/prd/status/run-123", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -178,7 +182,7 @@ class TestPRDStatusEndpoint:
         mock_store_class.return_value = mock_store
         mock_store.get_agent_run.return_value = None
 
-        response = client.get("/api/prd/status/nonexistent")
+        response = client.get("/api/prd/status/nonexistent", headers=AUTH_HEADERS)
 
         assert response.status_code == 404
 
@@ -196,7 +200,7 @@ class TestPRDStatusEndpoint:
             "metadata": {},
         }
 
-        response = client.get("/api/prd/status/run-123")
+        response = client.get("/api/prd/status/run-123", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -220,7 +224,7 @@ class TestPRDResultEndpoint:
             }
         ]
 
-        response = client.get("/api/prd/result/prd_123")
+        response = client.get("/api/prd/result/prd_123", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -237,7 +241,7 @@ class TestPRDResultEndpoint:
         mock_store_class.return_value = mock_store
         mock_store.get_task_agent_runs.return_value = []
 
-        response = client.get("/api/prd/result/nonexistent")
+        response = client.get("/api/prd/result/nonexistent", headers=AUTH_HEADERS)
 
         assert response.status_code == 404
 
@@ -253,7 +257,7 @@ class TestPRDResultEndpoint:
             }
         ]
 
-        response = client.get("/api/prd/result/prd_123")
+        response = client.get("/api/prd/result/prd_123", headers=AUTH_HEADERS)
 
         assert response.status_code == 400
 
@@ -284,7 +288,7 @@ class TestPRDDocumentsEndpoint:
             }
         ]
 
-        response = client.get("/api/prd/documents/prd_123")
+        response = client.get("/api/prd/documents/prd_123", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()

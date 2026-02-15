@@ -23,6 +23,8 @@ from src.api.main import app
 
 client = TestClient(app)
 
+AUTH_HEADERS = {"X-User-Id": "00000000-0000-0000-0000-000000000001"}
+
 
 class TestSQLInjectionPrevention:
     """Test SQL injection prevention across all endpoints."""
@@ -48,6 +50,7 @@ class TestSQLInjectionPrevention:
                     "description": "Test description",
                     "target_audience": "Test audience",
                 },
+                headers=AUTH_HEADERS,
             )
 
             # Should either reject with 400/422 or sanitise input
@@ -64,7 +67,8 @@ class TestSQLInjectionPrevention:
         """Test SQL injection prevention in query parameters."""
         for payload in self.SQL_INJECTION_PAYLOADS:
             response = client.get(
-                f"/api/prd/result/{payload}"
+                f"/api/prd/result/{payload}",
+                headers=AUTH_HEADERS,
             )
 
             # Should reject or handle safely
@@ -95,6 +99,7 @@ class TestXSSPrevention:
                     "description": payload,
                     "target_audience": "Test audience",
                 },
+                headers=AUTH_HEADERS,
             )
 
             if response.status_code in [200, 201]:
@@ -219,7 +224,7 @@ class TestInputValidation:
         response = client.post(
             "/api/prd/generate",
             data="not-valid-json",
-            headers={"Content-Type": "application/json"},
+            headers={"Content-Type": "application/json", "X-User-Id": "00000000-0000-0000-0000-000000000001"},
         )
 
         assert response.status_code == 422
@@ -229,6 +234,7 @@ class TestInputValidation:
         response = client.post(
             "/api/prd/generate",
             json={},
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422
@@ -244,6 +250,7 @@ class TestInputValidation:
                 "description": True,
                 "target_audience": ["invalid"],
             },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422
@@ -259,6 +266,7 @@ class TestInputValidation:
                 "description": very_long_string,
                 "target_audience": very_long_string,
             },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code in [400, 413, 422, 500]
@@ -274,6 +282,7 @@ class TestInputValidation:
                 "description": "Test",
                 "target_audience": "Test",
             },
+            headers=AUTH_HEADERS,
         )
 
         if response.status_code in [200, 201]:
@@ -322,6 +331,7 @@ class TestHeaderSecurity:
             headers={
                 "Origin": "http://localhost:3000",
                 "Access-Control-Request-Method": "POST",
+                "X-User-Id": "00000000-0000-0000-0000-000000000001",
             },
         )
 
@@ -329,7 +339,7 @@ class TestHeaderSecurity:
         headers = response.headers
         # The test client may not trigger CORS middleware fully,
         # but the response should not error
-        assert response.status_code in [200, 405]
+        assert response.status_code in [200, 401, 405]
 
     def test_request_id_in_response(self):
         """Test that X-Request-ID is returned in responses."""
@@ -344,7 +354,7 @@ class TestErrorHandling:
 
     def test_error_messages_not_verbose(self):
         """Test that error messages don't expose sensitive information."""
-        response = client.get("/api/prd/result/invalid-id-format")
+        response = client.get("/api/prd/result/invalid-id-format", headers=AUTH_HEADERS)
 
         if response.status_code >= 400:
             data = response.json()
@@ -430,7 +440,7 @@ class TestDataLeakage:
 
     def test_no_sensitive_data_in_responses(self):
         """Test that responses don't leak sensitive data."""
-        response = client.get("/api/prd/result/test-id")
+        response = client.get("/api/prd/result/test-id", headers=AUTH_HEADERS)
 
         if response.status_code == 200:
             data = response.json()

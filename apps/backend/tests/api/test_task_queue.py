@@ -7,6 +7,8 @@ from src.api.main import app
 
 client = TestClient(app)
 
+AUTH_HEADERS = {"X-User-Id": "00000000-0000-0000-0000-000000000001"}
+
 
 class TestTaskQueueAPI:
     """Tests for task queue endpoints."""
@@ -48,7 +50,8 @@ class TestTaskQueueAPI:
                 "description": "This is a test task for the agentic layer",
                 "task_type": "feature",
                 "priority": 5
-            }
+            },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 201
@@ -67,7 +70,8 @@ class TestTaskQueueAPI:
                 "description": "Valid description here",
                 "task_type": "feature",
                 "priority": 5
-            }
+            },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422  # Validation error
@@ -81,7 +85,8 @@ class TestTaskQueueAPI:
                 "description": "Valid description",
                 "task_type": "invalid_type",
                 "priority": 5
-            }
+            },
+            headers=AUTH_HEADERS,
         )
 
         assert response.status_code == 422  # Validation error
@@ -122,7 +127,7 @@ class TestTaskQueueAPI:
         mock_table.select.return_value.execute.return_value = mock_result
         mock_client.table.return_value = mock_table
 
-        response = client.get("/api/tasks/")
+        response = client.get("/api/tasks/", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -165,7 +170,7 @@ class TestTaskQueueAPI:
         mock_table.select.return_value.eq.return_value.execute.return_value = mock_result
         mock_client.table.return_value = mock_table
 
-        response = client.get("/api/tasks/?status_filter=pending&page_size=10")
+        response = client.get("/api/tasks/?status_filter=pending&page_size=10", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -190,7 +195,7 @@ class TestTaskQueueAPI:
         mock_table.select.return_value.execute.return_value = mock_result
         mock_client.table.return_value = mock_table
 
-        response = client.get("/api/tasks/?page=1&page_size=5")
+        response = client.get("/api/tasks/?page=1&page_size=5", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()
@@ -215,7 +220,7 @@ class TestTaskQueueAPI:
 
         mock_client.table.return_value.select.return_value.execute.return_value = mock_result
 
-        response = client.get("/api/tasks/stats/summary")
+        response = client.get("/api/tasks/stats/summary", headers=AUTH_HEADERS)
 
         assert response.status_code == 200
         data = response.json()

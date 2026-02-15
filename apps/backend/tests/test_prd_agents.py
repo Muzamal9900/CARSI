@@ -73,7 +73,7 @@ class TestPRDAnalysisAgent:
         """Test successful PRD analysis."""
         agent = PRDAnalysisAgent()
 
-        with patch.object(agent.client.messages, "create", return_value=mock_anthropic_response):
+        with patch.object(agent.client.messages, "create", new=AsyncMock(return_value=mock_anthropic_response)):
             result = await agent.execute(
                 task_description=sample_requirements,
                 context=sample_context
@@ -91,7 +91,7 @@ class TestPRDAnalysisAgent:
         """Test PRD analysis with API failure."""
         agent = PRDAnalysisAgent()
 
-        with patch.object(agent.client.messages, "create", side_effect=Exception("API Error")):
+        with patch.object(agent.client.messages, "create", new=AsyncMock(side_effect=Exception("API Error"))):
             result = await agent.execute(
                 task_description=sample_requirements,
                 context=sample_context
@@ -109,7 +109,7 @@ class TestPRDAnalysisAgent:
         mock_response = MagicMock()
         mock_response.content = [MagicMock(text="Invalid JSON {{{")]
 
-        with patch.object(agent.client.messages, "create", return_value=mock_response):
+        with patch.object(agent.client.messages, "create", new=AsyncMock(return_value=mock_response)):
             result = await agent.execute(
                 task_description=sample_requirements,
                 context=sample_context
@@ -174,7 +174,7 @@ class TestFeatureDecomposer:
             )
         ]
 
-        with patch.object(decomposer.client.messages, "create", return_value=mock_response):
+        with patch.object(decomposer.client.messages, "create", new=AsyncMock(return_value=mock_response)):
             result = await decomposer.execute(
                 prd_analysis=sample_prd_analysis,
                 context=sample_context
@@ -222,7 +222,7 @@ class TestFeatureDecomposer:
             )
         ]
 
-        with patch.object(decomposer.client.messages, "create", return_value=mock_response):
+        with patch.object(decomposer.client.messages, "create", new=AsyncMock(return_value=mock_response)):
             result = await decomposer.execute(
                 prd_analysis=sample_prd_analysis,
                 context=sample_context
@@ -234,7 +234,7 @@ class TestFeatureDecomposer:
             assert "features" in feature_list
             assert "version" in feature_list
             assert len(feature_list["features"]) == 1
-            assert feature_list["features"][0]["id"] == "us_001"  # Converted to snake_case
+            assert feature_list["features"][0]["id"] == "US-001"
 
 
 class TestTechnicalSpecGenerator:
@@ -300,6 +300,8 @@ class TestTechnicalSpecGenerator:
                     "scalability_approach": "Horizontal",
                     "performance_targets": {"api": "< 200ms"},
                     "caching_strategy": "Redis",
+                    "third_party_services": [],
+                    "integration_points": ["REST API"],
                     "deployment_architecture": "Vercel + Railway",
                     "infrastructure_requirements": ["2x servers"]
                 }
@@ -307,11 +309,10 @@ class TestTechnicalSpecGenerator:
             )
         ]
 
-        with patch.object(generator.client.messages, "create", return_value=mock_response):
+        with patch.object(generator.client.messages, "create", new=AsyncMock(return_value=mock_response)):
             result = await generator.execute(
                 prd_analysis=sample_prd_analysis,
                 feature_decomposition=sample_decomposition,
-                tech_spec=None,
                 context=sample_context
             )
 
@@ -383,6 +384,8 @@ class TestPRDOrchestrator:
                     "scalability_approach": "Horizontal",
                     "performance_targets": {},
                     "caching_strategy": "Redis",
+                    "third_party_services": [],
+                    "integration_points": [],
                     "deployment_architecture": "Cloud",
                     "infrastructure_requirements": [],
                     "generated_at": "2025-01-01T00:00:00",

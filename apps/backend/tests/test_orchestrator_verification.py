@@ -100,9 +100,11 @@ class TestVerificationGate:
     ) -> None:
         """Verification gate passes when evidence is provided."""
         # Create mock verification result with evidence
+        vid = orchestrator.verifier.get_verifier_id()
         mock_result = VerificationResult(
             task_id="test_task",
-            verifier_id=orchestrator.verifier.get_verifier_id(),
+            verifier_id=vid,
+            requesting_agent_id="agent_test",
             timestamp="2024-01-01T00:00:00Z",
             verified=True,
             passed_checks=3,
@@ -111,11 +113,13 @@ class TestVerificationGate:
             evidence=[
                 VerificationEvidence(
                     criterion="file_exists",
-                    verified=True,
-                    evidence_type="file_check",
-                    evidence_data="File exists: /path/to/file",
+                    type=VerificationType.FILE_EXISTS,
+                    method="pathlib.Path.exists()",
+                    result="pass",
+                    proof="File exists: /path/to/file",
                     timestamp="2024-01-01T00:00:00Z",
-                    verifier_id=orchestrator.verifier.get_verifier_id(),
+                    duration_ms=5,
+                    verifier_id=vid,
                 )
             ],
             failures=[],
@@ -133,6 +137,7 @@ class TestVerificationGate:
         mock_result = VerificationResult(
             task_id="test_task",
             verifier_id=orchestrator.verifier.get_verifier_id(),
+            requesting_agent_id="agent_test",
             timestamp="2024-01-01T00:00:00Z",
             verified=False,
             passed_checks=0,

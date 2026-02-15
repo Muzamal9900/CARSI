@@ -94,7 +94,7 @@ class TestFrontendAgent:
     async def test_execute_task(self, agent: FrontendAgent) -> None:
         """Test executing a frontend task."""
         result = await agent.execute("Build a button component")
-        assert result["status"] == "completed"
+        assert result["status"] == "pending_verification"
 
 
 class TestBackendAgent:
@@ -115,4 +115,4 @@ class TestBackendAgent:
     async def test_execute_task(self, agent: BackendAgent) -> None:
         """Test executing a backend task."""
         result = await agent.execute("Create an API endpoint")
-        assert result["status"] == "completed"
+        assert result["status"] == "pending_verification"

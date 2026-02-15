@@ -256,7 +256,7 @@ async def list_prd_documents(request: Request, prd_id: str) -> dict[str, Any]:
     Returns paths to all generated document files if output_dir was specified.
     """
     try:
-        result = await get_prd_result(prd_id)
+        result = await get_prd_result(request, prd_id)
 
         documents = result.get("documents_generated", [])
 

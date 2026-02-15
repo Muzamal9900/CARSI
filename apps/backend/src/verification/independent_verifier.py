@@ -77,6 +77,7 @@ class VerificationEvidence(BaseModel):
     proof: str = Field(description="Evidence: file path, output, or response")
     timestamp: str = Field(description="ISO datetime of check")
     duration_ms: int = Field(description="Time taken in milliseconds")
+    verifier_id: str = Field(description="ID of verifier (proves independence)")
 
 
 class VerificationFailure(BaseModel):
@@ -150,6 +151,28 @@ class IndependentVerifier:
         """Initialize with unique verifier ID."""
         self.verifier_id = f"verifier_{uuid.uuid4().hex[:12]}_{int(time.time())}"
         self.logger = get_logger(f"verifier.{self.verifier_id[:8]}")
+
+    def _create_evidence(
+        self,
+        criterion: str,
+        type: VerificationType,
+        method: str,
+        result: str,
+        proof: str,
+        timestamp: str,
+        duration_ms: int,
+    ) -> VerificationEvidence:
+        """Create evidence with verifier_id automatically set."""
+        return VerificationEvidence(
+            criterion=criterion,
+            type=type,
+            method=method,
+            result=result,
+            proof=proof,
+            timestamp=timestamp,
+            duration_ms=duration_ms,
+            verifier_id=self.verifier_id,
+        )
 
     async def verify(self, request: VerificationRequest) -> VerificationResult:
         """
@@ -287,7 +310,7 @@ class IndependentVerifier:
 
             case _:
                 return {
-                    "evidence": VerificationEvidence(
+                    "evidence": self._create_evidence(
                         criterion=criterion.target,
                         type=criterion.type,
                         method="unknown",
@@ -321,7 +344,7 @@ class IndependentVerifier:
             proof = f"File NOT found: {file_path}"
 
         return {
-            "evidence": VerificationEvidence(
+            "evidence": self._create_evidence(
                 criterion=file_path,
                 type=VerificationType.FILE_EXISTS,
                 method="pathlib.Path.exists()",
@@ -340,7 +363,7 @@ class IndependentVerifier:
 
         if not path.exists():
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.FILE_NOT_EMPTY,
                     method="pathlib.Path.stat().st_size > 0",
@@ -356,7 +379,7 @@ class IndependentVerifier:
         is_empty = stats.st_size == 0
 
         return {
-            "evidence": VerificationEvidence(
+            "evidence": self._create_evidence(
                 criterion=file_path,
                 type=VerificationType.FILE_NOT_EMPTY,
                 method="pathlib.Path.stat().st_size > 0",
@@ -375,7 +398,7 @@ class IndependentVerifier:
 
         if not path.exists():
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.NO_PLACEHOLDERS,
                     method="regex scan for TODO, TBD, FIXME, etc.",
@@ -410,7 +433,7 @@ class IndependentVerifier:
         has_placeholders = len(found_placeholders) > 0
 
         return {
-            "evidence": VerificationEvidence(
+            "evidence": self._create_evidence(
                 criterion=file_path,
                 type=VerificationType.NO_PLACEHOLDERS,
                 method="regex scan for TODO, TBD, FIXME, etc.",
@@ -437,7 +460,7 @@ class IndependentVerifier:
 
         if not path.exists():
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CODE_COMPILES,
                     method="compile check",
@@ -474,7 +497,7 @@ class IndependentVerifier:
                 output = result.stdout + result.stderr
 
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CODE_COMPILES,
                     method="compile/syntax check",
@@ -489,7 +512,7 @@ class IndependentVerifier:
             }
         except subprocess.TimeoutExpired:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CODE_COMPILES,
                     method="compile check",
@@ -502,7 +525,7 @@ class IndependentVerifier:
             }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CODE_COMPILES,
                     method="compile check",
@@ -538,7 +561,7 @@ class IndependentVerifier:
             has_errors = result.returncode != 0
 
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.LINT_PASSES,
                     method="lint check",
@@ -551,7 +574,7 @@ class IndependentVerifier:
             }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.LINT_PASSES,
                     method="lint check",
@@ -587,7 +610,7 @@ class IndependentVerifier:
             has_failures = result.returncode != 0 or "FAILED" in output or "FAIL" in output
 
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=test_path,
                     type=VerificationType.TESTS_PASS,
                     method="test execution",
@@ -600,7 +623,7 @@ class IndependentVerifier:
             }
         except subprocess.TimeoutExpired:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=test_path,
                     type=VerificationType.TESTS_PASS,
                     method="test execution",
@@ -613,7 +636,7 @@ class IndependentVerifier:
             }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=test_path,
                     type=VerificationType.TESTS_PASS,
                     method="test execution",
@@ -644,7 +667,7 @@ class IndependentVerifier:
                 body = response.text[:200]
 
                 return {
-                    "evidence": VerificationEvidence(
+                    "evidence": self._create_evidence(
                         criterion=endpoint,
                         type=VerificationType.ENDPOINT_RESPONDS,
                         method="HTTP GET request",
@@ -661,7 +684,7 @@ class IndependentVerifier:
                 }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=endpoint,
                     type=VerificationType.ENDPOINT_RESPONDS,
                     method="HTTP GET request",
@@ -688,7 +711,7 @@ class IndependentVerifier:
             within_threshold = response_time_ms <= threshold_ms
 
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=endpoint,
                     type=VerificationType.RESPONSE_TIME,
                     method=f"HTTP GET with {threshold_ms}ms threshold",
@@ -705,7 +728,7 @@ class IndependentVerifier:
             }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=endpoint,
                     type=VerificationType.RESPONSE_TIME,
                     method=f"HTTP GET with {threshold_ms}ms threshold",
@@ -726,7 +749,7 @@ class IndependentVerifier:
 
         if not path.exists():
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CONTENT_CONTAINS,
                     method=f"Check contains: {expected[:50]}...",
@@ -742,7 +765,7 @@ class IndependentVerifier:
         contains = expected in content
 
         return {
-            "evidence": VerificationEvidence(
+            "evidence": self._create_evidence(
                 criterion=file_path,
                 type=VerificationType.CONTENT_CONTAINS,
                 method=f"Check contains: {expected[:50]}...",
@@ -763,7 +786,7 @@ class IndependentVerifier:
 
         if not path.exists():
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=file_path,
                     type=VerificationType.CONTENT_NOT_CONTAINS,
                     method=f"Check not contains: {unwanted[:50]}...",
@@ -778,7 +801,7 @@ class IndependentVerifier:
         contains = unwanted in content
 
         return {
-            "evidence": VerificationEvidence(
+            "evidence": self._create_evidence(
                 criterion=file_path,
                 type=VerificationType.CONTENT_NOT_CONTAINS,
                 method=f"Check not contains: {unwanted[:50]}...",
@@ -812,7 +835,7 @@ class IndependentVerifier:
             has_errors = result.returncode != 0
 
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=build_path,
                     type=VerificationType.BUILD_PASSES,
                     method="pnpm build",
@@ -825,7 +848,7 @@ class IndependentVerifier:
             }
         except Exception as e:
             return {
-                "evidence": VerificationEvidence(
+                "evidence": self._create_evidence(
                     criterion=build_path,
                     type=VerificationType.BUILD_PASSES,
                     method="build",

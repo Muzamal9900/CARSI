@@ -103,6 +103,14 @@ class PRDOrchestrator(BaseAgent):
         self.test_generator = TestScenarioGenerator()
         self.roadmap_planner = RoadmapPlanner()
 
+    async def execute(
+        self,
+        task_description: str,
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Execute PRD generation (BaseAgent interface)."""
+        return await self.generate(requirements=task_description, context=context)
+
     async def generate(
         self,
         requirements: str,
