@@ -28,6 +28,16 @@
             "timeout": 60
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -ExecutionPolicy Bypass -File \".claude/hooks/scripts/notebooklm-sync.ps1\"",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -80,7 +90,12 @@
       "Bash(chmod *)",
       "Bash(touch *)",
       "Bash(git *)",
-      "Bash(supabase *)"
+      "Bash(pip install notebooklm-mcp-cli)",
+      "Bash(pip install pipx)",
+      "Bash(pipx install notebooklm-mcp-cli)",
+      "Bash(nlm *)",
+      "Bash(npx repomix *)",
+      "Bash(python scripts/validate-notebooks.py *)"
     ],
     "deny": ["Bash(rm -rf /)", "Bash(sudo *)"]
   },

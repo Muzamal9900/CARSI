@@ -518,6 +518,35 @@ Supabase has been fully removed. The backend uses a **NullStateStore** (`src/sta
 - `/api/analytics/*` - Returns empty metrics
 - `/api/contractors/*` - Returns 503
 
+## NotebookLM Second Brain
+
+Project knowledge lives in 4 NotebookLM notebooks. Query notebooks before web search.
+
+**Config**: `.claude/notebooklm/notebooks.json`
+**Skill**: `.skills/custom/notebooklm-second-brain/SKILL.md`
+
+| Notebook            | Use For                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| `project_sot`       | Architecture decisions, feature specs, implementation notes |
+| `debug_kb`          | Error patterns, debugging playbooks, test failures          |
+| `security_handbook` | OWASP, auth patterns, security reviews                      |
+| `repo_onboarding`   | Codebase atlas, mind maps, "how does this work?"            |
+
+### Quick Commands
+
+```bash
+/notebooklm-bootstrap              # One-time setup (install, auth, create notebooks)
+nlm notebook query <id>            # Query a notebook
+nlm source add <id> --file <path>  # Add source document
+nlm note create <id> "Title"       # Add implementation note
+```
+
+### Rules
+
+- **Notebook First**: Query relevant notebook before dumping docs into context
+- **Post-verify sync**: Successful builds auto-sync changes to `project_sot`
+- **No fabricated IDs**: Only use IDs from `notebooks.json` (set by bootstrap)
+
 ## Environment Variables
 
 ### Required (All Have Defaults)
