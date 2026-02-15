@@ -42,7 +42,7 @@ export async function PerformanceTrends({ days = 7 }: PerformanceTrendsProps) {
   }
 
   const dataPoints = trends.data_points.slice(0, days).reverse()
-  const maxTasks = Math.max(...dataPoints.map((d: any) => d.tasks_completed), 1)
+  const maxTasks = Math.max(...dataPoints.map((d: { tasks_completed: number }) => d.tasks_completed), 1)
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
@@ -53,7 +53,7 @@ export async function PerformanceTrends({ days = 7 }: PerformanceTrendsProps) {
 
       {/* Simple bar chart */}
       <div className="space-y-3">
-        {dataPoints.map((point: any, idx: number) => {
+        {dataPoints.map((point: { date: string; tasks_completed: number; success_rate: number }, idx: number) => {
           const barWidth = (point.tasks_completed / maxTasks) * 100
           const successRateColor =
             point.success_rate > 0.85
@@ -104,7 +104,7 @@ export async function PerformanceTrends({ days = 7 }: PerformanceTrendsProps) {
             <span>&gt;85% success</span>
           </div>
         </div>
-        <div>Avg: {dataPoints.reduce((acc: number, d: any) => acc + d.tasks_completed, 0) / dataPoints.length | 0} tasks/day</div>
+        <div>Avg: {dataPoints.reduce((acc: number, d: { tasks_completed: number }) => acc + d.tasks_completed, 0) / dataPoints.length | 0} tasks/day</div>
       </div>
     </div>
   )

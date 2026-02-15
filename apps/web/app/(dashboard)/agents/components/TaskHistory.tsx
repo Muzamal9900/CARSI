@@ -44,7 +44,7 @@ export async function TaskHistory({ limit = 10 }: TaskHistoryProps) {
   return (
     <div className="bg-white rounded-lg shadow overflow-hidden">
       <div className="divide-y">
-        {tasks.map((task: any) => {
+        {tasks.map((task: { task_id: string; status: string; description?: string; agent_type: string; verified?: boolean; iterations: number; duration_seconds?: number; created_at: string }) => {
           const statusIcon =
             task.status === 'completed' ? '[OK]' : task.status === 'failed' ? '[X]' : '[>]'
           const statusColor =

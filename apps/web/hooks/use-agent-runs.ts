@@ -33,11 +33,11 @@ export interface AgentRun {
   status: AgentRunStatus;
   current_step: string | null;
   progress_percent: number;
-  result: any;
+  result: Record<string, unknown>;
   error: string | null;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
   verification_attempts: number;
-  verification_evidence: any[];
+  verification_evidence: Record<string, unknown>[];
   started_at: string;
   completed_at: string | null;
   updated_at: string;
@@ -52,7 +52,7 @@ interface RealtimePayload {
   eventType: RealtimeEvent;
   new: AgentRun;
   old: AgentRun;
-  errors: any;
+  errors: string[] | null;
 }
 
 /**
