@@ -86,6 +86,7 @@ powershell -ExecutionPolicy Bypass -File .claude/hooks/install-hooks.ps1  # Inst
 - `src/config/` - Database and settings
 - `src/db/` - SQLAlchemy models
 - `src/models/` - AI provider abstraction layer
+- `src/state/` - State persistence (NullStateStore; PostgreSQL migration pending)
 
 ### Database (PostgreSQL 15)
 
@@ -308,7 +309,7 @@ async with AsyncSessionLocal() as session:
 
 - Profile information
 - Availability tracking
-- Document associations
+- API returns 503 until PostgreSQL migration (Supabase removed)
 
 ## Testing Strategy
 
@@ -398,20 +399,20 @@ This project includes **55 installed skills** compatible with Vercel's Agent Ski
 
 ### Key Skills
 
-| Category                | Skills | Examples                                                    |
-| ----------------------- | ------ | ----------------------------------------------------------- |
-| Error Handling          | 5      | `error-taxonomy`, `error-boundary`, `retry-strategy`        |
-| Security & Auth         | 9      | `input-sanitisation`, `rbac-patterns`, `oauth-flow`         |
-| API & Integration       | 6      | `api-contract`, `api-client`, `webhook-handler`             |
-| Observability           | 6      | `structured-logging`, `tracing-patterns`, `metrics-collector`|
-| Infrastructure          | 4      | `docker-patterns`, `ci-cd-patterns`, `infrastructure-as-code`|
-| Workflow & Orchestration| 6      | `state-machine`, `saga-pattern`, `workflow-engine`          |
-| UI & Design             | 4      | `scientific-luxury`, `xaem-theme-ui`, `react-best-practices`|
-| Meta / Orchestration    | 3      | `genesis-orchestrator`, `council-of-logic`, `skill-manager` |
-| Content & Communication | 6      | `email-template`, `pdf-generator`, `slack-integration`      |
-| Data & Search           | 5      | `vector-search`, `search-indexer`, `data-transform`         |
-| Caching & Resilience    | 3      | `cache-strategy`, `resilience-patterns`, `rate-limiter`     |
-| Other                   | 3      | `i18n-patterns`, `changelog-generator`, `feature-flag`      |
+| Category                 | Skills | Examples                                                      |
+| ------------------------ | ------ | ------------------------------------------------------------- |
+| Error Handling           | 5      | `error-taxonomy`, `error-boundary`, `retry-strategy`          |
+| Security & Auth          | 9      | `input-sanitisation`, `rbac-patterns`, `oauth-flow`           |
+| API & Integration        | 6      | `api-contract`, `api-client`, `webhook-handler`               |
+| Observability            | 6      | `structured-logging`, `tracing-patterns`, `metrics-collector` |
+| Infrastructure           | 4      | `docker-patterns`, `ci-cd-patterns`, `infrastructure-as-code` |
+| Workflow & Orchestration | 6      | `state-machine`, `saga-pattern`, `workflow-engine`            |
+| UI & Design              | 4      | `scientific-luxury`, `xaem-theme-ui`, `react-best-practices`  |
+| Meta / Orchestration     | 3      | `genesis-orchestrator`, `council-of-logic`, `skill-manager`   |
+| Content & Communication  | 6      | `email-template`, `pdf-generator`, `slack-integration`        |
+| Data & Search            | 5      | `vector-search`, `search-indexer`, `data-transform`           |
+| Caching & Resilience     | 3      | `cache-strategy`, `resilience-patterns`, `rate-limiter`       |
+| Other                    | 3      | `i18n-patterns`, `changelog-generator`, `feature-flag`        |
 
 ### Skill Manager
 
@@ -430,13 +431,13 @@ Hierarchical agent workflow for AI-assisted development.
 Developer (Human) -> Senior PM -> Orchestrator -> Specialists (A/B/C/D)
 ```
 
-| Agent              | Domain                              |
-| ------------------ | ----------------------------------- |
-| **Orchestrator**   | Task decomposition, synthesis       |
-| **Specialist A**   | Architecture, design, API contracts |
-| **Specialist B**   | Implementation, coding, refactoring |
-| **Specialist C**   | Testing, validation, coverage       |
-| **Specialist D**   | Documentation, review, knowledge    |
+| Agent            | Domain                              |
+| ---------------- | ----------------------------------- |
+| **Orchestrator** | Task decomposition, synthesis       |
+| **Specialist A** | Architecture, design, API contracts |
+| **Specialist B** | Implementation, coding, refactoring |
+| **Specialist C** | Testing, validation, coverage       |
+| **Specialist D** | Documentation, review, knowledge    |
 
 **Protocols**: Context isolation, quality gates, escalation path.
 
@@ -470,11 +471,11 @@ Automated shell commands at key lifecycle points.
 
 | Hook Event       | Script                      | Purpose                                          |
 | ---------------- | --------------------------- | ------------------------------------------------ |
-| **SessionStart** | `session-start-context.ps1` | Loads git status, Beads tasks, Australian locale  |
-| **PostToolUse**  | `post-edit-format.ps1`      | Auto-formats files after Edit/Write               |
-| **PreToolUse**   | `pre-bash-validate.py`      | Validates bash commands, blocks dangerous ones    |
-| **Notification** | `notification-alert.ps1`    | Windows toast notifications when input needed     |
-| **Stop**         | `stop-verify-todos.py`      | Verifies work completion before allowing stop     |
+| **SessionStart** | `session-start-context.ps1` | Loads git status, Beads tasks, Australian locale |
+| **PostToolUse**  | `post-edit-format.ps1`      | Auto-formats files after Edit/Write              |
+| **PreToolUse**   | `pre-bash-validate.py`      | Validates bash commands, blocks dangerous ones   |
+| **Notification** | `notification-alert.ps1`    | Windows toast notifications when input needed    |
+| **Stop**         | `stop-verify-todos.py`      | Verifies work completion before allowing stop    |
 
 ## Spec Generation
 
@@ -502,6 +503,20 @@ See [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md) for production depl
 2. **Zero Barriers** - No API keys, accounts, or configuration needed to start.
 3. **Production Ready** - Real authentication, testing, CI/CD included.
 4. **Optional Upgrades** - Easy path to cloud services when ready.
+
+## State Store Architecture
+
+Supabase has been fully removed. The backend uses a **NullStateStore** (`src/state/null_store.py`) that implements the same interface with no-op operations and a null client chain. This allows the app to start and run without any external state backend.
+
+- `src/state/null_store.py` - NullStateStore + `_NullTableClient` chain
+- `src/state/supabase.py` - Re-export shim (`NullStateStore as SupabaseStateStore`)
+- `src/state/__init__.py` - `get_state_store()` factory function
+- `src/utils/supabase_client.py` - Safe `_NullClient` shim (raises on attribute access)
+
+**Degraded endpoints** (return empty results / 503 until PostgreSQL migration):
+
+- `/api/analytics/*` - Returns empty metrics
+- `/api/contractors/*` - Returns 503
 
 ## Environment Variables
 
@@ -543,20 +558,20 @@ POSTHOG_API_KEY=xxx
 
 ## Documentation
 
-| Document                                                               | Purpose                            |
-| ---------------------------------------------------------------------- | ---------------------------------- |
-| [`README.md`](README.md)                                              | Overview and quick start           |
-| [`PROGRESS.md`](PROGRESS.md)                                          | Project status and phase tracking  |
-| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)                          | Complete setup guide               |
-| [`docs/AI_PROVIDERS.md`](docs/AI_PROVIDERS.md)                        | Ollama vs Claude                   |
-| [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md)              | Deployment guides                  |
-| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)                      | Scientific Luxury design system    |
-| [`docs/MULTI_AGENT_ARCHITECTURE.md`](docs/MULTI_AGENT_ARCHITECTURE.md)| Multi-agent workflow specification |
-| [`docs/BEADS.md`](docs/BEADS.md)                                      | AI agent memory system             |
-| [`docs/SPEC_GENERATION.md`](docs/SPEC_GENERATION.md)                  | Spec generation workflows          |
-| [`docs/new-project-checklist.md`](docs/new-project-checklist.md)      | 3-step setup checklist             |
-| [`.skills/AGENTS.md`](.skills/AGENTS.md)                              | Full 55-skill registry             |
-| [`docs/reference/VIBE_CODING_VS_SENIOR_ENGINEERS.md`](docs/reference/VIBE_CODING_VS_SENIOR_ENGINEERS.md) | AI vs human engineering analysis |
+| Document                                                                                                 | Purpose                            |
+| -------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| [`README.md`](README.md)                                                                                 | Overview and quick start           |
+| [`PROGRESS.md`](PROGRESS.md)                                                                             | Project status and phase tracking  |
+| [`docs/LOCAL_SETUP.md`](docs/LOCAL_SETUP.md)                                                             | Complete setup guide               |
+| [`docs/AI_PROVIDERS.md`](docs/AI_PROVIDERS.md)                                                           | Ollama vs Claude                   |
+| [`docs/OPTIONAL_SERVICES.md`](docs/OPTIONAL_SERVICES.md)                                                 | Deployment guides                  |
+| [`docs/DESIGN_SYSTEM.md`](docs/DESIGN_SYSTEM.md)                                                         | Scientific Luxury design system    |
+| [`docs/MULTI_AGENT_ARCHITECTURE.md`](docs/MULTI_AGENT_ARCHITECTURE.md)                                   | Multi-agent workflow specification |
+| [`docs/BEADS.md`](docs/BEADS.md)                                                                         | AI agent memory system             |
+| [`docs/SPEC_GENERATION.md`](docs/SPEC_GENERATION.md)                                                     | Spec generation workflows          |
+| [`docs/new-project-checklist.md`](docs/new-project-checklist.md)                                         | 3-step setup checklist             |
+| [`.skills/AGENTS.md`](.skills/AGENTS.md)                                                                 | Full 55-skill registry             |
+| [`docs/reference/VIBE_CODING_VS_SENIOR_ENGINEERS.md`](docs/reference/VIBE_CODING_VS_SENIOR_ENGINEERS.md) | AI vs human engineering analysis   |
 
 ## Quick Reference
 

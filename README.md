@@ -203,9 +203,9 @@ pnpm run verify
 - **FastAPI** async Python
 - **LangGraph** agent orchestration
 - **SQLAlchemy 2.0** ORM
-- **JWT** cookie-based auth
+- **JWT** cookie-based auth (no Supabase)
 - **Redis** caching layer
-- **Pytest** with coverage
+- **Pytest** 343+ tests passing
 
 </td>
 </tr>
@@ -396,17 +396,17 @@ ANTHROPIC_API_KEY=sk-ant-xxx
 
 ## Documentation
 
-| Guide                                                         | Description                   |
-| ------------------------------------------------------------- | ----------------------------- |
-| [Quick Start](docs/guides/QUICK_START.md)                     | Get running in 10 minutes     |
-| [Local Setup](docs/LOCAL_SETUP.md)                            | Complete setup guide          |
-| [AI Providers](docs/AI_PROVIDERS.md)                          | Ollama vs Claude comparison   |
-| [Multi-Agent Architecture](docs/MULTI_AGENT_ARCHITECTURE.md)  | Agent workflow specification  |
-| [Design System](docs/DESIGN_SYSTEM.md)                        | Scientific Luxury UI system   |
-| [Beads](docs/BEADS.md)                                        | AI agent memory system        |
-| [Testing Guide](docs/guides/TESTING_GUIDE.md)                 | Testing strategies            |
-| [CI/CD Guide](docs/guides/CI_CD_GUIDE.md)                     | Pipeline configuration        |
-| [Production Deployment](docs/guides/PRODUCTION-DEPLOYMENT.md) | Deployment options            |
+| Guide                                                         | Description                  |
+| ------------------------------------------------------------- | ---------------------------- |
+| [Quick Start](docs/guides/QUICK_START.md)                     | Get running in 10 minutes    |
+| [Local Setup](docs/LOCAL_SETUP.md)                            | Complete setup guide         |
+| [AI Providers](docs/AI_PROVIDERS.md)                          | Ollama vs Claude comparison  |
+| [Multi-Agent Architecture](docs/MULTI_AGENT_ARCHITECTURE.md)  | Agent workflow specification |
+| [Design System](docs/DESIGN_SYSTEM.md)                        | Scientific Luxury UI system  |
+| [Beads](docs/BEADS.md)                                        | AI agent memory system       |
+| [Testing Guide](docs/guides/TESTING_GUIDE.md)                 | Testing strategies           |
+| [CI/CD Guide](docs/guides/CI_CD_GUIDE.md)                     | Pipeline configuration       |
+| [Production Deployment](docs/guides/PRODUCTION-DEPLOYMENT.md) | Deployment options           |
 
 ### Framework Documentation
 
@@ -488,6 +488,6 @@ MIT License - Use freely for any purpose.
 
 <sub>Built with care for developers who want to build AI apps without barriers</sub>
 
-<sub>Last Updated: 30/01/2026</sub>
+<sub>Last Updated: 15/02/2026</sub>
 
 </div>
