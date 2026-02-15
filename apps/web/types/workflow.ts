@@ -52,10 +52,12 @@ export interface NodeConfig {
   position: NodePosition;
   label: string;
   description?: string;
-  config: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON config
+  config: Record<string, any>;
   inputs: Record<string, string>;
   outputs: Record<string, string>;
-  metadata: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON metadata
+  metadata: Record<string, any>;
 }
 
 export interface WorkflowEdge {
@@ -75,7 +77,8 @@ export interface WorkflowDefinition {
   version: string;
   nodes: NodeConfig[];
   edges: WorkflowEdge[];
-  variables: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- JSON variables
+  variables: Record<string, any>;
   skill_compatibility: string[];
   created_at: string;
   updated_at: string;

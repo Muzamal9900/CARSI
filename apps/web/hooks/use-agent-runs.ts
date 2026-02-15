@@ -33,11 +33,14 @@ export interface AgentRun {
   status: AgentRunStatus;
   current_step: string | null;
   progress_percent: number;
-  result: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
+  result: Record<string, any>;
   error: string | null;
-  metadata: Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
+  metadata: Record<string, any>;
   verification_attempts: number;
-  verification_evidence: Record<string, unknown>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase JSON column
+  verification_evidence: Record<string, any>[];
   started_at: string;
   completed_at: string | null;
   updated_at: string;
@@ -52,7 +55,8 @@ interface RealtimePayload {
   eventType: RealtimeEvent;
   new: AgentRun;
   old: AgentRun;
-  errors: string[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Supabase realtime payload
+  errors: any;
 }
 
 /**
