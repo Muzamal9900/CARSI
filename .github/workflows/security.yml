@@ -22,7 +22,7 @@ jobs:
     name: Snyk Frontend Security Scan (Optional)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: ${{ secrets.SNYK_TOKEN != '' }}
+    if: ${{ vars.SNYK_ENABLED == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
     name: Snyk Backend Security Scan (Optional)
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: ${{ secrets.SNYK_TOKEN != '' }}
+    if: ${{ vars.SNYK_ENABLED == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
