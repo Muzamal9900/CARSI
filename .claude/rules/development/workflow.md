@@ -8,10 +8,10 @@ pnpm dev                          # All services
 pnpm dev --filter=web             # Frontend only
 cd apps/backend && uv run uvicorn src.api.main:app --reload  # Backend only
 
-# Database
-supabase start                    # Start local Supabase
-supabase db push                  # Apply migrations
-supabase db reset                 # Reset database (destructive)
+# Database (Docker)
+pnpm run docker:up                # Start PostgreSQL + Redis
+pnpm run docker:down              # Stop services
+pnpm run docker:reset             # Reset database (destructive)
 
 # Testing
 pnpm turbo run test               # All tests
@@ -47,8 +47,7 @@ docs(skills): update orchestrator guide
 ## Pre-PR Checklist
 
 ```bash
-# Single command - all checks
-pnpm turbo run type-check lint test && echo "✅ Ready for PR"
+pnpm turbo run type-check lint test && echo "Ready for PR"
 ```
 
 ## Architecture Layers
@@ -56,7 +55,7 @@ pnpm turbo run type-check lint test && echo "✅ Ready for PR"
 ```
 Frontend: Components → Hooks → API Routes → Services
 Backend:  API → Agents → Tools → Graphs → State
-Database: Tables → RLS → Functions → Triggers
+Database: Tables → Functions → Triggers
 ```
 
 **Rule**: No cross-layer imports. Each layer only imports from the layer directly below.

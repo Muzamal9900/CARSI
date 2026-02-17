@@ -76,5 +76,9 @@ nul
 # Local binaries (Beads CLI)
 .bin/
 
+# AI Review (generated outputs)
+ai-review/results/
+ai-review/screenshots/
+
 # NotebookLM generated artifacts
 .claude/notebooklm/repo-pack.txt

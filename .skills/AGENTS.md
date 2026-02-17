@@ -75,10 +75,12 @@ Location: `.skills/custom/`
 | **xaem-theme-ui**  | Two-pass theme generation and code translation pipeline (colour palettes, glow, timing, tokens)   | "theme", "palette", "colour scheme", "design tokens", "generate theme" |
 | **execution-guardian** | Pre-execution governance with dynamic validation gates, risk/confidence scoring, and structured error format | "risk", "safe to proceed", "prerequisite", "validation gate", "confidence" |
 | **system-supervisor** | Architecture drift detection, silent failure scanning, hallucination prevention, and feature completeness audit | "drift", "dead code", "completeness", "audit", "integrity", "silent failure" |
+| **playwright-browser** | Playwright CLI and MCP tools for headless browser automation, E2E testing, screenshots, and web scraping | "playwright", "E2E", "browser test", "screenshot", "headless", "automation" |
+| **claude-browser** | Claude Chrome extension tools for personal browser automation in logged-in sessions | "chrome", "personal browser", "form fill", "logged in", "tab management" |
 
 ### Identified Gaps
 
-No gaps identified. All **57 skills** are installed. Use `/skill-manager analyse` to run automated gap analysis across all installed skills and detect missing capabilities.
+No gaps identified. All **59 skills** are installed. Use `/skill-manager analyse` to run automated gap analysis across all installed skills and detect missing capabilities.
 
 ## Skill Priority
 
@@ -141,6 +143,8 @@ When multiple skills could apply, use this priority order:
 55. **xaem-theme-ui** - For theme generation and design token translation
 56. **react-best-practices** - For React-specific optimisations
 57. **web-design-guidelines** - For accessibility and UX audits
+58. **playwright-browser** - For headless browser automation and E2E testing
+59. **claude-browser** - For personal Chrome browser automation
 
 ## Skill Activation
 
