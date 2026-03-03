@@ -13,6 +13,7 @@ from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -60,6 +61,11 @@ class LMSUser(Base):
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     theme_preference = Column(String(10), default="light")
+    # IICRC Professional Identity (migration 003)
+    iicrc_member_number = Column(String(20), nullable=True)
+    iicrc_card_image_url = Column(Text, nullable=True)
+    iicrc_expiry_date = Column(Date, nullable=True)
+    iicrc_certifications = Column(JSONB, nullable=True, default=list)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -70,6 +76,10 @@ class LMSUser(Base):
     cec_transactions = relationship("LMSCECTransaction", back_populates="student")
     certificates = relationship("LMSCertificate", back_populates="student")
     lesson_notes = relationship("LMSLessonNote", back_populates="student", cascade="all, delete-orphan")
+    xp_events = relationship("LMSXPEvent", back_populates="student", cascade="all, delete-orphan")
+    user_level = relationship("LMSUserLevel", back_populates="student", uselist=False, cascade="all, delete-orphan")
+    subscriptions = relationship("LMSSubscription", back_populates="student", cascade="all, delete-orphan")
+    cec_reports = relationship("LMSCECReport", back_populates="student", cascade="all, delete-orphan")
 
     @property
     def roles(self) -> list[str]:
@@ -460,3 +470,108 @@ class LMSMigrationJob(Base):
     error_log = Column(JSONB, default=list)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# Gamification — XP Events (Migration 003)
+# ---------------------------------------------------------------------------
+
+
+class LMSXPEvent(Base):
+    __tablename__ = "lms_xp_events"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    source_type = Column(String(50), nullable=False)
+    # lesson_completed | quiz_passed | quiz_perfect | course_completed | streak_bonus
+    source_id = Column(PGUUID(as_uuid=True), nullable=True)
+    xp_awarded = Column(Integer, nullable=False)
+    earned_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    student = relationship("LMSUser", back_populates="xp_events")
+
+
+# ---------------------------------------------------------------------------
+# Gamification — User Levels (Migration 003)
+# ---------------------------------------------------------------------------
+
+
+class LMSUserLevel(Base):
+    __tablename__ = "lms_user_levels"
+
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    total_xp = Column(Integer, nullable=False, default=0)
+    current_level = Column(Integer, nullable=False, default=1)
+    current_streak = Column(Integer, nullable=False, default=0)
+    longest_streak = Column(Integer, nullable=False, default=0)
+    last_active_date = Column(Date, nullable=True)
+
+    student = relationship("LMSUser", back_populates="user_level")
+
+
+# ---------------------------------------------------------------------------
+# Subscriptions — Stripe Recurring (Migration 003)
+# ---------------------------------------------------------------------------
+
+
+class LMSSubscription(Base):
+    __tablename__ = "lms_subscriptions"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    stripe_subscription_id = Column(String(255), unique=True, nullable=False)
+    stripe_customer_id = Column(String(255), nullable=False)
+    status = Column(String(50), nullable=False, default="trialling")
+    # trialling | active | past_due | cancelled | unpaid
+    plan = Column(String(50), nullable=False, default="yearly")
+    current_period_start = Column(DateTime(timezone=True), nullable=True)
+    current_period_end = Column(DateTime(timezone=True), nullable=True)
+    trial_end = Column(DateTime(timezone=True), nullable=True)
+    cancelled_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    student = relationship("LMSUser", back_populates="subscriptions")
+
+
+# ---------------------------------------------------------------------------
+# IICRC CEC Reports — Email Audit Trail (Migration 003)
+# ---------------------------------------------------------------------------
+
+
+class LMSCECReport(Base):
+    __tablename__ = "lms_cec_reports"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    course_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_courses.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    iicrc_member_number = Column(String(20), nullable=False)
+    email_to = Column(String(255), nullable=False)
+    status = Column(String(20), nullable=False, default="pending")
+    # pending | sent | failed
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    error_message = Column(Text, nullable=True)
+    retry_count = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    student = relationship("LMSUser", back_populates="cec_reports")
+    course = relationship("LMSCourse")
