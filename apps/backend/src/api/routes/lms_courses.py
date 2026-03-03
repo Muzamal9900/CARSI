@@ -12,11 +12,12 @@ POST   /api/lms/courses/{slug}/publish      — publish course (admin only)
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from src.api.deps_lms import get_current_lms_user, require_role
 from src.api.schemas.lms_courses import CourseCreate, CourseListOut, CourseOut, CourseUpdate
 from src.config.database import get_async_db
-from src.db.lms_models import LMSCourse, LMSUser
+from src.db.lms_models import LMSCourse, LMSEnrollment, LMSUser, LMSUserRole
 
 router = APIRouter(prefix="/api/lms/courses", tags=["lms-courses"])
 
@@ -168,6 +169,52 @@ async def publish_course(
     await db.commit()
     await db.refresh(course)
     return CourseOut.model_validate(course)
+
+
+@router.get("/{slug}/enrollment-status")
+async def get_enrollment_status(
+    slug: str,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: LMSUser = Depends(get_current_lms_user),
+) -> dict:
+    """
+    Return the current user's enrolment status and progress for a course.
+
+    Response keys:
+    - enrolled (bool)
+    - status (str | None) — active|completed|suspended
+    - completion_percentage (float)
+    - enrollment_id (str | None)
+    """
+    course_result = await db.execute(select(LMSCourse).where(LMSCourse.slug == slug))
+    course = course_result.scalar_one_or_none()
+    if not course:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Course not found")
+
+    enrol_result = await db.execute(
+        select(LMSEnrollment)
+        .where(LMSEnrollment.student_id == current_user.id, LMSEnrollment.course_id == course.id)
+        .options(
+            selectinload(LMSEnrollment.progress_records),
+            selectinload(LMSEnrollment.course).selectinload(LMSCourse.modules),
+        )
+    )
+    enrollment = enrol_result.scalar_one_or_none()
+
+    if not enrollment:
+        return {
+            "enrolled": False,
+            "status": None,
+            "completion_percentage": 0.0,
+            "enrollment_id": None,
+        }
+
+    return {
+        "enrolled": True,
+        "status": enrollment.status,
+        "completion_percentage": enrollment.completion_percentage,
+        "enrollment_id": str(enrollment.id),
+    }
 
 
 @router.delete("/{slug}", status_code=status.HTTP_204_NO_CONTENT)

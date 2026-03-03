@@ -26,11 +26,14 @@ from .routes import (
     health,
     lms_auth,
     lms_courses,
+    lms_credentials,
     lms_drive,
     lms_enrollments,
     lms_admin,
     lms_lessons,
+    lms_migration,
     lms_modules,
+    lms_pathways,
     lms_progress,
     lms_quiz,
     prd,
@@ -106,12 +109,15 @@ app.include_router(lms_auth.router)
 app.include_router(lms_courses.router)
 app.include_router(lms_drive.router)
 app.include_router(lms_enrollments.router)
+app.include_router(lms_credentials.router)
 app.include_router(lms_admin.router)
 app.include_router(lms_lessons.router)
 app.include_router(lms_lessons.modules_router)
 app.include_router(lms_modules.router)
 app.include_router(lms_progress.router)
 app.include_router(lms_quiz.router)
+app.include_router(lms_pathways.router)
+app.include_router(lms_migration.router)
 app.include_router(agents.router, prefix="/api", tags=["Agents"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(webhooks.router, prefix="/api", tags=["Webhooks"])

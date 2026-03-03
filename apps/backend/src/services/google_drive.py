@@ -111,3 +111,59 @@ class DriveService:
         if self.is_disabled:
             return None
         return f"https://drive.google.com/uc?export=download&id={file_id}"
+
+    def list_folders_recursive(
+        self,
+        folder_id: str | None = None,
+        *,
+        _depth: int = 0,
+        _parent_name: str | None = None,
+    ) -> list[dict]:
+        """
+        Recursively discover all files and sub-folders within *folder_id*.
+
+        Returns a flat list where each item is a Drive file dict augmented
+        with ``_parent_name`` (the name of its immediate parent folder).
+        Stops at depth 5 to prevent runaway recursion on deep Drive trees.
+        """
+        if self.is_disabled or _depth > 5:
+            return []
+
+        target = folder_id or self._folder_id
+        if not target:
+            return []
+
+        _FOLDER_MIME = "application/vnd.google-apps.folder"
+        results: list[dict] = []
+
+        try:
+            response = (
+                self._service.files()
+                .list(
+                    q=f"'{target}' in parents and trashed=false",
+                    fields=f"files({_DRIVE_FILE_FIELDS})",
+                    orderBy="name",
+                    pageSize=200,
+                )
+                .execute()
+            )
+        except Exception as exc:
+            logger.error("DriveService.list_folders_recursive error", folder_id=target, error=str(exc))
+            return []
+
+        for item in response.get("files", []):
+            item["_parent_name"] = _parent_name
+            if item.get("mimeType") == _FOLDER_MIME:
+                # Recurse into sub-folders; the folder itself is also included
+                results.append(item)
+                results.extend(
+                    self.list_folders_recursive(
+                        item["id"],
+                        _depth=_depth + 1,
+                        _parent_name=item.get("name"),
+                    )
+                )
+            else:
+                results.append(item)
+
+        return results

@@ -2,7 +2,7 @@
 CARSI LMS — SQLAlchemy ORM Models
 
 All LMS tables use the lms_ prefix to coexist cleanly with the starter
-project's existing schema. Models map 1:1 to the 001_lms_core_schema migration.
+project's existing schema. Models map 1:1 to migrations 001 and 002.
 """
 
 import uuid
@@ -115,6 +115,12 @@ class LMSCourse(Base):
     cppp40421_unit_code = Column(String(20))
     cppp40421_unit_name = Column(Text)
     meta = Column(JSONB, default=dict)
+    # Migration 002 additions
+    difficulty = Column(String(50))                # beginner|intermediate|advanced|expert
+    estimated_duration_hours = Column(Numeric(5, 1))
+    category_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_categories.id", ondelete="SET NULL"))
+    learning_objectives = Column(JSONB, default=list)
+    migration_source = Column(String(50))          # google_drive|manual|import
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -129,6 +135,14 @@ class LMSCourse(Base):
     enrollments = relationship("LMSEnrollment", back_populates="course")
     certificates = relationship("LMSCertificate", back_populates="course")
     cec_transactions = relationship("LMSCECTransaction", back_populates="course")
+    category_ref = relationship("LMSCategory", back_populates="courses")
+    pathway_courses = relationship("LMSLearningPathwayCourse", back_populates="course")
+    prerequisites = relationship(
+        "LMSCoursePrerequisite",
+        foreign_keys="LMSCoursePrerequisite.course_id",
+        back_populates="course",
+        cascade="all, delete-orphan",
+    )
 
 
 class LMSModule(Base):
@@ -348,3 +362,101 @@ class LMSDriveAsset(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     uploader = relationship("LMSUser")
+
+
+# ---------------------------------------------------------------------------
+# Category Taxonomy (Migration 002)
+# ---------------------------------------------------------------------------
+
+
+class LMSCategory(Base):
+    __tablename__ = "lms_categories"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    parent_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_categories.id", ondelete="SET NULL"))
+    order_index = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    parent = relationship("LMSCategory", remote_side="LMSCategory.id", back_populates="children")
+    children = relationship("LMSCategory", back_populates="parent")
+    courses = relationship("LMSCourse", back_populates="category_ref")
+
+
+# ---------------------------------------------------------------------------
+# Learning Pathways (Migration 002)
+# ---------------------------------------------------------------------------
+
+
+class LMSLearningPathway(Base):
+    __tablename__ = "lms_learning_pathways"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slug = Column(String(255), unique=True, nullable=False, index=True)
+    title = Column(String(500), nullable=False)
+    description = Column(Text)
+    iicrc_discipline = Column(String(10))          # WRT|CRT|OCT|ASD|CCT
+    target_certification = Column(String(100))
+    estimated_hours = Column(Numeric(5, 1))
+    is_published = Column(Boolean, default=False)
+    order_index = Column(Integer, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    pathway_courses = relationship(
+        "LMSLearningPathwayCourse",
+        back_populates="pathway",
+        cascade="all, delete-orphan",
+        order_by="LMSLearningPathwayCourse.order_index",
+    )
+
+
+class LMSLearningPathwayCourse(Base):
+    """Junction table: pathway ↔ course with ordering and required flag."""
+
+    __tablename__ = "lms_learning_pathway_courses"
+
+    pathway_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_learning_pathways.id", ondelete="CASCADE"), primary_key=True)
+    course_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_courses.id", ondelete="CASCADE"), primary_key=True)
+    order_index = Column(Integer, nullable=False)
+    is_required = Column(Boolean, default=True)
+
+    pathway = relationship("LMSLearningPathway", back_populates="pathway_courses")
+    course = relationship("LMSCourse", back_populates="pathway_courses")
+
+
+# ---------------------------------------------------------------------------
+# Course Prerequisites (Migration 002)
+# ---------------------------------------------------------------------------
+
+
+class LMSCoursePrerequisite(Base):
+    __tablename__ = "lms_course_prerequisites"
+
+    course_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_courses.id", ondelete="CASCADE"), primary_key=True)
+    prerequisite_course_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_courses.id", ondelete="CASCADE"), primary_key=True)
+    is_strict = Column(Boolean, default=False)
+
+    course = relationship("LMSCourse", foreign_keys=[course_id], back_populates="prerequisites")
+    prerequisite = relationship("LMSCourse", foreign_keys=[prerequisite_course_id])
+
+
+# ---------------------------------------------------------------------------
+# Migration Jobs (Migration 002)
+# ---------------------------------------------------------------------------
+
+
+class LMSMigrationJob(Base):
+    __tablename__ = "lms_migration_jobs"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    job_type = Column(String(50), nullable=False)       # discover|extract|enrich|validate|load
+    status = Column(String(50), default="pending")      # pending|running|completed|failed
+    total_items = Column(Integer)
+    processed_items = Column(Integer, default=0)
+    failed_items = Column(Integer, default=0)
+    result_manifest = Column(JSONB, default=list)       # discovered/processed items
+    error_log = Column(JSONB, default=list)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
