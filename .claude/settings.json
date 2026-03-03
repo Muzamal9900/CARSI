@@ -68,7 +68,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python \".claude/hooks/scripts/pre-bash-validate.py\"",
+            "command": "python \"C:\\CARSI\\.claude\\hooks\\scripts\\pre-bash-validate.py\"",
             "timeout": 10
           }
         ]
