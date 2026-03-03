@@ -15,3 +15,4 @@ from . import lms_gamification  # noqa: F401
 from . import lms_migration  # noqa: F401
 from . import lms_subscription  # noqa: F401
 from . import lms_webhooks  # noqa: F401
+from . import lms_course_ideas  # noqa: F401

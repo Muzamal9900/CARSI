@@ -30,7 +30,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIXES = ("/api/lms/auth/", "/api/lms/credentials/", "/api/lms/webhooks/")
 
     # Path prefixes that are public for GET requests only (e.g. course catalog, pathways)
-    PUBLIC_GET_PREFIXES = ("/api/lms/courses", "/api/lms/pathways", "/api/lms/gamification/leaderboard")
+    PUBLIC_GET_PREFIXES = ("/api/lms/courses", "/api/lms/pathways", "/api/lms/gamification/leaderboard", "/api/lms/ideas")
 
     async def dispatch(
         self,

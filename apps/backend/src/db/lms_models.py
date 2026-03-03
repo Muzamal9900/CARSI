@@ -575,3 +575,49 @@ class LMSCECReport(Base):
 
     student = relationship("LMSUser", back_populates="cec_reports")
     course = relationship("LMSCourse")
+
+
+# ---------------------------------------------------------------------------
+# Course Idea Catalog (Migration 004)
+# ---------------------------------------------------------------------------
+
+
+class LMSCourseIdea(Base):
+    __tablename__ = "lms_course_ideas"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String(500), nullable=False)
+    description = Column(Text, nullable=True)
+    iicrc_discipline = Column(String(10), nullable=True)
+    suggested_by_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    vote_count = Column(Integer, nullable=False, default=0)
+    status = Column(String(50), nullable=False, default="idea")
+    # idea | in_development | published
+    ai_outline = Column(JSONB, nullable=True)
+    ai_outline_generated_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    suggested_by = relationship("LMSUser")
+    votes = relationship("LMSCourseIdeaVote", back_populates="idea", cascade="all, delete-orphan")
+
+
+class LMSCourseIdeaVote(Base):
+    __tablename__ = "lms_course_idea_votes"
+
+    idea_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_course_ideas.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    user_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    voted_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    idea = relationship("LMSCourseIdea", back_populates="votes")

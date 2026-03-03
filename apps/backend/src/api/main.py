@@ -35,6 +35,7 @@ from .routes import (
     lms_migration,
     lms_subscription,
     lms_webhooks,
+    lms_course_ideas,
     lms_modules,
     lms_pathways,
     lms_progress,
@@ -124,6 +125,7 @@ app.include_router(lms_gamification.router)
 app.include_router(lms_migration.router)
 app.include_router(lms_subscription.router)
 app.include_router(lms_webhooks.router)
+app.include_router(lms_course_ideas.router)
 app.include_router(agents.router, prefix="/api", tags=["Agents"])
 app.include_router(chat.router, prefix="/api", tags=["Chat"])
 app.include_router(webhooks.router, prefix="/api", tags=["Webhooks"])
