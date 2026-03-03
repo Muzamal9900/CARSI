@@ -55,6 +55,17 @@ ISSUE_ID_MAP = {
     "GP-109": None,
     "GP-110": None,
     "GP-111": None,
+    "GP-112": None,  # Phase 16 — LMS Navigation + Enrolment Flow
+    "GP-113": None,  # Phase 17 — Instructor Dashboard + Analytics
+    "GP-114": None,  # Phase 18 — Student Credentials Wallet + Lesson Notes
+    "GP-115": None,  # Phase 19 — Quiz Authoring
+    "GP-116": None,  # Phase 20 — Email Notifications
+    "GP-117": None,  # Phase 21 — Feedback & Review Ecosystem
+    "GP-118": None,  # Phase 22 — AI Feedback Response + Instructor Insights
+    "GP-119": None,  # Phase 23 — Course Idea Catalog + AI Outline Generator
+    "GP-120": None,  # Phase 24 — PDF Certificates + Quiz CECs
+    "GP-121": None,  # Phase 25 — Stripe Payments
+    "GP-122": None,  # Phase 26 — CPP40421 + RPL Portfolio
 }
 
 

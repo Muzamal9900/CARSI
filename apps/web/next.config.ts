@@ -22,6 +22,7 @@ const pwaConfig = withPWA({
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@shared'],
+  turbopack: {},
   experimental: {
     // Typed routes disabled - requires full route type generation to be configured
     // typedRoutes: true,

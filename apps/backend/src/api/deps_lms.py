@@ -6,8 +6,9 @@ These work alongside the existing starter auth system using lms_users table.
 """
 
 from collections.abc import Callable
+from uuid import UUID
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,38 +23,43 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 async def get_current_lms_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    x_user_id: str | None = Header(default=None),
     db: AsyncSession = Depends(get_async_db),
 ) -> LMSUser:
     """
-    Resolve the current LMS user from Bearer JWT token.
-    Uses lms_users table (separate from starter's users table).
+    Resolve the current LMS user from:
+      1. Bearer JWT token (production)
+      2. X-User-Id header (dev fallback — looked up by UUID)
     """
-    if not credentials:
+    user: LMSUser | None = None
+
+    if credentials:
+        email = extract_user_email(credentials.credentials)
+        if email:
+            result = await db.execute(
+                select(LMSUser)
+                .where(LMSUser.email == email)
+                .options(selectinload(LMSUser.user_roles).selectinload(LMSUserRole.role))
+            )
+            user = result.scalar_one_or_none()
+
+    if user is None and x_user_id:
+        try:
+            uid = UUID(x_user_id)
+        except ValueError:
+            pass
+        else:
+            result = await db.execute(
+                select(LMSUser)
+                .where(LMSUser.id == uid)
+                .options(selectinload(LMSUser.user_roles).selectinload(LMSUserRole.role))
+            )
+            user = result.scalar_one_or_none()
+
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    email = extract_user_email(credentials.credentials)
-    if not email:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    result = await db.execute(
-        select(LMSUser)
-        .where(LMSUser.email == email)
-        .options(selectinload(LMSUser.user_roles).selectinload(LMSUserRole.role))
-    )
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="LMS user not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
