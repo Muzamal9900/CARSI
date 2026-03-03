@@ -1,67 +1,52 @@
 services:
   postgres:
     image: pgvector/pgvector:pg15
-    container_name: nodejs-starter-postgres
+    container_name: carsi-postgres
     environment:
-      POSTGRES_DB: starter_db
-      POSTGRES_USER: starter_user
-      POSTGRES_PASSWORD: local_dev_password
-      POSTGRES_HOST_AUTH_METHOD: trust  # Simplified for local development
+      POSTGRES_DB: carsi_dev
+      POSTGRES_USER: carsi_user
+      POSTGRES_PASSWORD: carsi_dev_pass
+      POSTGRES_HOST_AUTH_METHOD: trust
     ports:
-      - "5433:5432"
+      - '5433:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - carsi_postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U starter_user -d starter_db"]
+      test: ['CMD-SHELL', 'pg_isready -U carsi_user -d carsi_dev']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - starter-network
+      - carsi-network
 
   redis:
     image: redis:7-alpine
-    container_name: nodejs-starter-redis
+    container_name: carsi-redis
     ports:
-      - "6380:6379"
+      - '6380:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
-      - starter-network
+      - carsi-network
 
-  # Backend service (optional - can be run locally for development)
-  # Uncomment if you want to run the entire stack in Docker
-  # backend:
-  #   build:
-  #     context: ./apps/backend
-  #     dockerfile: Dockerfile
-  #   container_name: nodejs-starter-backend
-  #   environment:
-  #     DATABASE_URL: postgresql://starter_user:local_dev_password@postgres:5432/starter_db
-  #     REDIS_URL: redis://redis:6379
-  #     AI_PROVIDER: ${AI_PROVIDER:-ollama}
-  #     OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-  #   ports:
-  #     - "8000:8000"
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
-  #   networks:
-  #     - starter-network
-  #   volumes:
-  #     - ./apps/backend:/app
-  #   command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: carsi-mailpit
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    restart: unless-stopped
+    networks:
+      - carsi-network
 
 volumes:
-  postgres_data:
+  carsi_postgres_data:
     driver: local
 
 networks:
-  starter-network:
+  carsi-network:
     driver: bridge
