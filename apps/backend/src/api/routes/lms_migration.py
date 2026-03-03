@@ -32,7 +32,9 @@ _DISCIPLINE_KEYWORDS: dict[str, str] = {
     "odour": "OCT",
     "odor": "OCT",
     "asd": "ASD",
+    "applied structural drying": "ASD",
     "applied-structural-drying": "ASD",
+    "structural drying": "ASD",
     "cct": "CCT",
     "commercial": "CCT",
 }

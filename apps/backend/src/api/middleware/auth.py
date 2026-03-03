@@ -27,10 +27,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     PUBLIC_PATHS = {"/", "/health", "/ready", "/docs", "/openapi.json"}
 
     # Path prefixes that don't require auth regardless of method (e.g. auth flows)
-    PUBLIC_PREFIXES = ("/api/lms/auth/",)
+    PUBLIC_PREFIXES = ("/api/lms/auth/", "/api/lms/credentials/")
 
-    # Path prefixes that are public for GET requests only (e.g. course catalog)
-    PUBLIC_GET_PREFIXES = ("/api/lms/courses",)
+    # Path prefixes that are public for GET requests only (e.g. course catalog, pathways)
+    PUBLIC_GET_PREFIXES = ("/api/lms/courses", "/api/lms/pathways")
 
     async def dispatch(
         self,
@@ -39,6 +39,10 @@ class AuthMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         """Process the request and validate authentication."""
         path = request.url.path
+
+        # Always pass CORS preflight through to CORSMiddleware
+        if request.method == "OPTIONS":
+            return await call_next(request)
 
         # Skip auth for exact public paths
         if path in self.PUBLIC_PATHS:
