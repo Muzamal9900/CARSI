@@ -93,6 +93,20 @@ class Settings(BaseSettings):
     google_ai_api_key: str = Field(default="", description="Google AI API key (optional)")
     openrouter_api_key: str = Field(default="", description="OpenRouter API key (optional)")
 
+    # Google Drive Integration
+    google_drive_folder_id: str = Field(
+        default="",
+        description="Root Google Drive folder ID for CARSI course content",
+    )
+    google_drive_credentials_file: str = Field(
+        default="",
+        description="Path to service account credentials JSON file",
+    )
+    feature_google_drive: bool = Field(
+        default=False,
+        description="Enable Google Drive integration (requires credentials)",
+    )
+
     # MCP Tools
     exa_api_key: str = Field(default="")
     ref_tools_api_key: str = Field(default="")
