@@ -23,5 +23,7 @@
       "Bash(pnpm turbo run lint:*)",
       "Bash(grep:*)"
     ]
-  }
+  },
+  "enabledMcpjsonServers": ["linear"],
+  "enableAllProjectMcpServers": true
 }
