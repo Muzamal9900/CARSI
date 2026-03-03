@@ -1,0 +1,50 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { AdminMetrics } from '@/components/lms/AdminMetrics';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+interface Metrics {
+  total_users: number;
+  total_courses: number;
+  total_enrollments: number;
+}
+
+export default function AdminDashboardPage() {
+  const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const userId = localStorage.getItem('carsi_user_id') ?? '';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
+
+    fetch(`${backendUrl}/api/lms/admin/metrics`, {
+      headers: userId ? { 'X-User-Id': userId } : {},
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setMetrics(data))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-muted-foreground">Platform overview and management tools.</p>
+      </div>
+
+      {loading && <p className="text-muted-foreground">Loading metrics…</p>}
+      {metrics && <AdminMetrics metrics={metrics} />}
+
+      <div className="flex gap-4">
+        <Button asChild variant="outline">
+          <Link href="/admin/users">Manage Users</Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/admin/courses">Review Courses</Link>
+        </Button>
+      </div>
+    </div>
+  );
+}

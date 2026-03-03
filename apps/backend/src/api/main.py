@@ -28,6 +28,7 @@ from .routes import (
     lms_courses,
     lms_drive,
     lms_enrollments,
+    lms_admin,
     lms_lessons,
     lms_modules,
     lms_progress,
@@ -105,6 +106,7 @@ app.include_router(lms_auth.router)
 app.include_router(lms_courses.router)
 app.include_router(lms_drive.router)
 app.include_router(lms_enrollments.router)
+app.include_router(lms_admin.router)
 app.include_router(lms_lessons.router)
 app.include_router(lms_lessons.modules_router)
 app.include_router(lms_modules.router)
