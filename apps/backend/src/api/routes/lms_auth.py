@@ -173,6 +173,39 @@ async def login(
     )
 
 
+class UserUpdateRequest(BaseModel):
+    theme_preference: str | None = None
+
+
+@router.patch("/me", response_model=UserProfileResponse)
+async def update_me(
+    data: UserUpdateRequest,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: LMSUser = Depends(get_current_lms_user),
+) -> UserProfileResponse:
+    """Update current user profile fields (e.g. theme preference)."""
+    if data.theme_preference is not None:
+        if data.theme_preference not in ("light", "dark"):
+            raise HTTPException(
+                status_code=422,
+                detail="theme_preference must be 'light' or 'dark'",
+            )
+        current_user.theme_preference = data.theme_preference
+
+    await db.commit()
+    await db.refresh(current_user)
+
+    return UserProfileResponse(
+        id=str(current_user.id),
+        email=current_user.email,
+        full_name=current_user.full_name,
+        roles=current_user.roles,
+        theme_preference=current_user.theme_preference,
+        is_active=current_user.is_active,
+        is_verified=current_user.is_verified,
+    )
+
+
 @router.get("/me", response_model=UserProfileResponse)
 async def get_me(
     current_user: LMSUser = Depends(get_current_lms_user),
