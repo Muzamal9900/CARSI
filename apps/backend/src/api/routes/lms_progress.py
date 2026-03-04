@@ -5,6 +5,7 @@ POST /api/lms/lessons/{lesson_id}/complete  — mark a lesson complete
 GET  /api/lms/courses/{course_id}/progress  — get course progress for current user
 """
 
+import asyncio
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -98,6 +99,29 @@ async def mark_lesson_complete(
     except Exception:
         # Worker not running in dev is acceptable — progress is already saved above
         pass
+
+    # Check if course is now 100% complete — push event to Unite-Hub Nexus
+    total_r = await db.execute(
+        select(func.count(LMSLesson.id))
+        .join(LMSModule)
+        .where(LMSModule.course_id == course_id)
+    )
+    total_lessons = total_r.scalar() or 0
+    completed_r = await db.execute(
+        select(func.count(LMSProgress.id)).where(
+            LMSProgress.enrollment_id == enrollment.id,
+            LMSProgress.completed_at.isnot(None),
+        )
+    )
+    completed_lessons = completed_r.scalar() or 0
+    if total_lessons > 0 and completed_lessons >= total_lessons:
+        from src.services.nexus_connector import push_event
+
+        asyncio.create_task(push_event("course.completed", {
+            "student_id": str(current_user.id),
+            "course_id": str(course_id),
+            "completed_at": datetime.now(timezone.utc).isoformat(),
+        }))
 
     return ProgressOut(
         lesson_id=progress.lesson_id,

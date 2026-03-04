@@ -5,6 +5,7 @@ GET /api/lms/credentials/{credential_id}  — public credential verification
   credential_id is the enrollment UUID; no auth required (public verification page)
 """
 
+import asyncio
 from datetime import datetime
 from uuid import UUID
 
@@ -63,6 +64,17 @@ async def get_credential(
     is_valid = enrollment.status in ("active", "completed")
     issued_ts: datetime = enrollment.completed_at or enrollment.enrolled_at
     issued_date = issued_ts.strftime("%d %B %Y").lstrip("0") if issued_ts else "—"
+
+    # Fire-and-forget: push certification event to Unite-Hub Nexus
+    if is_valid:
+        from src.services.nexus_connector import push_event
+
+        asyncio.create_task(push_event("certification.awarded", {
+            "student_id": str(student.id) if student else None,
+            "credential_id": credential_id,
+            "course_title": course.title if course else "Unknown",
+            "issued_at": issued_ts.isoformat() if issued_ts else None,
+        }))
 
     return CredentialOut(
         credential_id=credential_id,
