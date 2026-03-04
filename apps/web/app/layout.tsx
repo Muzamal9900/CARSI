@@ -1,8 +1,9 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Outfit, DM_Sans } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toast';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { OrganizationSchema, WebsiteSchema } from '@/components/seo';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -16,12 +17,80 @@ const dmSans = DM_Sans({
   display: 'swap',
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+
 export const metadata: Metadata = {
-  title: 'CARSI | Restoration Training — IICRC CEC Platform',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'CARSI | Restoration Training — IICRC CEC Platform',
+    template: '%s | CARSI',
+  },
   description:
-    'IICRC-aligned CEC training for cleaning and restoration professionals. Earn recognised credits, track your progress.',
-  keywords: 'restoration training, IICRC CECs, water restoration, CARSI',
+    'IICRC-aligned CEC training for cleaning and restoration professionals in Australia. Earn recognised credits, track your progress, get certified.',
+  keywords: [
+    'restoration training',
+    'IICRC CECs',
+    'water restoration',
+    'carpet restoration',
+    'fire restoration',
+    'CARSI',
+    'cleaning training',
+    'Australia',
+  ],
+  authors: [{ name: 'CARSI', url: siteUrl }],
+  creator: 'CARSI',
+  publisher: 'CARSI Pty Ltd',
   manifest: '/manifest.json',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_AU',
+    url: siteUrl,
+    siteName: 'CARSI',
+    title: 'CARSI | Restoration Training — IICRC CEC Platform',
+    description:
+      'IICRC-aligned CEC training for cleaning and restoration professionals in Australia. Earn recognised credits, track your progress.',
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+        alt: 'CARSI — Professional Restoration Training',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CARSI | Restoration Training — IICRC CEC Platform',
+    description:
+      'IICRC-aligned CEC training for cleaning and restoration professionals in Australia.',
+    images: [`${siteUrl}/og-image.png`],
+    creator: '@carsi_au',
+  },
+  alternates: {
+    canonical: siteUrl,
+  },
+  category: 'Education',
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0f1a' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -31,6 +100,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en-AU" className="dark" suppressHydrationWarning>
+      <head>
+        <OrganizationSchema />
+        <WebsiteSchema />
+      </head>
       <body className={`${outfit.variable} ${dmSans.variable} font-sans`} suppressHydrationWarning>
         <ThemeProvider initialTheme="dark">
           {children}
