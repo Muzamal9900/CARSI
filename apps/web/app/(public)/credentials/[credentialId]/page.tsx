@@ -20,9 +20,22 @@ export default async function CredentialPage({
   const credential = await getCredential(credentialId);
   if (!credential) notFound();
 
+  const backendUrl = process.env.API_URL ?? 'http://localhost:8000';
+  const pdfUrl = `${backendUrl}/api/lms/credentials/${credentialId}/pdf`;
+
   return (
     <main className="container mx-auto px-4 py-16">
       <CredentialVerificationCard credential={credential} />
+      <div className="mt-6 text-center">
+        <a
+          href={pdfUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block rounded-sm border border-white/10 bg-white/5 px-6 py-3 text-sm font-medium text-white transition-colors hover:bg-white/10"
+        >
+          Download Certificate (PDF)
+        </a>
+      </div>
     </main>
   );
 }

@@ -10,6 +10,7 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from src.config.database import get_async_db
 from src.db.lms_models import LMSCourse, LMSEnrollment, LMSUser
+from src.services.pdf_certificate import generate_certificate_pdf
 
 router = APIRouter(prefix="/api/lms/credentials", tags=["lms-credentials"])
 
@@ -88,4 +90,48 @@ async def get_credential(
         issuing_organisation="CARSI — Certified Applied Restoration & Skilling Institute",
         verification_url=f"https://carsi.com.au/credentials/{credential_id}",
         cppp40421_unit_code=course.cppp40421_unit_code if course else None,
+    )
+
+
+@router.get("/{credential_id}/pdf")
+async def get_credential_pdf(
+    credential_id: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> Response:
+    """Return a downloadable PDF certificate for a verified credential."""
+    try:
+        uid = UUID(credential_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credential not found")
+
+    result = await db.execute(
+        select(LMSEnrollment)
+        .where(LMSEnrollment.id == uid)
+        .options(
+            selectinload(LMSEnrollment.student),
+            selectinload(LMSEnrollment.course),
+        )
+    )
+    enrollment = result.scalar_one_or_none()
+    if not enrollment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Credential not found")
+
+    course: LMSCourse = enrollment.course
+    student: LMSUser = enrollment.student
+    completion_ts: datetime = enrollment.completed_at or enrollment.enrolled_at
+
+    pdf_bytes = generate_certificate_pdf(
+        student_name=student.full_name if student else "Unknown",
+        course_title=course.title if course else "Unknown",
+        iicrc_discipline=course.iicrc_discipline if course else None,
+        cec_credits=float(course.cec_hours) if course and course.cec_hours else None,
+        completion_date=completion_ts,
+        credential_id=credential_id,
+    )
+
+    short_id = credential_id[:8]
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="certificate-{short_id}.pdf"'},
     )
