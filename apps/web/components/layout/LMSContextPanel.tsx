@@ -15,9 +15,28 @@ const disciplines = [
   { code: 'AMRT', label: 'Applied Microbial', color: '#27ae60' },
 ];
 
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+const industries = [
+  { slug: 'mining', label: 'Mining', icon: '\u26CF\uFE0F', color: '#f59e0b' },
+  { slug: 'aged-care', label: 'Aged Care', icon: '\uD83C\uDFE5', color: '#10b981' },
+  {
+    slug: 'commercial-cleaning',
+    label: 'Commercial Cleaning',
+    icon: '\uD83E\uDDF9',
+    color: '#17b8d4',
+  },
+];
+
+function NavLink({
+  href,
+  activePrefix,
+  children,
+}: {
+  href: string;
+  activePrefix?: string;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const isActive = pathname === href;
+  const isActive = activePrefix ? pathname.startsWith(activePrefix) : pathname === href;
 
   return (
     <Link
@@ -122,6 +141,26 @@ export function LMSContextPanel() {
               </span>
               <span className="truncate text-xs leading-tight">{d.label}</span>
             </Link>
+          ))}
+        </CollapsibleSection>
+      </div>
+
+      {/* Industries */}
+      <div className="px-2 py-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <CollapsibleSection title="Industries" defaultOpen={false}>
+          {industries.map((ind) => (
+            <NavLink
+              key={ind.slug}
+              href={`/industries/${ind.slug}`}
+              activePrefix={`/industries/${ind.slug}`}
+            >
+              <span
+                className="mr-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                style={{ backgroundColor: ind.color, boxShadow: `0 0 6px ${ind.color}` }}
+              />
+              <span className="mr-2 text-sm">{ind.icon}</span>
+              <span className="truncate text-xs leading-tight">{ind.label}</span>
+            </NavLink>
           ))}
         </CollapsibleSection>
       </div>
