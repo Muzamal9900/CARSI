@@ -6,71 +6,94 @@ import { usePathname } from 'next/navigation';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 const disciplines = [
-  { code: 'WRT', label: 'Water Restoration' },
-  { code: 'CRT', label: 'Carpet Restoration' },
-  { code: 'ASD', label: 'Applied Structural Drying' },
-  { code: 'OCT', label: 'Odour Control' },
-  { code: 'CCT', label: 'Commercial Carpet' },
-  { code: 'FSRT', label: 'Fire & Smoke' },
-  { code: 'AMRT', label: 'Applied Microbial' },
+  { code: 'WRT', label: 'Water Restoration', color: '#2490ed' },
+  { code: 'CRT', label: 'Carpet Restoration', color: '#26c4a0' },
+  { code: 'ASD', label: 'Applied Structural Drying', color: '#6c63ff' },
+  { code: 'OCT', label: 'Odour Control', color: '#9b59b6' },
+  { code: 'CCT', label: 'Commercial Carpet', color: '#17b8d4' },
+  { code: 'FSRT', label: 'Fire & Smoke', color: '#f05a35' },
+  { code: 'AMRT', label: 'Applied Microbial', color: '#27ae60' },
 ];
 
-interface NavLinkProps {
-  href: string;
-  children: React.ReactNode;
-}
-
-function NavLink({ href, children }: NavLinkProps) {
+function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
   const pathname = usePathname();
   const isActive = pathname === href;
+
   return (
     <Link
       href={href}
-      className={`block rounded-sm px-3 py-1.5 text-sm transition-colors duration-150 ${
+      className="flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-200"
+      style={
         isActive
-          ? 'bg-[#EFF6FF] font-medium text-[#2490ed]'
-          : 'text-[#374151] hover:bg-[#F9FAFB] hover:text-[#111827]'
-      }`}
+          ? {
+              background: 'rgba(36, 144, 237, 0.15)',
+              color: '#2490ed',
+              border: '1px solid rgba(36, 144, 237, 0.25)',
+              boxShadow: '0 0 12px rgba(36, 144, 237, 0.1)',
+            }
+          : {
+              color: 'rgba(255, 255, 255, 0.55)',
+              border: '1px solid transparent',
+            }
+      }
     >
       {children}
     </Link>
   );
 }
 
-interface CollapsibleSectionProps {
+function CollapsibleSection({
+  title,
+  defaultOpen = true,
+  children,
+}: {
   title: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
-}
-
-function CollapsibleSection({ title, defaultOpen = true, children }: CollapsibleSectionProps) {
+}) {
   const [open, setOpen] = useState(defaultOpen);
+
   return (
-    <div className="mb-2">
+    <div className="mb-1">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold tracking-wider text-[#6B7280] uppercase transition-colors duration-150 hover:text-[#374151]"
+        className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold tracking-widest uppercase transition-colors duration-150"
+        style={{ color: 'rgba(255, 255, 255, 0.3)' }}
       >
         <span>{title}</span>
         {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
       </button>
-      {open && <div className="mt-0.5">{children}</div>}
+      {open && <div className="mt-0.5 space-y-0.5">{children}</div>}
     </div>
   );
 }
 
 export function LMSContextPanel() {
   return (
-    <aside className="flex min-h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto border-r border-[#E5E7EB] bg-white">
+    <aside
+      className="scrollbar-glass relative z-10 flex min-h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto"
+      style={{
+        background: 'rgba(8, 12, 24, 0.75)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+      }}
+    >
       {/* Header */}
-      <div className="border-b border-[#E5E7EB] px-4 py-4">
-        <p className="text-xs font-semibold tracking-wider text-[#6B7280] uppercase">
+      <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+        <p
+          className="text-[10px] font-semibold tracking-[0.2em] uppercase"
+          style={{ color: 'rgba(255, 255, 255, 0.3)' }}
+        >
           CARSI Learning
         </p>
       </div>
 
       {/* Main nav */}
-      <div className="border-b border-[#E5E7EB] px-2 py-3">
+      <div
+        className="space-y-0.5 px-2 py-3"
+        style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}
+      >
         <NavLink href="/student">My Learning</NavLink>
         <NavLink href="/student/credentials">Certificates</NavLink>
         <NavLink href="/courses">All Courses</NavLink>
@@ -78,20 +101,26 @@ export function LMSContextPanel() {
       </div>
 
       {/* IICRC Disciplines */}
-      <div className="border-b border-[#E5E7EB] px-2 py-3">
+      <div className="px-2 py-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
         <CollapsibleSection title="IICRC Disciplines">
           {disciplines.map((d) => (
             <Link
               key={d.code}
               href={`/courses?discipline=${d.code}`}
-              className="group flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm text-[#374151] transition-colors duration-150 hover:bg-[#F9FAFB] hover:text-[#111827]"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-200"
+              style={{ border: '1px solid transparent', color: 'rgba(255, 255, 255, 0.5)' }}
             >
-              <span className="w-9 flex-shrink-0 font-mono text-xs font-semibold text-[#2490ed]">
+              <span
+                className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                style={{ backgroundColor: d.color, boxShadow: `0 0 6px ${d.color}` }}
+              />
+              <span
+                className="flex-shrink-0 font-mono text-[11px] font-bold"
+                style={{ color: d.color }}
+              >
                 {d.code}
               </span>
-              <span className="text-xs leading-tight text-[#6B7280] group-hover:text-[#374151]">
-                {d.label}
-              </span>
+              <span className="truncate text-xs leading-tight">{d.label}</span>
             </Link>
           ))}
         </CollapsibleSection>

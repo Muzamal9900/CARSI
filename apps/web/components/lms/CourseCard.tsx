@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Clock } from 'lucide-react';
 
 interface CourseCardProps {
   course: {
@@ -20,26 +20,29 @@ interface CourseCardProps {
   };
 }
 
-// Discipline-specific gradient backgrounds as placeholders
-const disciplineGradients: Record<string, string> = {
-  WRT: 'from-blue-600 to-blue-800',
-  CRT: 'from-teal-600 to-teal-800',
-  ASD: 'from-indigo-600 to-indigo-800',
-  OCT: 'from-purple-600 to-purple-800',
-  CCT: 'from-cyan-600 to-cyan-800',
-  FSRT: 'from-orange-600 to-red-700',
-  AMRT: 'from-green-600 to-green-800',
+const disciplineColors: Record<string, { color: string; glow: string; grad: string }> = {
+  WRT: { color: '#2490ed', glow: 'rgba(36,144,237,0.3)', grad: 'from-blue-700 to-blue-900' },
+  CRT: { color: '#26c4a0', glow: 'rgba(38,196,160,0.3)', grad: 'from-teal-600 to-teal-900' },
+  ASD: { color: '#6c63ff', glow: 'rgba(108,99,255,0.3)', grad: 'from-indigo-700 to-indigo-900' },
+  OCT: { color: '#9b59b6', glow: 'rgba(155,89,182,0.3)', grad: 'from-purple-700 to-purple-900' },
+  CCT: { color: '#17b8d4', glow: 'rgba(23,184,212,0.3)', grad: 'from-cyan-600 to-cyan-900' },
+  FSRT: { color: '#f05a35', glow: 'rgba(240,90,53,0.3)', grad: 'from-orange-700 to-red-900' },
+  AMRT: { color: '#27ae60', glow: 'rgba(39,174,96,0.3)', grad: 'from-green-700 to-green-900' },
+};
+
+const defaultStyle = {
+  color: '#2490ed',
+  glow: 'rgba(36,144,237,0.2)',
+  grad: 'from-blue-800 to-slate-900',
 };
 
 function formatRelativeDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86_400_000);
-  if (days === 0) return 'Updated today';
-  if (days === 1) return 'Updated yesterday';
-  if (days < 30) return `Updated ${days} days ago`;
-  const months = Math.floor(days / 30);
-  return `Updated ${months} month${months > 1 ? 's' : ''} ago`;
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86_400_000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
 }
 
 export function CourseCard({ course }: CourseCardProps) {
@@ -54,78 +57,105 @@ export function CourseCard({ course }: CourseCardProps) {
       ? course.category.split(' ')[0]
       : null);
 
-  const gradientClass =
-    (discipline && disciplineGradients[discipline]) ?? 'from-blue-600 to-blue-800';
+  const ds = (discipline ? disciplineColors[discipline] : undefined) ?? defaultStyle;
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-sm border border-[#E5E7EB] bg-white transition-shadow duration-200 hover:shadow-md">
-      {/* Course image / placeholder */}
-      <div className={`relative h-36 w-full overflow-hidden bg-gradient-to-br ${gradientClass}`}>
-        {course.thumbnail_url ? (
+    <div className="glass-card card-3d group flex flex-col overflow-hidden rounded-xl">
+      {/* Image / gradient header */}
+      <div
+        className={`relative h-32 w-full bg-gradient-to-br ${ds.grad} flex-shrink-0 overflow-hidden`}
+      >
+        {course.thumbnail_url && (
           <Image
             src={course.thumbnail_url}
             alt={course.title}
             fill
-            className="object-cover"
+            className="object-cover opacity-80 transition-opacity duration-300 group-hover:opacity-100"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-end p-3">
-            {discipline && (
-              <span className="font-mono text-xs font-semibold text-white/70">{discipline}</span>
-            )}
-          </div>
         )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        {discipline && (
+          <span
+            className="absolute top-2 left-2 rounded-md px-2 py-0.5 font-mono text-xs font-bold"
+            style={{
+              color: ds.color,
+              background: 'rgba(0,0,0,0.6)',
+              border: `1px solid ${ds.color}40`,
+              boxShadow: `0 0 8px ${ds.glow}`,
+            }}
+          >
+            {discipline}
+          </span>
+        )}
+        <span
+          className="absolute top-2 right-2 rounded-md px-2 py-0.5 text-xs font-semibold"
+          style={
+            isFree
+              ? {
+                  color: '#27ae60',
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(39,174,96,0.4)',
+                }
+              : {
+                  color: '#ed9d24',
+                  background: 'rgba(0,0,0,0.6)',
+                  border: '1px solid rgba(237,157,36,0.4)',
+                  boxShadow: '0 0 8px rgba(237,157,36,0.2)',
+                }
+          }
+        >
+          {price}
+        </span>
       </div>
 
       {/* Card body */}
       <div className="flex flex-1 flex-col p-3">
-        {/* Badges */}
-        <div className="mb-2 flex flex-wrap gap-1.5">
-          {discipline && (
-            <span className="inline-flex items-center rounded-sm bg-[#EFF6FF] px-2 py-0.5 text-xs font-semibold text-[#2490ed]">
-              {discipline}
-            </span>
-          )}
-          <span
-            className={`inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-semibold ${
-              isFree ? 'bg-[#F0FDF4] text-[#16a34a]' : 'bg-[#FFF7ED] text-[#ed9d24]'
-            }`}
-          >
-            {price}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h3 className="mb-2 line-clamp-2 flex-1 text-sm leading-snug font-semibold text-[#111827]">
+        <h3
+          className="mb-2 line-clamp-2 text-sm leading-snug font-semibold"
+          style={{ color: 'rgba(255,255,255,0.9)' }}
+        >
           {course.title}
         </h3>
 
-        {/* Meta */}
-        <div className="mt-auto flex items-center justify-between border-t border-[#F3F4F6] pt-2">
-          <div className="flex items-center gap-1 text-xs text-[#6B7280]">
+        {course.short_description && (
+          <p
+            className="mb-2 line-clamp-2 text-xs leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.45)' }}
+          >
+            {course.short_description}
+          </p>
+        )}
+
+        <div
+          className="mt-auto flex items-center justify-between pt-2"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <div
+            className="flex items-center gap-2 text-xs"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
+          >
             {course.lesson_count != null && (
-              <>
+              <span className="flex items-center gap-1">
                 <BookOpen className="h-3 w-3" />
-                <span>{course.lesson_count} Lessons</span>
-              </>
+                {course.lesson_count}
+              </span>
             )}
-            {!course.lesson_count && course.updated_at && (
-              <span>{formatRelativeDate(course.updated_at)}</span>
+            {course.updated_at && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {formatRelativeDate(course.updated_at)}
+              </span>
             )}
           </div>
           <Link
             href={`/courses/${course.slug}`}
-            className="text-xs font-medium text-[#2490ed] hover:underline"
-            aria-label={`View ${course.title}`}
+            className="text-xs font-medium transition-all duration-150"
+            style={{ color: ds.color }}
           >
-            View
+            View →
           </Link>
         </div>
-
-        {course.lesson_count != null && course.updated_at && (
-          <p className="mt-1 text-[10px] text-[#9CA3AF]">{formatRelativeDate(course.updated_at)}</p>
-        )}
       </div>
     </div>
   );

@@ -28,16 +28,35 @@ export default async function CoursesPage({
   const { items: courses, total } = await getCourses();
 
   return (
-    <main className="min-h-screen bg-[#F3F4F6]">
-      <div className="container mx-auto px-4 py-8">
+    <main className="relative min-h-screen" style={{ background: '#060a14' }}>
+      {/* Mesh background */}
+      <div className="mesh-bg" aria-hidden="true">
+        <div className="mesh-blob mesh-blob-1" />
+        <div className="mesh-blob mesh-blob-2" />
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-[#111827]">Restoration Training Courses</h1>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <h1
+            className="font-display text-2xl font-bold"
+            style={{ color: 'rgba(255,255,255,0.92)' }}
+          >
+            Restoration Training Courses
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
             {total} course{total !== 1 ? 's' : ''} across 7 IICRC disciplines
           </p>
         </div>
 
-        <div className="rounded-sm border border-[#E5E7EB] bg-white p-5">
+        <div
+          className="rounded-xl p-5"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            backdropFilter: 'blur(24px) saturate(160%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+            border: '1px solid rgba(255,255,255,0.07)',
+          }}
+        >
           <CourseGrid courses={courses} initialTab={discipline ?? 'All'} />
         </div>
       </div>

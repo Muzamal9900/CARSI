@@ -7,6 +7,16 @@ import { CourseCard } from './CourseCard';
 const DISCIPLINE_TABS = ['All', 'WRT', 'CRT', 'ASD', 'OCT', 'CCT', 'FSRT', 'AMRT', 'Free'] as const;
 type DisciplineTab = (typeof DISCIPLINE_TABS)[number];
 
+const tabColors: Record<string, string> = {
+  WRT: '#2490ed',
+  CRT: '#26c4a0',
+  ASD: '#6c63ff',
+  OCT: '#9b59b6',
+  CCT: '#17b8d4',
+  FSRT: '#f05a35',
+  AMRT: '#27ae60',
+};
+
 interface Course {
   id: string;
   slug: string;
@@ -38,12 +48,9 @@ function sortCourses(courses: Course[], sortBy: SortKey): Course[] {
       const pb = typeof b.price_aud === 'string' ? parseFloat(b.price_aud) : b.price_aud;
       return pa - pb;
     }
-    if (sortBy === 'updated') {
-      const da = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-      const db = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-      return db - da;
-    }
-    return 0;
+    const da = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+    const db = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+    return db - da;
   });
 }
 
@@ -82,36 +89,65 @@ export function CourseGrid({ courses, initialTab = 'All' }: CourseGridProps) {
   return (
     <div>
       {/* Discipline tab bar */}
-      <div className="scrollbar-hide mb-4 flex gap-0 overflow-x-auto border-b border-[#E5E7EB]">
-        {DISCIPLINE_TABS.map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`border-b-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
-              activeTab === tab
-                ? 'border-[#2490ed] text-[#2490ed]'
-                : 'border-transparent text-[#6B7280] hover:border-[#D1D5DB] hover:text-[#374151]'
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div
+        className="scrollbar-hide mb-5 flex overflow-x-auto"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}
+      >
+        {DISCIPLINE_TABS.map((tab) => {
+          const isActive = activeTab === tab;
+          const accentColor = tabColors[tab] ?? '#2490ed';
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className="relative px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200"
+              style={isActive ? { color: accentColor } : { color: 'rgba(255,255,255,0.4)' }}
+            >
+              {tab}
+              {isActive && (
+                <span
+                  className="absolute right-0 bottom-0 left-0 h-0.5 rounded-full"
+                  style={{ background: accentColor, boxShadow: `0 0 8px ${accentColor}` }}
+                />
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Search + sort row */}
-      <div className="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-        <div className="flex items-center gap-2">
+      {/* Search + sort */}
+      <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-3">
           <div className="relative">
-            <Search className="absolute top-1/2 left-2.5 h-3.5 w-3.5 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search
+              className="absolute top-1/2 left-3 h-3.5 w-3.5 -translate-y-1/2"
+              style={{ color: 'rgba(255,255,255,0.3)' }}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search courses..."
-              className="w-52 rounded-sm border border-[#E5E7EB] bg-white py-1.5 pr-3 pl-8 text-sm text-[#111827] placeholder:text-[#9CA3AF] focus:border-[#2490ed] focus:ring-1 focus:ring-[#2490ed] focus:outline-none"
+              className="w-52 rounded-lg py-2 pr-4 pl-9 text-sm transition-all duration-200 focus:outline-none"
+              style={{
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                color: 'rgba(255,255,255,0.8)',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(36,144,237,0.5)';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(36,144,237,0.1)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
             />
           </div>
-          <div className="flex items-center gap-1.5 text-sm text-[#6B7280]">
+          <div
+            className="flex items-center gap-1.5 text-sm"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
+          >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>
               {filtered.length} course{filtered.length !== 1 ? 's' : ''}
@@ -122,7 +158,12 @@ export function CourseGrid({ courses, initialTab = 'All' }: CourseGridProps) {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortKey)}
-          className="rounded-sm border border-[#E5E7EB] bg-white px-2.5 py-1.5 text-sm text-[#374151] focus:ring-1 focus:ring-[#2490ed] focus:outline-none"
+          className="rounded-lg px-3 py-2 text-sm focus:outline-none"
+          style={{
+            background: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            color: 'rgba(255,255,255,0.7)',
+          }}
         >
           <option value="updated">Recently Updated</option>
           <option value="price">Price</option>
@@ -138,8 +179,8 @@ export function CourseGrid({ courses, initialTab = 'All' }: CourseGridProps) {
           ))}
         </div>
       ) : (
-        <div className="py-16 text-center">
-          <p className="text-sm text-[#6B7280]">
+        <div className="py-20 text-center">
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
             No courses found{searchQuery ? ` for "${searchQuery}"` : ''}.
           </p>
         </div>
