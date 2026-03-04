@@ -621,3 +621,37 @@ class LMSCourseIdeaVote(Base):
     voted_at = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     idea = relationship("LMSCourseIdea", back_populates="votes")
+
+
+# ---------------------------------------------------------------------------
+# RPL Portfolio — Recognition of Prior Learning (Migration 005)
+# ---------------------------------------------------------------------------
+
+
+class LMSRPLPortfolio(Base):
+    __tablename__ = "lms_rpl_portfolios"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    unit_code = Column(String(20), nullable=False)
+    unit_name = Column(String(255), nullable=False)
+    evidence_description = Column(Text, nullable=False)
+    evidence_urls = Column(JSONB, nullable=False, default=list)
+    status = Column(String(50), nullable=False, default="pending")
+    # pending | under_review | approved | rejected
+    reviewer_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    reviewer_notes = Column(Text, nullable=True)
+    reviewed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    student = relationship("LMSUser", foreign_keys=[student_id])
+    reviewer = relationship("LMSUser", foreign_keys=[reviewer_id])
