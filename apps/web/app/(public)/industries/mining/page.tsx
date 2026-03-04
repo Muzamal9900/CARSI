@@ -1,29 +1,36 @@
-import Link from 'next/link';
-import { ArrowRight, Shield, HardHat, Droplets } from 'lucide-react';
-import { CourseGrid } from '@/components/lms/CourseGrid';
+import { Pickaxe, Shield, Droplets, Wind } from 'lucide-react';
+import {
+  IndustryPageLayout,
+  IndustryHero,
+  IndustryWhySection,
+  IndustryCourseSection,
+  IndustryCTA,
+} from '@/components/industries';
 
 // ---------------------------------------------------------------------------
-// Data
+// Data Fetching
 // ---------------------------------------------------------------------------
 
 async function getIndustryCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
   try {
-    const [asdRes, wrtRes] = await Promise.all([
-      fetch(`${backendUrl}/api/lms/courses?discipline=ASD&limit=8`, { next: { revalidate: 60 } }),
+    const [wrtRes, amrtRes, asdRes] = await Promise.all([
       fetch(`${backendUrl}/api/lms/courses?discipline=WRT&limit=8`, { next: { revalidate: 60 } }),
+      fetch(`${backendUrl}/api/lms/courses?discipline=AMRT&limit=8`, { next: { revalidate: 60 } }),
+      fetch(`${backendUrl}/api/lms/courses?discipline=ASD&limit=8`, { next: { revalidate: 60 } }),
     ]);
 
-    const asdData = asdRes.ok ? await asdRes.json() : { items: [] };
     const wrtData = wrtRes.ok ? await wrtRes.json() : { items: [] };
+    const amrtData = amrtRes.ok ? await amrtRes.json() : { items: [] };
+    const asdData = asdRes.ok ? await asdRes.json() : { items: [] };
 
-    const asdCourses = asdData.items ?? asdData ?? [];
-    const wrtCourses = wrtData.items ?? wrtData ?? [];
-
-    // Deduplicate by id
     const seen = new Set<string>();
     const combined = [];
-    for (const c of [...asdCourses, ...wrtCourses]) {
+    for (const c of [
+      ...(wrtData.items ?? []),
+      ...(amrtData.items ?? []),
+      ...(asdData.items ?? []),
+    ]) {
       if (!seen.has(c.id)) {
         seen.add(c.id);
         combined.push(c);
@@ -36,278 +43,88 @@ async function getIndustryCourses() {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-components
+// Page Configuration
 // ---------------------------------------------------------------------------
 
-function GlassStatCard({ value, label }: { value: string; label: string }) {
-  return (
-    <div
-      className="rounded-xl px-5 py-4 text-center"
-      style={{
-        background: 'rgba(255,255,255,0.05)',
-        backdropFilter: 'blur(20px) saturate(160%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
-        border: '1px solid rgba(255,255,255,0.1)',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)',
-      }}
-    >
-      <p className="text-gradient font-display text-2xl font-bold">{value}</p>
-      <p className="mt-0.5 text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-        {label}
-      </p>
-    </div>
-  );
-}
+const ACCENT_COLOR = '#ed9d24';
 
-function DisciplinePill({ code, label, color }: { code: string; label: string; color: string }) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded px-2.5 py-1 font-mono text-xs font-bold"
-      style={{
-        color,
-        background: `${color}15`,
-        border: `1px solid ${color}40`,
-      }}
-    >
-      <span
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: color, boxShadow: `0 0 6px ${color}` }}
-      />
-      {code} — {label}
-    </span>
-  );
-}
+const disciplines = [
+  { code: 'WRT', label: 'Water Damage Restoration', color: '#ed9d24' },
+  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#d4891e' },
+  { code: 'ASD', label: 'Applied Structural Drying', color: '#c77b1a' },
+];
+
+const stats = [
+  { value: '400+', label: 'Mining Operations' },
+  { value: 'WHS', label: 'Act Compliance' },
+  { value: 'IICRC', label: 'CEC Approved' },
+];
+
+const whyCards = [
+  {
+    icon: Shield,
+    title: 'WHS Compliance',
+    description:
+      'Mining operations have strict WHS obligations. IICRC training demonstrates due diligence for water damage and mould hazard identification on site.',
+    color: '#ed9d24',
+  },
+  {
+    icon: Droplets,
+    title: 'Wet Area Response',
+    description:
+      'Water ingress in accommodation blocks, wet mess areas, and underground operations requires immediate, standards-based response.',
+    color: '#d4891e',
+  },
+  {
+    icon: Wind,
+    title: 'Remote Site Capability',
+    description:
+      'Online, self-paced training works for FIFO rosters. Staff can complete modules during swing-off or on-site downtime.',
+    color: '#2490ed',
+  },
+];
 
 // ---------------------------------------------------------------------------
-// Page
+// Page Component
 // ---------------------------------------------------------------------------
 
 export default async function MiningIndustryPage() {
   const courses = await getIndustryCourses();
 
   return (
-    <main className="relative min-h-screen" style={{ background: '#060a14' }}>
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <div className="mesh-blob mesh-blob-1" />
-        <div className="mesh-blob mesh-blob-2" />
-      </div>
+    <IndustryPageLayout>
+      <IndustryHero
+        icon={Pickaxe}
+        industryName="Mining Industry"
+        accentColor={ACCENT_COLOR}
+        headline="Mining Site"
+        headlineAccent="Restoration Training"
+        description="WHS-compliant restoration training for mining operations. IICRC credentials for water damage, mould remediation, and structural drying in remote site environments."
+        disciplines={disciplines}
+        stats={stats}
+      />
 
-      <div className="relative z-10">
-        {/* Hero */}
-        <section className="mx-auto max-w-7xl px-4 pt-20 pb-16 sm:px-6 lg:px-8">
-          <div className="animate-slide-up">
-            {/* Industry pill */}
-            <div
-              className="mb-6 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-              style={{
-                background: 'rgba(108,99,255,0.12)',
-                border: '1px solid rgba(108,99,255,0.3)',
-                color: '#6c63ff',
-                boxShadow: '0 0 12px rgba(108,99,255,0.1)',
-              }}
-            >
-              <HardHat className="h-3.5 w-3.5" />
-              Mining Industry
-            </div>
+      <IndustryWhySection
+        industryName="Mining Operations"
+        headline="Built for"
+        headlineAccent="remote site safety"
+        cards={whyCards}
+      />
 
-            <h1
-              className="font-display mb-6 text-4xl leading-[1.1] font-bold tracking-tight sm:text-5xl"
-              style={{ color: 'rgba(255,255,255,0.95)' }}
-            >
-              Mining Industry
-              <br />
-              <span className="text-gradient">Safety Training</span>
-            </h1>
+      <IndustryCourseSection
+        industryName="Mining"
+        disciplineList="WRT, AMRT & ASD"
+        courses={courses}
+      />
 
-            <p
-              className="mb-8 max-w-xl text-lg leading-relaxed"
-              style={{ color: 'rgba(255,255,255,0.55)' }}
-            >
-              Mandatory IICRC CEC training for mining site supervisors and safety officers. Protect
-              your workforce with nationally recognised mould assessment and water damage
-              restoration credentials.
-            </p>
-
-            {/* Discipline pills */}
-            <div className="mb-10 flex flex-wrap gap-2">
-              <DisciplinePill code="ASD" label="Applied Structural Drying" color="#6c63ff" />
-              <DisciplinePill code="WRT" label="Water Restoration" color="#2490ed" />
-            </div>
-          </div>
-
-          {/* Stats row */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <GlassStatCard value="$2.4B" label="Mining Industry" />
-            <GlassStatCard value="Mandatory" label="Safety Training" />
-            <GlassStatCard value="IICRC" label="CEC Approved" />
-          </div>
-        </section>
-
-        {/* Why this matters */}
-        <section className="py-16" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="mb-10">
-              <p
-                className="mb-3 text-xs font-semibold tracking-widest uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Why Mining Professionals Choose CARSI
-              </p>
-              <h2
-                className="font-display text-3xl font-bold"
-                style={{ color: 'rgba(255,255,255,0.92)' }}
-              >
-                Built for <span className="text-gradient">site safety</span>
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {[
-                {
-                  Icon: Shield,
-                  title: 'WHS Compliance',
-                  desc: 'Meet Work Health & Safety obligations with IICRC-aligned mould and water damage training for mining environments.',
-                  color: '#2490ed',
-                  glow: 'rgba(36,144,237,0.15)',
-                },
-                {
-                  Icon: Droplets,
-                  title: 'Water Damage Response',
-                  desc: 'Train supervisors to manage groundwater intrusion, flooding events, and structural drying on remote sites.',
-                  color: '#6c63ff',
-                  glow: 'rgba(108,99,255,0.15)',
-                },
-                {
-                  Icon: HardHat,
-                  title: 'Site-Ready Credentials',
-                  desc: 'Earn CECs recognised by IICRC. Downloadable transcripts for site induction and compliance audits.',
-                  color: '#ed9d24',
-                  glow: 'rgba(237,157,36,0.15)',
-                },
-              ].map((item) => (
-                <div key={item.title} className="glass-card card-3d rounded-xl p-6">
-                  <div
-                    className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg"
-                    style={{ background: item.glow, border: `1px solid ${item.color}30` }}
-                  >
-                    <item.Icon className="h-5 w-5" style={{ color: item.color }} />
-                  </div>
-                  <h3
-                    className="font-display mb-2 text-sm font-bold"
-                    style={{ color: 'rgba(255,255,255,0.9)' }}
-                  >
-                    {item.title}
-                  </h3>
-                  <p
-                    className="text-xs leading-relaxed"
-                    style={{ color: 'rgba(255,255,255,0.45)' }}
-                  >
-                    {item.desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Course grid */}
-        <section className="py-16" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-            <div className="mb-8">
-              <p
-                className="mb-2 text-xs font-semibold tracking-widest uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Mining-Relevant Courses
-              </p>
-              <h2
-                className="font-display text-3xl font-bold"
-                style={{ color: 'rgba(255,255,255,0.92)' }}
-              >
-                ASD &amp; WRT Training
-              </h2>
-            </div>
-
-            <div
-              className="rounded-xl p-5"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                backdropFilter: 'blur(24px) saturate(160%)',
-                WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-                border: '1px solid rgba(255,255,255,0.07)',
-              }}
-            >
-              <CourseGrid courses={courses} initialTab="All" />
-            </div>
-          </div>
-        </section>
-
-        {/* CTA */}
-        <section className="py-20">
-          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-            <div
-              className="relative overflow-hidden rounded-2xl px-8 py-14"
-              style={{
-                background: 'rgba(255,255,255,0.04)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                border: '1px solid rgba(108,99,255,0.2)',
-                boxShadow: '0 0 60px rgba(108,99,255,0.08), inset 0 1px 0 rgba(255,255,255,0.08)',
-              }}
-            >
-              <div
-                className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full"
-                style={{
-                  background: 'radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 70%)',
-                  filter: 'blur(40px)',
-                }}
-              />
-              <p
-                className="relative z-10 mb-4 text-xs font-semibold tracking-widest uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Mining Safety Training
-              </p>
-              <h2
-                className="font-display relative z-10 mb-4 text-4xl font-bold"
-                style={{ color: 'rgba(255,255,255,0.95)' }}
-              >
-                Get Your Team <span className="text-gradient">Certified</span>
-              </h2>
-              <p
-                className="relative z-10 mx-auto mb-8 max-w-lg text-base"
-                style={{ color: 'rgba(255,255,255,0.5)' }}
-              >
-                $795 AUD/year per seat. 7-day free trial. Bulk team pricing available.
-              </p>
-              <div className="relative z-10 flex justify-center gap-3">
-                <Link
-                  href="/subscribe"
-                  className="inline-flex items-center gap-2 rounded-lg px-8 py-3 font-semibold text-white transition-all duration-200 hover:scale-[1.03]"
-                  style={{
-                    background: 'linear-gradient(135deg, #ed9d24 0%, #d4891e 100%)',
-                    boxShadow: '0 0 30px rgba(237,157,36,0.4)',
-                  }}
-                >
-                  Get Your Team Certified <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/courses"
-                  className="inline-flex items-center gap-2 rounded-lg px-8 py-3 font-semibold transition-all duration-200"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    color: 'rgba(255,255,255,0.8)',
-                  }}
-                >
-                  Browse All Courses
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
+      <IndustryCTA
+        subtitle="Mining Site Training"
+        title="Mining Restoration Bundle"
+        price="$245"
+        description="WRT + AMRT + ASD training for mining site teams. Bulk licensing available for camp accommodation managers."
+        ctaText="Train Your Site Team"
+        accentColor={ACCENT_COLOR}
+      />
+    </IndustryPageLayout>
   );
 }
