@@ -123,6 +123,14 @@ class Settings(BaseSettings):
     def effective_celery_backend(self) -> str:
         return self.celery_result_backend or self.redis_url.rstrip("/") + "/2"
 
+    # Stripe Payments
+    stripe_secret_key: str = Field(default="", description="Stripe secret API key")
+    stripe_webhook_secret: str = Field(default="", description="Stripe webhook signing secret")
+    frontend_url: str = Field(
+        default="http://localhost:3009",
+        description="Frontend URL for Stripe redirects",
+    )
+
     # Unite-Hub Nexus Integration
     unite_hub_api_url: str = Field(
         default="https://api.unite-hub.com/v1/events",

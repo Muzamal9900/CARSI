@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { EnrolButton } from '@/components/lms/EnrolButton';
 
 interface CourseDetail {
   id: string;
@@ -90,9 +91,13 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                 <p className="text-muted-foreground mb-2 text-sm">CECs: {course.cec_hours} hours</p>
               )}
 
-              <button className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 w-full rounded-md px-4 py-2 font-medium">
-                Enrol Now
-              </button>
+              <div className="mt-4">
+                <EnrolButton
+                  slug={course.slug}
+                  priceAud={parseFloat(course.price_aud)}
+                  isFree={course.is_free}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>

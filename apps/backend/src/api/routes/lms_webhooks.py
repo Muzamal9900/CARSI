@@ -22,7 +22,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.database import get_async_db
-from src.db.lms_models import LMSSubscription
+from src.db.lms_models import LMSEnrollment, LMSSubscription
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
@@ -56,7 +56,9 @@ async def stripe_webhook(
     event_type: str = event["type"]
     obj = event["data"]["object"]
 
-    if event_type == "customer.subscription.created":
+    if event_type == "checkout.session.completed":
+        await _handle_checkout_completed(db, obj)
+    elif event_type == "customer.subscription.created":
         await _handle_subscription_created(db, obj)
     elif event_type == "customer.subscription.deleted":
         await _handle_subscription_deleted(db, obj)
@@ -66,6 +68,43 @@ async def stripe_webhook(
         await _handle_payment_failed(db, obj)
 
     return {"received": True}
+
+
+async def _handle_checkout_completed(db: AsyncSession, obj: dict) -> None:
+    """Handle checkout.session.completed — enrol student in paid course."""
+    from uuid import UUID
+
+    metadata = obj.get("metadata") or {}
+    course_id_str = metadata.get("course_id")
+    student_id_str = metadata.get("student_id")
+
+    if not course_id_str or not student_id_str:
+        return
+
+    try:
+        course_id = UUID(course_id_str)
+        student_id = UUID(student_id_str)
+    except ValueError:
+        return
+
+    # Idempotent — skip if already enrolled
+    existing = await db.execute(
+        select(LMSEnrollment).where(
+            LMSEnrollment.student_id == student_id,
+            LMSEnrollment.course_id == course_id,
+        )
+    )
+    if existing.scalar_one_or_none():
+        return
+
+    enrollment = LMSEnrollment(
+        student_id=student_id,
+        course_id=course_id,
+        status="active",
+        payment_reference=obj.get("id", ""),
+    )
+    db.add(enrollment)
+    await db.commit()
 
 
 async def _handle_subscription_created(db: AsyncSession, obj: dict) -> None:
