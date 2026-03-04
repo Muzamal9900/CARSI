@@ -96,3 +96,4 @@ ai-review/screenshots/
 .claude/notebooklm/repo-pack.txt
 .claude/data/minion-state.json
 .worktrees/
+.env*.local
