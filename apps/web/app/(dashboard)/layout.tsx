@@ -1,18 +1,12 @@
-import { Header } from "@/components/layout/header";
-import { Sidebar } from "@/components/layout/sidebar";
+import { LMSIconRail } from '@/components/layout/LMSIconRail';
+import { LMSContextPanel } from '@/components/layout/LMSContextPanel';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6">{children}</main>
-      </div>
+    <div className="flex min-h-screen bg-[#F3F4F6]">
+      <LMSIconRail />
+      <LMSContextPanel />
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }

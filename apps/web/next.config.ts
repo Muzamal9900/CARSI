@@ -28,7 +28,30 @@ const nextConfig: NextConfig = {
     // typedRoutes: true,
   },
   images: {
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'carsi.com.au',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.carsi.com.au',
+        pathname: '/**',
+      },
+      {
+        // Google Drive thumbnails served via lh3.googleusercontent.com
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+        pathname: '/**',
+      },
+      {
+        // Drive direct download thumbnails
+        protocol: 'https',
+        hostname: 'drive.google.com',
+        pathname: '/**',
+      },
+    ],
   },
   async headers() {
     return [
