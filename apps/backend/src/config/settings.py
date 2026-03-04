@@ -123,6 +123,16 @@ class Settings(BaseSettings):
     def effective_celery_backend(self) -> str:
         return self.celery_result_backend or self.redis_url.rstrip("/") + "/2"
 
+    # Unite-Hub Nexus Integration
+    unite_hub_api_url: str = Field(
+        default="https://api.unite-hub.com/v1/events",
+        description="Unite-Hub Nexus API endpoint for event push",
+    )
+    unite_hub_api_key: str = Field(
+        default="",
+        description="API key for Unite-Hub Nexus (leave empty to disable)",
+    )
+
     # MCP Tools
     exa_api_key: str = Field(default="")
     ref_tools_api_key: str = Field(default="")
