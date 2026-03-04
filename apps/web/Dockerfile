@@ -1,6 +1,8 @@
+# syntax=docker/dockerfile:1
 # =============================================================================
 # CARSI LMS — Next.js Production Dockerfile
 # Multi-stage build for minimal production image
+# BuildKit required: DOCKER_BUILDKIT=1
 # =============================================================================
 
 # ---------------------------------------------------------------------------
@@ -13,14 +15,15 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-# Copy monorepo root files needed for install
+# Copy monorepo root files needed for install (layer caching: deps change rarely)
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/config/package.json ./packages/config/
 
-# Install dependencies (frozen lockfile for reproducibility)
-RUN pnpm install --frozen-lockfile
+# Install dependencies with BuildKit pnpm store cache
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # ---------------------------------------------------------------------------
 # Stage 2: Builder
@@ -33,7 +36,7 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 # Copy installed dependencies from deps stage
 COPY --from=deps /app/ ./
 
-# Copy full source
+# Copy full source (after deps for layer caching)
 COPY apps/web/ ./apps/web/
 COPY packages/ ./packages/
 
@@ -62,7 +65,7 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone output + static assets + public
+# Copy ONLY standalone output + static assets + public (minimal image)
 COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
