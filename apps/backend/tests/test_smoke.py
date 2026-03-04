@@ -90,19 +90,18 @@ def _mock_course() -> MagicMock:
     course.short_description = "Learn WRT basics"
     course.price_aud = Decimal("349.00")
     course.is_free = False
-    course.is_published = True
+    course.status = "published"
     course.level = "beginner"
     course.category = "Water Damage Restoration"
     course.tags = ["WRT"]
     course.iicrc_discipline = "WRT"
     course.cec_hours = Decimal("14.0")
-    course.lesson_count = 10
-    course.thumbnail_url = None
-    course.drive_folder_id = None
+    course.duration_hours = None
+    course.cppp40421_unit_code = None
+    course.cppp40421_unit_name = None
     course.instructor_id = INSTRUCTOR_ID
     course.created_at = datetime(2026, 1, 1)
     course.updated_at = datetime(2026, 3, 1)
-    course.instructor = _mock_instructor()
     return course
 
 

@@ -655,3 +655,33 @@ class LMSRPLPortfolio(Base):
 
     student = relationship("LMSUser", foreign_keys=[student_id])
     reviewer = relationship("LMSUser", foreign_keys=[reviewer_id])
+
+
+# ---------------------------------------------------------------------------
+# Course Bundles (Migration 006)
+# ---------------------------------------------------------------------------
+
+
+class LMSBundle(Base):
+    __tablename__ = "lms_bundles"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(200), nullable=False)
+    slug = Column(String(200), nullable=False, unique=True)
+    description = Column(Text, nullable=True)
+    price_aud = Column(Numeric(10, 2), nullable=False)
+    original_price_aud = Column(Numeric(10, 2), nullable=True)
+    is_active = Column(Boolean, default=True)
+    industry_tag = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    courses = relationship("LMSCourse", secondary="lms_bundle_courses", backref="bundles")
+
+
+class LMSBundleCourse(Base):
+    __tablename__ = "lms_bundle_courses"
+
+    bundle_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_bundles.id", ondelete="CASCADE"), primary_key=True)
+    course_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_courses.id", ondelete="CASCADE"), primary_key=True)
+    display_order = Column(Integer, default=0)
