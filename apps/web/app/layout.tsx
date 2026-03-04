@@ -7,8 +7,10 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'CARSI LMS',
-  description: 'IICRC CEC Training — Cleaning & Restoration',
+  title: 'CARSI | Restoration Training — Unite-Group Nexus',
+  description:
+    'IICRC-aligned CEC training for cleaning and restoration professionals. Powered by CARSI, part of the Unite-Group Nexus.',
+  keywords: 'restoration training, IICRC CECs, water restoration, CARSI, Unite-Group',
   manifest: '/manifest.json',
 };
 
