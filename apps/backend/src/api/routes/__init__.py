@@ -17,3 +17,4 @@ from . import lms_subscription  # noqa: F401
 from . import lms_webhooks  # noqa: F401
 from . import lms_course_ideas  # noqa: F401
 from . import lms_rpl  # noqa: F401
+from . import lms_ai_builder  # noqa: F401
