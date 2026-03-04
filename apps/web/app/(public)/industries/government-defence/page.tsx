@@ -5,6 +5,7 @@ import {
   IndustryWhySection,
   IndustryCourseSection,
   IndustryCTA,
+  ContractorAddOns,
 } from '@/components/industries';
 
 // ---------------------------------------------------------------------------
@@ -120,6 +121,8 @@ export default async function GovernmentDefenceIndustryPage() {
         disciplineList="AMRT, WRT, ASD & FSRT"
         courses={courses}
       />
+
+      <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
         subtitle="Government Facility Training"
