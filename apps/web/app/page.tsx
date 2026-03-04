@@ -261,20 +261,24 @@ export default async function Home() {
               className="hidden items-center gap-6 text-sm md:flex"
               style={{ color: 'rgba(255,255,255,0.5)' }}
             >
-              {['Courses|/courses', 'Pathways|/pathways', 'Pricing|/subscribe', 'About|/about'].map(
-                (item) => {
-                  const [label, href] = item.split('|');
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="transition-colors duration-150 hover:text-white"
-                    >
-                      {label}
-                    </Link>
-                  );
-                }
-              )}
+              {[
+                'Courses|/courses',
+                'Industries|/industries/mining',
+                'Pathways|/pathways',
+                'Pricing|/subscribe',
+                'About|/about',
+              ].map((item) => {
+                const [label, href] = item.split('|');
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="transition-colors duration-150 hover:text-white"
+                  >
+                    {label}
+                  </Link>
+                );
+              })}
             </div>
 
             {/* CTA */}
