@@ -1,4 +1,4 @@
-import { Building, Shield, Droplets, Scale } from 'lucide-react';
+import { Hotel, Droplets, Footprints, Waves } from 'lucide-react';
 import {
   IndustryPageLayout,
   IndustryHero,
@@ -15,25 +15,25 @@ import {
 async function getIndustryCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
   try {
-    const [amrtRes, wrtRes, crtRes, asdRes] = await Promise.all([
-      fetch(`${backendUrl}/api/lms/courses?discipline=AMRT&limit=8`, { next: { revalidate: 60 } }),
+    const [wrtRes, crtRes, asdRes, octRes] = await Promise.all([
       fetch(`${backendUrl}/api/lms/courses?discipline=WRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=CRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=ASD&limit=8`, { next: { revalidate: 60 } }),
+      fetch(`${backendUrl}/api/lms/courses?discipline=OCT&limit=8`, { next: { revalidate: 60 } }),
     ]);
 
-    const amrtData = amrtRes.ok ? await amrtRes.json() : { items: [] };
     const wrtData = wrtRes.ok ? await wrtRes.json() : { items: [] };
     const crtData = crtRes.ok ? await crtRes.json() : { items: [] };
     const asdData = asdRes.ok ? await asdRes.json() : { items: [] };
+    const octData = octRes.ok ? await octRes.json() : { items: [] };
 
     const seen = new Set<string>();
     const combined = [];
     for (const c of [
-      ...(amrtData.items ?? []),
       ...(wrtData.items ?? []),
       ...(crtData.items ?? []),
       ...(asdData.items ?? []),
+      ...(octData.items ?? []),
     ]) {
       if (!seen.has(c.id)) {
         seen.add(c.id);
@@ -50,42 +50,42 @@ async function getIndustryCourses() {
 // Page Configuration
 // ---------------------------------------------------------------------------
 
-const ACCENT_COLOR = '#673ab7';
+const ACCENT_COLOR = '#ed9d24';
 
 const disciplines = [
-  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#673ab7' },
-  { code: 'WRT', label: 'Water Damage Restoration', color: '#512da8' },
-  { code: 'CRT', label: 'Carpet Repair Technology', color: '#4527a0' },
-  { code: 'ASD', label: 'Applied Structural Drying', color: '#311b92' },
+  { code: 'WRT', label: 'Water Damage Restoration', color: '#ed9d24' },
+  { code: 'CRT', label: 'Carpet Repair & Reinstallation', color: '#d48b1e' },
+  { code: 'ASD', label: 'Applied Structural Drying', color: '#bb7918' },
+  { code: 'OCT', label: 'Odour Control', color: '#a36712' },
 ];
 
 const stats = [
-  { value: '12,000+', label: 'Property Agencies' },
-  { value: 'RTA', label: 'Compliance' },
-  { value: 'IICRC', label: 'CEC Approved' },
+  { value: '10,000+', label: 'Hotels' },
+  { value: '24/7', label: 'Response' },
+  { value: 'IICRC', label: 'Certified' },
 ];
 
 const whyCards = [
   {
-    icon: Scale,
-    title: 'Tribunal Defence',
-    description:
-      'Verifiable assessment credentials provide defensible documentation in NCAT/VCAT hearings. Reduce mould and carpet disputes with standards-based evidence.',
-    color: '#673ab7',
-  },
-  {
-    icon: Shield,
-    title: 'RTA Compliance',
-    description:
-      'Mould is a habitability issue under all state Residential Tenancies Acts. Trained managers avoid regulatory breaches and landlord liability.',
-    color: '#512da8',
-  },
-  {
     icon: Droplets,
-    title: 'Insurance Claims',
+    title: 'Guest Experience',
     description:
-      'Defensible, standards-based documentation for water damage and mould insurance claims. Win management contracts with qualified credentials.',
+      'Rapid water damage response minimises room downtime and protects guest satisfaction. IICRC-trained teams restore affected areas before reviews are impacted.',
     color: '#ed9d24',
+  },
+  {
+    icon: Footprints,
+    title: 'High-Traffic Areas',
+    description:
+      'Professional carpet maintenance for lobbies, corridors, and conference rooms. CRT-certified technicians extend carpet lifespan in areas with thousands of daily footfalls.',
+    color: '#d48b1e',
+  },
+  {
+    icon: Waves,
+    title: 'Pool & Spa Areas',
+    description:
+      'ASD training for pool overflow and spa water incidents. OCT certification for odour control in enclosed wet areas, change rooms, and guest bathrooms.',
+    color: '#bb7918',
   },
 ];
 
@@ -93,43 +93,43 @@ const whyCards = [
 // Page Component
 // ---------------------------------------------------------------------------
 
-export default async function PropertyManagementIndustryPage() {
+export default async function HospitalityIndustryPage() {
   const courses = await getIndustryCourses();
 
   return (
     <IndustryPageLayout>
       <IndustryHero
-        icon={Building}
-        industryName="Property Management"
+        icon={Hotel}
+        industryName="Hospitality & Tourism"
         accentColor={ACCENT_COLOR}
-        headline="Property Management"
+        headline="Hospitality"
         headlineAccent="Restoration Training"
-        description="Residential Tenancies Act compliance training for property managers and strata managers. IICRC credentials reduce tribunal disputes and differentiate your agency in competitive markets."
+        description="Keep guests comfortable and properties protected. IICRC-certified training for hotel maintenance teams covering water damage, carpet care, structural drying, and odour control."
         disciplines={disciplines}
         stats={stats}
       />
 
       <IndustryWhySection
-        industryName="Property Managers"
+        industryName="Hospitality Teams"
         headline="Built for"
-        headlineAccent="tribunal defence"
+        headlineAccent="guest-first operations"
         cards={whyCards}
       />
 
       <IndustryCourseSection
-        industryName="Property Management"
-        disciplineList="AMRT, WRT, CRT & ASD"
+        industryName="Hospitality"
+        disciplineList="WRT, CRT, ASD & OCT"
         courses={courses}
       />
 
       <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
-        subtitle="Property Management Training"
-        title="Property Bundle"
-        price="$195"
-        description="AMRT Mould Basics + WRT Water Damage + CRT Carpet Assessment. Agency bulk pricing available for 10+ property managers."
-        ctaText="Get Certified"
+        subtitle="Hospitality Training Bundle"
+        title="Hotel Maintenance Bundle"
+        price="$295"
+        description="WRT + CRT + OCT training for hotel maintenance teams. Bulk licensing available for hotel chains and resort groups."
+        ctaText="Request Bundle Pricing"
         accentColor={ACCENT_COLOR}
       />
     </IndustryPageLayout>

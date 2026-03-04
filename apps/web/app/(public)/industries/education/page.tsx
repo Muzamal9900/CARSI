@@ -1,4 +1,4 @@
-import { Stethoscope, Shield, Droplets, Flame } from 'lucide-react';
+import { GraduationCap, ShieldCheck, Building, Users } from 'lucide-react';
 import {
   IndustryPageLayout,
   IndustryHero,
@@ -15,16 +15,16 @@ import {
 async function getIndustryCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
   try {
-    const [amrtRes, wrtRes, fsrtRes, asdRes] = await Promise.all([
+    const [amrtRes, wrtRes, crtRes, asdRes] = await Promise.all([
       fetch(`${backendUrl}/api/lms/courses?discipline=AMRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=WRT&limit=8`, { next: { revalidate: 60 } }),
-      fetch(`${backendUrl}/api/lms/courses?discipline=FSRT&limit=8`, { next: { revalidate: 60 } }),
+      fetch(`${backendUrl}/api/lms/courses?discipline=CRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=ASD&limit=8`, { next: { revalidate: 60 } }),
     ]);
 
     const amrtData = amrtRes.ok ? await amrtRes.json() : { items: [] };
     const wrtData = wrtRes.ok ? await wrtRes.json() : { items: [] };
-    const fsrtData = fsrtRes.ok ? await fsrtRes.json() : { items: [] };
+    const crtData = crtRes.ok ? await crtRes.json() : { items: [] };
     const asdData = asdRes.ok ? await asdRes.json() : { items: [] };
 
     const seen = new Set<string>();
@@ -32,7 +32,7 @@ async function getIndustryCourses() {
     for (const c of [
       ...(amrtData.items ?? []),
       ...(wrtData.items ?? []),
-      ...(fsrtData.items ?? []),
+      ...(crtData.items ?? []),
       ...(asdData.items ?? []),
     ]) {
       if (!seen.has(c.id)) {
@@ -50,41 +50,41 @@ async function getIndustryCourses() {
 // Page Configuration
 // ---------------------------------------------------------------------------
 
-const ACCENT_COLOR = '#009688';
+const ACCENT_COLOR = '#2196f3';
 
 const disciplines = [
-  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#009688' },
-  { code: 'WRT', label: 'Water Damage Restoration', color: '#00796b' },
-  { code: 'FSRT', label: 'Fire & Smoke Restoration', color: '#00695c' },
-  { code: 'ASD', label: 'Applied Structural Drying', color: '#004d40' },
+  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#2196f3' },
+  { code: 'WRT', label: 'Water Damage Restoration', color: '#1976d2' },
+  { code: 'CRT', label: 'Carpet Repair & Reinstallation', color: '#1565c0' },
+  { code: 'ASD', label: 'Applied Structural Drying', color: '#0d47a1' },
 ];
 
 const stats = [
-  { value: '2,050+', label: 'Hospitals' },
-  { value: 'NSQHS', label: 'Standard 3' },
+  { value: '9,500+', label: 'Schools' },
+  { value: 'WHS', label: 'Compliance' },
   { value: 'IICRC', label: 'CEC Approved' },
 ];
 
 const whyCards = [
   {
-    icon: Shield,
-    title: 'NSQHS Alignment',
+    icon: ShieldCheck,
+    title: 'Duty of Care',
     description:
-      'Training supports National Safety & Quality Health Service Standards compliance, particularly Standard 3 (Preventing and Controlling Infections).',
-    color: '#009688',
+      'Schools must demonstrate competency in mould identification and remediation. IICRC training provides documented evidence of due diligence for student and staff safety.',
+    color: '#2196f3',
   },
   {
-    icon: Droplets,
-    title: 'Water Damage Response',
+    icon: Building,
+    title: 'Heritage Buildings',
     description:
-      'Water damage in clinical areas, plant rooms, and basement services requires immediate, standards-based response. Train your environmental services team.',
-    color: '#00796b',
+      'Many older school buildings require specialised structural drying techniques. ASD certification ensures heritage fabric is preserved during water damage restoration.',
+    color: '#1976d2',
   },
   {
-    icon: Flame,
-    title: 'Fire & Smoke',
+    icon: Users,
+    title: 'Parent Council Confidence',
     description:
-      'Fire & smoke response in clinical environments and equipment rooms. IICRC credentials provide verifiable evidence for JCI accreditation audits.',
+      'IICRC credentials provide documented proof of competency that satisfies parent council scrutiny and school board reporting requirements.',
     color: '#ed9d24',
   },
 ];
@@ -93,43 +93,43 @@ const whyCards = [
 // Page Component
 // ---------------------------------------------------------------------------
 
-export default async function HealthcareIndustryPage() {
+export default async function EducationIndustryPage() {
   const courses = await getIndustryCourses();
 
   return (
     <IndustryPageLayout>
       <IndustryHero
-        icon={Stethoscope}
-        industryName="Healthcare Industry"
+        icon={GraduationCap}
+        industryName="Education"
         accentColor={ACCENT_COLOR}
-        headline="Healthcare Facility"
+        headline="Education Facility"
         headlineAccent="Restoration Training"
-        description="NSQHS-aligned training for Australia's 2,050+ public and private hospitals. IICRC credentials support Standard 3 (Preventing and Controlling Infections) compliance and JCI accreditation audits."
+        description="WHS-compliant training for schools, universities, and TAFEs. IICRC credentials demonstrate duty of care for mould remediation and water damage response across education facilities."
         disciplines={disciplines}
         stats={stats}
       />
 
       <IndustryWhySection
-        industryName="Healthcare Facilities"
+        industryName="Education Facilities"
         headline="Built for"
-        headlineAccent="patient safety"
+        headlineAccent="student safety"
         cards={whyCards}
       />
 
       <IndustryCourseSection
-        industryName="Healthcare"
-        disciplineList="AMRT, WRT, FSRT & ASD"
+        industryName="Education"
+        disciplineList="AMRT, WRT, CRT & ASD"
         courses={courses}
       />
 
       <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
-        subtitle="Healthcare Facility Training"
-        title="Healthcare Bundle"
+        subtitle="Education Facility Training"
+        title="Education Facility Bundle"
         price="$295"
-        description="WRT + AMRT + FSRT training + Healthcare-Specific Mould Risk Assessment bonus module. Online, self-paced — fits around 24/7 hospital shift patterns."
-        ctaText="Train Your Team"
+        description="AMRT + WRT training for school maintenance teams. Bulk 10+ seat licensing available for education departments and school networks."
+        ctaText="Request Education Pricing"
         accentColor={ACCENT_COLOR}
       />
     </IndustryPageLayout>

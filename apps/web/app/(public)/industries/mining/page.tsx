@@ -5,6 +5,7 @@ import {
   IndustryWhySection,
   IndustryCourseSection,
   IndustryCTA,
+  ContractorAddOns,
 } from '@/components/industries';
 
 // ---------------------------------------------------------------------------
@@ -116,6 +117,8 @@ export default async function MiningIndustryPage() {
         disciplineList="WRT, AMRT & ASD"
         courses={courses}
       />
+
+      <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
         subtitle="Mining Site Training"

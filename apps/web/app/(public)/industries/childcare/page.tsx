@@ -5,6 +5,7 @@ import {
   IndustryWhySection,
   IndustryCourseSection,
   IndustryCTA,
+  ContractorAddOns,
 } from '@/components/industries';
 
 // ---------------------------------------------------------------------------
@@ -116,6 +117,8 @@ export default async function ChildcareIndustryPage() {
         disciplineList="AMRT, CRT & WRT"
         courses={courses}
       />
+
+      <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
         subtitle="Childcare Compliance Training"

@@ -1,4 +1,4 @@
-import { Stethoscope, Shield, Droplets, Flame } from 'lucide-react';
+import { FileCheck, Shield, TrendingDown } from 'lucide-react';
 import {
   IndustryPageLayout,
   IndustryHero,
@@ -15,24 +15,24 @@ import {
 async function getIndustryCourses() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
   try {
-    const [amrtRes, wrtRes, fsrtRes, asdRes] = await Promise.all([
-      fetch(`${backendUrl}/api/lms/courses?discipline=AMRT&limit=8`, { next: { revalidate: 60 } }),
+    const [wrtRes, fsrtRes, amrtRes, asdRes] = await Promise.all([
       fetch(`${backendUrl}/api/lms/courses?discipline=WRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=FSRT&limit=8`, { next: { revalidate: 60 } }),
+      fetch(`${backendUrl}/api/lms/courses?discipline=AMRT&limit=8`, { next: { revalidate: 60 } }),
       fetch(`${backendUrl}/api/lms/courses?discipline=ASD&limit=8`, { next: { revalidate: 60 } }),
     ]);
 
-    const amrtData = amrtRes.ok ? await amrtRes.json() : { items: [] };
     const wrtData = wrtRes.ok ? await wrtRes.json() : { items: [] };
     const fsrtData = fsrtRes.ok ? await fsrtRes.json() : { items: [] };
+    const amrtData = amrtRes.ok ? await amrtRes.json() : { items: [] };
     const asdData = asdRes.ok ? await asdRes.json() : { items: [] };
 
     const seen = new Set<string>();
     const combined = [];
     for (const c of [
-      ...(amrtData.items ?? []),
       ...(wrtData.items ?? []),
       ...(fsrtData.items ?? []),
+      ...(amrtData.items ?? []),
       ...(asdData.items ?? []),
     ]) {
       if (!seen.has(c.id)) {
@@ -50,42 +50,42 @@ async function getIndustryCourses() {
 // Page Configuration
 // ---------------------------------------------------------------------------
 
-const ACCENT_COLOR = '#009688';
+const ACCENT_COLOR = '#1976d2';
 
 const disciplines = [
-  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#009688' },
-  { code: 'WRT', label: 'Water Damage Restoration', color: '#00796b' },
-  { code: 'FSRT', label: 'Fire & Smoke Restoration', color: '#00695c' },
-  { code: 'ASD', label: 'Applied Structural Drying', color: '#004d40' },
+  { code: 'WRT', label: 'Water Damage Restoration', color: '#1976d2' },
+  { code: 'FSRT', label: 'Fire & Smoke Restoration', color: '#1565c0' },
+  { code: 'AMRT', label: 'Applied Microbial Remediation', color: '#0d47a1' },
+  { code: 'ASD', label: 'Applied Structural Drying', color: '#0b3d91' },
 ];
 
 const stats = [
-  { value: '2,050+', label: 'Hospitals' },
-  { value: 'NSQHS', label: 'Standard 3' },
-  { value: 'IICRC', label: 'CEC Approved' },
+  { value: '$4.5B', label: 'Claims/year' },
+  { value: 'IICRC', label: 'Standards' },
+  { value: '24/7', label: 'Online' },
 ];
 
 const whyCards = [
   {
+    icon: FileCheck,
+    title: 'Accurate Scoping',
+    description:
+      'Understand IICRC standards to approve appropriate restoration scope. Reduce under- and over-scoped claims with evidence-based assessment knowledge.',
+    color: '#1976d2',
+  },
+  {
     icon: Shield,
-    title: 'NSQHS Alignment',
+    title: 'Fraud Prevention',
     description:
-      'Training supports National Safety & Quality Health Service Standards compliance, particularly Standard 3 (Preventing and Controlling Infections).',
-    color: '#009688',
+      'Identify over-scoped or unnecessary remediation work. IICRC training equips adjusters to challenge inflated quotes with technical authority.',
+    color: '#1565c0',
   },
   {
-    icon: Droplets,
-    title: 'Water Damage Response',
+    icon: TrendingDown,
+    title: 'Claims Efficiency',
     description:
-      'Water damage in clinical areas, plant rooms, and basement services requires immediate, standards-based response. Train your environmental services team.',
-    color: '#00796b',
-  },
-  {
-    icon: Flame,
-    title: 'Fire & Smoke',
-    description:
-      'Fire & smoke response in clinical environments and equipment rooms. IICRC credentials provide verifiable evidence for JCI accreditation audits.',
-    color: '#ed9d24',
+      'Faster claim resolution when adjusters understand restoration processes. Reduce back-and-forth between assessors and contractors on scope of works.',
+    color: '#0d47a1',
   },
 ];
 
@@ -93,43 +93,43 @@ const whyCards = [
 // Page Component
 // ---------------------------------------------------------------------------
 
-export default async function HealthcareIndustryPage() {
+export default async function InsuranceIndustryPage() {
   const courses = await getIndustryCourses();
 
   return (
     <IndustryPageLayout>
       <IndustryHero
-        icon={Stethoscope}
-        industryName="Healthcare Industry"
+        icon={FileCheck}
+        industryName="Insurance"
         accentColor={ACCENT_COLOR}
-        headline="Healthcare Facility"
+        headline="Insurance Professional"
         headlineAccent="Restoration Training"
-        description="NSQHS-aligned training for Australia's 2,050+ public and private hospitals. IICRC credentials support Standard 3 (Preventing and Controlling Infections) compliance and JCI accreditation audits."
+        description="IICRC training for loss adjusters, claims assessors, building consultants, and forensic accountants. Understand restoration standards to scope claims accurately and reduce fraud."
         disciplines={disciplines}
         stats={stats}
       />
 
       <IndustryWhySection
-        industryName="Healthcare Facilities"
+        industryName="Insurance Professionals"
         headline="Built for"
-        headlineAccent="patient safety"
+        headlineAccent="claims accuracy"
         cards={whyCards}
       />
 
       <IndustryCourseSection
-        industryName="Healthcare"
-        disciplineList="AMRT, WRT, FSRT & ASD"
+        industryName="Insurance"
+        disciplineList="WRT, FSRT, AMRT & ASD"
         courses={courses}
       />
 
       <ContractorAddOns accentColor={ACCENT_COLOR} />
 
       <IndustryCTA
-        subtitle="Healthcare Facility Training"
-        title="Healthcare Bundle"
+        subtitle="Insurance Professional Training"
+        title="Insurance Professional Bundle"
         price="$295"
-        description="WRT + AMRT + FSRT training + Healthcare-Specific Mould Risk Assessment bonus module. Online, self-paced — fits around 24/7 hospital shift patterns."
-        ctaText="Train Your Team"
+        description="WRT + FSRT training for claims teams. Equip loss adjusters and assessors with the restoration knowledge to scope accurately and settle faster."
+        ctaText="Get Started"
         accentColor={ACCENT_COLOR}
       />
     </IndustryPageLayout>
