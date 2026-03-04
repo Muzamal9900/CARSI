@@ -1,36 +1,34 @@
 # Current State
 
-> Updated: 04/03/2026 AEST — session wrap
+> Updated: 04/03/2026 AEST. Branch: feature/gamification-subscription-iicrc
 
 ## Active Task
 
-WordPress SQL dump migration pipeline — Phases 1–3 complete.
+WordPress SQL migration pipeline — all 6 phases complete and committed.
 
-## In-Progress Work
+## Completed This Session
 
-- Branch: `feature/gamification-subscription-iicrc`
-- Migration scripts committed (b65e79c): `scripts/migration/01_recon.py`, `02_post_types.py`, `03_course_structure.py`
-- Output JSONs generated locally at `scripts/migration/output/` (gitignored)
-  - 90 published courses, 739 lessons, 290 topics extracted
-  - Prices resolved for 60/90 courses ($0–$770 AUD)
-  - 30 remaining courses are membership-gated (need manual price)
+- Phase 4 (04_lesson_content.py): 714 lessons extracted across 86 courses
+- Phase 5 (05_users_enrollments.py): 261 users, 228 enrollments extracted
+- Phase 6 (06_load_to_carsi.py): LIVE load executed — 261 users, 90 courses, 90 modules, 714 lessons, 228 enrollments loaded into CARSI PostgreSQL
+- Fixed React hydration warning on <body> (suppressHydrationWarning) — committed 3d78e1e
 
-## Supabase Question (Pending)
+## Database State (local dev, port 5433)
 
-User asked about linking Supabase. Awaiting clarification on intent:
+- Total courses: 91 published (90 migrated WP + 1 existing seed WRT)
+- Total users: 265 (261 migrated + 4 seed accounts)
+- Total enrollments: 229 (228 migrated + 1 seed)
+- Migrated users have temp password: CarsiReset2026! (bcrypt hash in lms_users.hashed_password)
 
-1. Replace local PostgreSQL (full migration)
-2. Add alongside for specific features (Realtime, Storage, Auth)
-3. Use as production target for Vercel deploy
+## Next Steps (pending)
 
-Current DB: local PostgreSQL in Docker. Supabase MCP NOT configured in .mcp.json.
+1. Homepage — / still shows old "AI Agent Orchestration" starter template, needs CARSI landing page
+2. GP-131 — RestoreAssist training manual course (blocked on login credentials)
+3. GP-128 — Deploy to Vercel Sydney (needs production DB decision)
+4. ~30 migrated courses have NULL description — need content enrichment
 
-## Next Steps (Migration Pipeline)
+## Key Files
 
-- Phase 4: Extract lesson content (post_content from sfwd-lessons)
-- Phase 4b: Map lessons to courses via ld_course_steps PHP serialised blob
-- Phase 5: Load extracted data into CARSI PostgreSQL
-
-## Last Updated
-
-04/03/2026 AEST (manual session wrap)
+- scripts/migration/ — all 6 pipeline phases
+- scripts/migration/output/ — gitignored JSON outputs (courses, lessons, users, enrollments)
+- apps/web/app/layout.tsx — suppressHydrationWarning fix on body tag
