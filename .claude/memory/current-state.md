@@ -1,34 +1,36 @@
 # Current State
 
-> Updated: 04/03/2026 AEST. Branch: feature/gamification-subscription-iicrc
+> Updated: 05/03/2026 AEST
 
-## Active Task
+## Active Branch
 
-WordPress SQL migration pipeline — all 6 phases complete and committed.
+`feature/gamification-subscription-iicrc`
 
 ## Completed This Session
 
-- Phase 4 (04_lesson_content.py): 714 lessons extracted across 86 courses
-- Phase 5 (05_users_enrollments.py): 261 users, 228 enrollments extracted
-- Phase 6 (06_load_to_carsi.py): LIVE load executed — 261 users, 90 courses, 90 modules, 714 lessons, 228 enrollments loaded into CARSI PostgreSQL
-- Fixed React hydration warning on <body> (suppressHydrationWarning) — committed 3d78e1e
+1. **UI Redesign — Two-panel sidebar layout** (commit `aee5acd`)
+   - Created `LMSIconRail.tsx` + `LMSContextPanel.tsx`
+   - Updated `(dashboard)/layout.tsx` to use new panels
+   - Redesigned `CourseCard.tsx` (Fikri Studio style)
+   - Updated `CourseGrid.tsx` (tab bar + search + sort)
+   - Updated `/courses` page (discipline URL param)
+   - Rebuilt `app/page.tsx` (Growpath-inspired landing)
 
-## Database State (local dev, port 5433)
+2. **Glassmorphic 3D Vision redesign** (commit `77fe568`)
+   - `globals.css` — full Abyssal Glass design system: mesh blob animations, glass-card, card-3d, glow utilities, discipline colour coding
+   - `layout.tsx` — Outfit + DM Sans fonts, `html.dark` forced
+   - All layout/card/grid components updated to glass surfaces
+   - Landing page: deep space hero with floating glass stat grid, animated mesh background
 
-- Total courses: 91 published (90 migrated WP + 1 existing seed WRT)
-- Total users: 265 (261 migrated + 4 seed accounts)
-- Total enrollments: 229 (228 migrated + 1 seed)
-- Migrated users have temp password: CarsiReset2026! (bcrypt hash in lms_users.hashed_password)
+## Next Steps
 
-## Next Steps (pending)
+- Choose: merge to main OR push PR
+- `pnpm dev --port 3009` → preview at localhost:3009
 
-1. Homepage — / still shows old "AI Agent Orchestration" starter template, needs CARSI landing page
-2. GP-131 — RestoreAssist training manual course (blocked on login credentials)
-3. GP-128 — Deploy to Vercel Sydney (needs production DB decision)
-4. ~30 migrated courses have NULL description — need content enrichment
+## Key Commits
 
-## Key Files
-
-- scripts/migration/ — all 6 pipeline phases
-- scripts/migration/output/ — gitignored JSON outputs (courses, lessons, users, enrollments)
-- apps/web/app/layout.tsx — suppressHydrationWarning fix on body tag
+```
+77fe568 feat(ui): glassmorphic 3D vision redesign — Abyssal Glass theme
+aee5acd feat(ui): redesign dashboard layout + landing page
+043b1c4 fix(proxy): rename exported function from middleware→proxy
+```
