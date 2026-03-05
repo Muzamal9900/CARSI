@@ -1,38 +1,24 @@
 # Current State
 
-> Updated: 05/03/2026 14:30 AEST
+> Updated by PreCompact hook. Session: 96911920
 
 ## Active Task
 
-Production deployment preparation for CARSI LMS.
+Compaction triggered — context was saved at 05/03/2026 12:07 AEST.
+Re-read CONSTITUTION.md if rules feel unclear after compaction.
 
-## Recent Work Completed
+## Recent Architectural Choices
 
-- Synthex marketing automation connector (GP-201 Done)
-- 15 event types for full student journey tracking
-- Data sync API endpoints for Synthex
-- Linear updated: 145 Done, 4 Todo (production tasks)
+See architectural-decisions.md for logged decisions.
 
-## Linear Status
+## In-Progress Work
 
-- **Done:** 145 issues
-- **Todo:** 4 issues (GP-200, GP-202, GP-203, GP-204)
-- **Focus:** Production deployment (8-12 hours estimated)
+Check recent git status: `git status` and `git log --oneline -5`
 
-## Production Blockers
+## Next Steps
 
-1. Backend not deployed (Railway/Render recommended)
-2. PostgreSQL not provisioned
-3. Alembic migrations not run on prod
-4. Course content not imported from Google Drive
-5. API keys (Stripe, Synthex, Unite-Hub) not configured
-
-## Git Status
-
-- Branch: feature/gamification-subscription-iicrc
-- Latest commit: 2f7f7d4 (Synthex integration)
-- Working tree: clean
+Re-read .claude/memory/CONSTITUTION.md to restore rule context.
 
 ## Last Updated
 
-05/03/2026 14:30 AEST
+05/03/2026 12:07 AEST (PreCompact hook)
