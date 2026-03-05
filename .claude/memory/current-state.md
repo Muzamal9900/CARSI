@@ -1,24 +1,32 @@
 # Current State
 
-> Updated by PreCompact hook. Session: 96911920
+> Updated manually. Session: 96911920 (continued)
 
 ## Active Task
 
-Compaction triggered — context was saved at 05/03/2026 20:21 AEST.
-Re-read CONSTITUTION.md if rules feel unclear after compaction.
+GP-207 ⏳ IN PROGRESS — Custom domain api.carsi.com.au
 
-## Recent Architectural Choices
+## Completed This Session
 
-See architectural-decisions.md for logged decisions.
+- GP-206 ✅ All Fly.io secrets configured (Stripe, Anthropic, Redis)
+- Upstash Redis created (carsi-redis, Tokyo region, free tier)
+- Fly.io cert created for api.carsi.com.au
+- Vercel env updated (NEXT_PUBLIC_BACKEND_URL → https://api.carsi.com.au)
+- Vercel deployed: https://carsi.com.au
 
-## In-Progress Work
+## Waiting On User
 
-Check recent git status: `git status` and `git log --oneline -5`
+DNS records need to be added in domain registrar:
 
-## Next Steps
+- A record: api → 66.241.124.60
+- AAAA record: api → 2a09:8280:1::dc:bda5:0
 
-Re-read .claude/memory/CONSTITUTION.md to restore rule context.
+## Remaining Linear Issues
+
+- GP-207: ⏳ DNS pending
+- GP-203: Import Courses from Google Drive
+- GP-200: Production Deployment Checklist
 
 ## Last Updated
 
-05/03/2026 20:21 AEST (PreCompact hook)
+05/03/2026 21:20 AEST (manual)
