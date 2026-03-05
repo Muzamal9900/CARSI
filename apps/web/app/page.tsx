@@ -745,10 +745,17 @@ export default async function Home() {
                 Platform
               </p>
               <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {['Courses', 'Pathways', 'Pricing', 'About'].map((item) => (
-                  <li key={item}>
-                    <Link href={`/${item.toLowerCase()}`} className="hover:text-white">
-                      {item}
+                {[
+                  { label: 'Courses', href: '/courses' },
+                  { label: 'Pathways', href: '/pathways' },
+                  { label: 'Pricing', href: '/pricing' },
+                  { label: 'About', href: '/about' },
+                  { label: 'Testimonials', href: '/testimonials' },
+                  { label: 'Contact', href: '/contact' },
+                ].map((item) => (
+                  <li key={item.label}>
+                    <Link href={item.href} className="hover:text-white">
+                      {item.label}
                     </Link>
                   </li>
                 ))}
