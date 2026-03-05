@@ -9,7 +9,7 @@ import { Menu, X } from 'lucide-react';
 // Animation Config (Council-approved Bezier)
 // ---------------------------------------------------------------------------
 
-const smoothEase = [0.4, 0, 0.2, 1];
+const smoothEase: [number, number, number, number] = [0.4, 0, 0.2, 1];
 
 const menuVariants = {
   closed: {

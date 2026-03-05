@@ -9,7 +9,7 @@ import { ReactNode } from 'react';
 // Council-Approved Animation Config (Bezier principle)
 // ---------------------------------------------------------------------------
 
-const smoothEase = [0.4, 0, 0.2, 1]; // Council-approved smooth easing
+const smoothEase: [number, number, number, number] = [0.4, 0, 0.2, 1]; // Council-approved smooth easing
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 20 },
