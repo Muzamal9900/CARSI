@@ -36,7 +36,7 @@ def upgrade() -> None:
             nullable=True,
         ),
         sa.Column("vote_count", sa.Integer, nullable=False, server_default="0"),
-        sa.Column("status", sa.String(50), nullable=False, server_default="'idea'"),
+        sa.Column("status", sa.String(50), nullable=False, server_default=sa.text("'idea'")),
         sa.Column(
             "ai_outline",
             postgresql.JSONB(astext_type=sa.Text()),

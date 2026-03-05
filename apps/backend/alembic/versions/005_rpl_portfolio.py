@@ -43,10 +43,10 @@ def upgrade() -> None:
             "evidence_urls",
             postgresql.JSONB(astext_type=sa.Text()),
             nullable=False,
-            server_default="'[]'",
+            server_default=sa.text("'[]'"),
         ),
         # Review workflow
-        sa.Column("status", sa.String(50), nullable=False, server_default="'pending'"),
+        sa.Column("status", sa.String(50), nullable=False, server_default=sa.text("'pending'")),
         # pending | under_review | approved | rejected
         sa.Column(
             "reviewer_id",
