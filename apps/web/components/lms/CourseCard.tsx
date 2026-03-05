@@ -142,7 +142,7 @@ export function CourseCard({ course }: CourseCardProps) {
         >
           <div
             className="flex items-center gap-2 text-xs"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
+            style={{ color: 'rgba(255,255,255,0.6)' }}
           >
             {course.lesson_count != null && (
               <span className="flex items-center gap-1">

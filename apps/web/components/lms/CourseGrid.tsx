@@ -156,7 +156,7 @@ export function CourseGrid({ courses, initialTab = 'All', loading = false }: Cou
           </div>
           <div
             className="flex items-center gap-1.5 text-sm"
-            style={{ color: 'rgba(255,255,255,0.35)' }}
+            style={{ color: 'rgba(255,255,255,0.6)' }}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             <span>
@@ -200,7 +200,7 @@ export function CourseGrid({ courses, initialTab = 'All', loading = false }: Cou
         </div>
       ) : (
         <div className="py-20 text-center">
-          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
             No courses found{searchQuery ? ` for "${searchQuery}"` : ''}.
           </p>
         </div>
