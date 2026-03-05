@@ -1,15 +1,32 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
+import { OrganizationSchema } from '@/components/seo/JsonLd';
 import {
   ArrowRight,
-  Building2,
   Baby,
-  Stethoscope,
-  HardHat,
   Building,
+  Building2,
+  FileCheck,
+  GraduationCap,
+  HardHat,
+  Hotel,
+  Layers,
+  Pickaxe,
   Shield,
   Sparkles,
-  Pickaxe,
+  Stethoscope,
+  Store,
 } from 'lucide-react';
+
+// ---------------------------------------------------------------------------
+// Metadata
+// ---------------------------------------------------------------------------
+
+export const metadata: Metadata = {
+  title: 'Industry Training Solutions | CARSI',
+  description:
+    'IICRC-certified training for 12+ industries across Australia. Sector-specific restoration courses with verifiable credentials for healthcare, hospitality, mining, construction, and more.',
+};
 
 // ---------------------------------------------------------------------------
 // Data
@@ -17,49 +34,25 @@ import {
 
 const industries = [
   {
-    slug: 'aged-care',
-    label: 'Aged Care',
-    description: 'NQF-compliant infection control training for residential aged care facilities.',
-    Icon: Shield,
-    color: '#27ae60',
-    disciplines: ['CRT', 'AMRT'],
-  },
-  {
-    slug: 'childcare',
-    label: 'Childcare',
-    description: 'ACECQA-aligned hygiene training for early childhood centres.',
-    Icon: Baby,
-    color: '#e91e63',
-    disciplines: ['AMRT', 'CRT', 'WRT'],
-  },
-  {
     slug: 'healthcare',
     label: 'Healthcare',
-    description: 'NSQHS Standard 3 training for hospital facility teams.',
+    description: 'Hospitals, clinics, medical facilities',
     Icon: Stethoscope,
     color: '#009688',
-    disciplines: ['AMRT', 'WRT', 'FSRT', 'ASD'],
+    disciplines: ['AMRT', 'WRT', 'FSRT'],
   },
   {
-    slug: 'construction',
-    label: 'Construction',
-    description: 'NCC-compliant moisture and mould management for site teams.',
-    Icon: HardHat,
-    color: '#ff9800',
-    disciplines: ['WRT', 'ASD', 'AMRT'],
-  },
-  {
-    slug: 'property-management',
-    label: 'Property Management',
-    description: 'Residential Tenancies Act compliance for property managers.',
-    Icon: Building,
-    color: '#673ab7',
-    disciplines: ['AMRT', 'WRT', 'CRT', 'ASD'],
+    slug: 'hospitality',
+    label: 'Hotels & Resorts',
+    description: 'Hotels, resorts, casinos, cruise ships',
+    Icon: Hotel,
+    color: '#8e44ad',
+    disciplines: ['WRT', 'CRT', 'ASD', 'OCT'],
   },
   {
     slug: 'government-defence',
     label: 'Government & Defence',
-    description: 'WHS-compliant training for councils and defence facilities.',
+    description: 'Councils, state agencies, defence',
     Icon: Building2,
     color: '#2196f3',
     disciplines: ['AMRT', 'WRT', 'ASD', 'FSRT'],
@@ -67,18 +60,82 @@ const industries = [
   {
     slug: 'commercial-cleaning',
     label: 'Commercial Cleaning',
-    description: 'Professional certification for cleaning contractors.',
+    description: 'Cleaning contractors, facility services',
     Icon: Sparkles,
     color: '#2490ed',
-    disciplines: ['CRT', 'CCT', 'OCT'],
+    disciplines: ['CCT', 'CRT', 'WRT', 'AMRT'],
+  },
+  {
+    slug: 'aged-care',
+    label: 'Aged Care',
+    description: 'Residential aged care facilities',
+    Icon: Shield,
+    color: '#27ae60',
+    disciplines: ['CRT', 'AMRT', 'WRT'],
+  },
+  {
+    slug: 'education',
+    label: 'Education',
+    description: 'Schools, universities',
+    Icon: GraduationCap,
+    color: '#3498db',
+    disciplines: ['AMRT', 'WRT', 'CRT', 'ASD'],
+  },
+  {
+    slug: 'insurance',
+    label: 'Insurance',
+    description: 'Loss adjusters, claims assessors',
+    Icon: FileCheck,
+    color: '#16a085',
+    disciplines: ['WRT', 'FSRT', 'AMRT', 'ASD'],
+  },
+  {
+    slug: 'strata',
+    label: 'Strata & Body Corporate',
+    description: 'Building managers, body corporate',
+    Icon: Layers,
+    color: '#9b59b6',
+    disciplines: ['WRT', 'CRT', 'AMRT', 'ASD'],
   },
   {
     slug: 'mining',
-    label: 'Mining',
-    description: 'Site restoration training for mining and resources sector.',
+    label: 'Mining & Resources',
+    description: 'Mine camps, remote facilities',
     Icon: Pickaxe,
     color: '#ed9d24',
-    disciplines: ['WRT', 'AMRT', 'ASD'],
+    disciplines: ['WRT', 'ASD', 'AMRT'],
+  },
+  {
+    slug: 'retail',
+    label: 'Retail & Shopping Centres',
+    description: 'Shopping centres, major landlords',
+    Icon: Store,
+    color: '#e74c3c',
+    disciplines: ['WRT', 'CRT', 'OCT', 'FSRT'],
+  },
+  {
+    slug: 'childcare',
+    label: 'Childcare',
+    description: 'Early childhood centres',
+    Icon: Baby,
+    color: '#e91e63',
+    disciplines: ['CRT', 'AMRT'],
+  },
+  {
+    slug: 'construction',
+    label: 'Construction',
+    description: 'Builders, construction sites',
+    Icon: HardHat,
+    color: '#ff9800',
+    disciplines: ['WRT', 'ASD'],
+  },
+  {
+    slug: 'property-management',
+    label: 'Property Management',
+    description: 'Property managers, real estate',
+    Icon: Building,
+    color: '#673ab7',
+    disciplines: ['WRT', 'CRT', 'ASD'],
   },
 ];
 
@@ -88,19 +145,17 @@ const industries = [
 
 export default function IndustriesPage() {
   return (
-    <main className="min-h-screen" style={{ background: '#0a0f1a' }}>
-      {/* Subtle gradient */}
-      <div
-        className="pointer-events-none fixed inset-0"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(36,144,237,0.08) 0%, transparent 50%)',
-        }}
-        aria-hidden="true"
-      />
+    <main className="min-h-screen" style={{ background: '#060a14' }}>
+      <OrganizationSchema />
+
+      {/* Mesh background */}
+      <div className="mesh-bg" aria-hidden="true">
+        <div className="mesh-blob mesh-blob-1" />
+        <div className="mesh-blob mesh-blob-2" />
+      </div>
 
       <div className="relative z-10">
-        {/* Header */}
+        {/* Hero */}
         <section className="mx-auto max-w-6xl px-6 pt-20 pb-12">
           <p
             className="mb-2 text-xs tracking-wide uppercase"
@@ -112,14 +167,14 @@ export default function IndustriesPage() {
             className="mb-4 text-4xl font-bold tracking-tight"
             style={{ color: 'rgba(255,255,255,0.95)' }}
           >
-            Training for your sector
+            Industry Training Solutions
           </h1>
           <p
             className="max-w-2xl text-lg leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.5)' }}
           >
-            IICRC-aligned restoration training tailored to your industry&apos;s compliance
-            requirements. Each pathway includes sector-specific courses and verifiable credentials.
+            IICRC-certified training for 12+ industries across Australia. Each pathway includes
+            sector-specific courses, verifiable credentials, and continuing education credits.
           </p>
         </section>
 

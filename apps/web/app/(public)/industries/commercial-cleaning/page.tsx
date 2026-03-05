@@ -7,6 +7,7 @@ import {
   IndustryCTA,
   ContractorAddOns,
 } from '@/components/industries';
+import { FAQSchema } from '@/components/seo/JsonLd';
 
 // ---------------------------------------------------------------------------
 // Data Fetching
@@ -61,6 +62,34 @@ const stats = [
   { value: 'CECs', label: 'Continuous Education' },
 ];
 
+const faqs = [
+  {
+    question: 'How do cleaning companies add restoration services in Australia?',
+    answer:
+      'Commercial cleaning businesses expand into restoration by upskilling existing staff with IICRC certifications. CRT (Carpet Restoration), WRT (Water Damage Restoration), and OCT (Odour Control) are the most common entry points. These credentials allow cleaners to offer insured restoration work alongside routine cleaning contracts, increasing revenue per client.',
+  },
+  {
+    question: 'What IICRC certifications help win insurance restoration panels?',
+    answer:
+      'Major Australian insurers and loss adjusters require contractors on their restoration panels to hold current IICRC certifications. WRT (Water Damage Restoration) and FSRT (Fire & Smoke Restoration) are the most commonly requested. Maintaining current CECs (Continuing Education Credits) is essential to remain on approved contractor lists.',
+  },
+  {
+    question: 'How does IICRC certification align with ISSA standards?',
+    answer:
+      'IICRC and ISSA (International Sanitary Supply Association) are complementary industry bodies. IICRC provides technician-level certifications in specific restoration disciplines, while ISSA focuses on cleaning management standards. Australian cleaning companies often hold credentials from both organisations to demonstrate comprehensive capability in tenders.',
+  },
+  {
+    question: 'What is the cost of IICRC certification for cleaning staff in Australia?',
+    answer:
+      'CARSI offers IICRC CEC-approved training from $795 AUD per year per seat, which includes access to all courses, verifiable digital credentials, and CEC tracking. Bulk team pricing is available for cleaning companies training multiple technicians. All courses are online and self-paced, eliminating travel and downtime costs.',
+  },
+  {
+    question: 'How do cleaning contractors track IICRC CEC credits for their team?',
+    answer:
+      "CARSI provides a team dashboard where business owners and managers can monitor each technician's CEC progress, certification status, and expiry dates. Verifiable digital transcripts are issued for each completed course, suitable for tender submissions, insurance panel applications, and client proposals.",
+  },
+];
+
 const whyCards = [
   {
     icon: Award,
@@ -94,6 +123,7 @@ export default async function CommercialCleaningIndustryPage() {
 
   return (
     <IndustryPageLayout>
+      <FAQSchema questions={faqs} />
       <IndustryHero
         icon={Sparkles}
         industryName="Commercial Cleaning"

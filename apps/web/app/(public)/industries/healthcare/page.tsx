@@ -7,6 +7,7 @@ import {
   IndustryCTA,
   ContractorAddOns,
 } from '@/components/industries';
+import { FAQSchema } from '@/components/seo/JsonLd';
 
 // ---------------------------------------------------------------------------
 // Data Fetching
@@ -65,6 +66,29 @@ const stats = [
   { value: 'IICRC', label: 'CEC Approved' },
 ];
 
+const faqs = [
+  {
+    question: 'What IICRC certifications do Australian hospitals need?',
+    answer:
+      'Australian healthcare facilities typically require AMRT (Applied Microbial Remediation) for mould and infection control, WRT (Water Damage Restoration) for pipe bursts and flooding in clinical areas, and FSRT (Fire & Smoke Restoration) for emergency response. These certifications support NSQHS Standard 3 compliance and JCI accreditation audits.',
+  },
+  {
+    question: 'How does IICRC training support NSQHS Standard 3 compliance?',
+    answer:
+      'NSQHS Standard 3 (Preventing and Controlling Infections) requires healthcare facilities to demonstrate staff competency in infection prevention. IICRC AMRT certification provides verifiable evidence that environmental services teams are trained in mould identification, remediation protocols, and contamination prevention — all directly relevant to Standard 3 audit requirements.',
+  },
+  {
+    question: 'Can hospital maintenance staff complete IICRC training online?',
+    answer:
+      'Yes. CARSI delivers IICRC CEC-approved courses online and self-paced, designed to fit around 24/7 hospital shift patterns. Staff can complete modules between shifts without leaving the facility. All courses count toward IICRC Continuing Education Credits (CECs) and issue verifiable digital credentials on completion.',
+  },
+  {
+    question: 'What is mould remediation training for healthcare facilities?',
+    answer:
+      'IICRC AMRT (Applied Microbial Remediation) training covers mould identification, moisture assessment, containment procedures, and remediation protocols specific to clinical environments. In Australian hospitals, this is critical for plant rooms, basement services, and water-damaged areas where microbial growth poses infection risks to immunocompromised patients.',
+  },
+];
+
 const whyCards = [
   {
     icon: Shield,
@@ -98,6 +122,7 @@ export default async function HealthcareIndustryPage() {
 
   return (
     <IndustryPageLayout>
+      <FAQSchema questions={faqs} />
       <IndustryHero
         icon={Stethoscope}
         industryName="Healthcare Industry"

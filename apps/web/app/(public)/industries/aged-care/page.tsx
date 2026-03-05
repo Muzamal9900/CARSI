@@ -7,6 +7,7 @@ import {
   IndustryCTA,
   ContractorAddOns,
 } from '@/components/industries';
+import { FAQSchema } from '@/components/seo/JsonLd';
 
 // ---------------------------------------------------------------------------
 // Data Fetching
@@ -54,6 +55,24 @@ const stats = [
   { value: 'IICRC', label: 'CEC Approved' },
 ];
 
+const faqs = [
+  {
+    question: 'What IICRC certifications do aged care facilities need?',
+    answer:
+      'Australian aged care facilities typically require CRT (Carpet Restoration) for high-traffic flooring maintenance and AMRT (Applied Microbial Remediation) for mould and infection control. These certifications support National Quality Framework compliance and demonstrate competency to aged care auditors.',
+  },
+  {
+    question: 'How does IICRC training support Aged Care Quality Standards?',
+    answer:
+      'The Aged Care Quality Standards require facilities to demonstrate safe, clean environments for residents. IICRC AMRT certification provides verifiable evidence that cleaning teams are trained in mould identification, remediation protocols, and infection prevention — directly relevant to Standard 3 (Personal Care and Clinical Care) compliance.',
+  },
+  {
+    question: 'Can aged care staff complete IICRC training around shift work?',
+    answer:
+      'Yes. CARSI delivers IICRC CEC-approved courses online and self-paced, designed to fit around 24/7 aged care operations. Staff can complete modules between shifts without leaving the facility. All courses issue verifiable digital credentials on completion.',
+  },
+];
+
 const whyCards = [
   {
     icon: Shield,
@@ -87,6 +106,7 @@ export default async function AgedCareIndustryPage() {
 
   return (
     <IndustryPageLayout>
+      <FAQSchema questions={faqs} />
       <IndustryHero
         icon={HeartPulse}
         industryName="Aged Care Industry"

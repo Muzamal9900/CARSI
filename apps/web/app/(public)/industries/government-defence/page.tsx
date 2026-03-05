@@ -7,6 +7,7 @@ import {
   IndustryCTA,
   ContractorAddOns,
 } from '@/components/industries';
+import { FAQSchema } from '@/components/seo/JsonLd';
 
 // ---------------------------------------------------------------------------
 // Data Fetching
@@ -65,6 +66,29 @@ const stats = [
   { value: 'IICRC', label: 'CEC Approved' },
 ];
 
+const faqs = [
+  {
+    question: 'Is IICRC certification required for AusTender procurement panels?',
+    answer:
+      'While not universally mandated, many Commonwealth and state government procurement panels list IICRC certification as a pre-qualification criterion for restoration and remediation contracts. Verifiable IICRC credentials satisfy audit requirements and demonstrate technical competency in tender submissions through AusTender and state equivalents.',
+  },
+  {
+    question: 'What WHS obligations apply to mould in government buildings?',
+    answer:
+      'Under Australian WHS legislation, government employers have a duty of care to identify and manage mould and moisture hazards. IICRC AMRT (Applied Microbial Remediation) training provides facility teams with the skills to conduct mould assessments, implement containment protocols, and document remediation — demonstrating WHS due diligence to regulators.',
+  },
+  {
+    question: 'How do you restore heritage-listed government buildings after water damage?',
+    answer:
+      'Heritage-listed buildings require specialised structural drying techniques that avoid damaging original materials. IICRC ASD (Applied Structural Drying) certification trains government maintenance teams in low-impact drying methods, moisture monitoring, and documentation protocols that satisfy both heritage conservation requirements and WHS compliance.',
+  },
+  {
+    question: 'Can government facility staff complete IICRC training online?',
+    answer:
+      'Yes. CARSI delivers IICRC CEC-approved courses online and self-paced, suitable for council and agency staff across metropolitan and regional Australia. Courses issue verifiable digital credentials that satisfy audit and procurement compliance requirements. Bulk seat licensing is available for departments and councils.',
+  },
+];
+
 const whyCards = [
   {
     icon: Shield,
@@ -98,6 +122,7 @@ export default async function GovernmentDefenceIndustryPage() {
 
   return (
     <IndustryPageLayout>
+      <FAQSchema questions={faqs} />
       <IndustryHero
         icon={Building2}
         industryName="Government & Defence"
