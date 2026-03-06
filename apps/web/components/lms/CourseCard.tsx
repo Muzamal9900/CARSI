@@ -25,47 +25,143 @@ interface CourseCardProps {
 }
 
 /**
- * Generates a fallback thumbnail path based on the course slug.
- * Attempts to find a matching local image in /images/courses/
+ * All 74 AI-generated course thumbnail images available in /images/courses/
+ */
+const COURSE_IMAGES = new Set([
+  'administration-course',
+  'air-filtration-equipment',
+  'biohazard-remediation',
+  'building-materials',
+  'carpet-cleaning-basics',
+  'commercial-kitchen-cleaning',
+  'communication-skills',
+  'concrete-moisture-testing',
+  'containment-barriers',
+  'contents-restoration',
+  'customer-service',
+  'dehumidification',
+  'document-drying',
+  'donning-doffing-ppe',
+  'emergency-response',
+  'fire-damage-assessment',
+  'flood-restoration',
+  'glass-cleaning',
+  'gym-cleaning',
+  'hard-floor-cleaning',
+  'healthcare-cleaning',
+  'hoarding-cleanup',
+  'infection-control-childcare',
+  'insurance-documentation',
+  'intro-advanced-structural-drying',
+  'intro-applied-microbial-remediation',
+  'intro-applied-structural-drying',
+  'intro-asbestos-awareness',
+  'intro-biological-contaminants',
+  'intro-carpet-cleaning-drying',
+  'intro-digital-moisture-mapping',
+  'intro-drying-techniques',
+  'intro-hvac-drying',
+  'intro-infrared-thermography',
+  'intro-large-loss-drying',
+  'intro-odour-control',
+  'intro-ppe-equipment',
+  'intro-project-management',
+  'intro-psychrometry-drying',
+  'intro-safety-procedures',
+  'intro-smoke-soot-restoration',
+  'intro-structural-drying-concepts',
+  'intro-water-damage-restoration',
+  'intro-water-extraction',
+  'leather-cleaning',
+  'marketing-course',
+  'moisture-meter-training',
+  'mould-remediation-level-1',
+  'mould-remediation-level-2',
+  'mould-remediation-level-3',
+  'office-cleaning',
+  'ozone-treatment',
+  'pest-contamination',
+  'pressure-washing',
+  'pricing-quoting',
+  'retail-cleaning',
+  'risk-assessment',
+  'rug-cleaning',
+  'school-cleaning',
+  'soot-removal',
+  'stain-removal',
+  'starting-a-business',
+  'stone-tile-cleaning',
+  'subfloor-drying',
+  'team-leadership',
+  'thermal-fogging',
+  'timber-floor-restoration',
+  'upholstery-cleaning',
+  'vehicle-detailing',
+  'ventilation-equipment',
+  'wall-cavity-drying',
+  'warehouse-cleaning',
+  'whs-awareness',
+  'window-cleaning',
+]);
+
+/**
+ * Calculate word overlap score between two slugs (0-1)
+ */
+function wordOverlapScore(a: string, b: string): number {
+  const wordsA = new Set(a.split('-').filter((w) => w.length > 2));
+  const wordsB = new Set(b.split('-').filter((w) => w.length > 2));
+  if (wordsA.size === 0 || wordsB.size === 0) return 0;
+
+  let matches = 0;
+  for (const word of wordsA) {
+    if (wordsB.has(word)) matches++;
+  }
+  return matches / Math.max(wordsA.size, wordsB.size);
+}
+
+/**
+ * Generates a fallback thumbnail path based on the course slug or title.
+ * Attempts to match against 74 AI-generated images in /images/courses/
  */
 function getFallbackThumbnail(slug: string, title: string): string | null {
-  // Common slug transformations
-  const candidates = [
-    slug,
-    slug.replace(/-/g, '-'),
-    title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, ''),
-  ];
+  // Normalise title to slug format
+  const titleSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
-  // Known course image mappings (subset - common patterns)
-  const knownImages = new Set([
-    'intro-water-damage-restoration',
-    'intro-applied-structural-drying',
-    'intro-applied-microbial-remediation',
-    'mould-remediation-level-1',
-    'carpet-cleaning-basics',
-    'dehumidification',
-    'flood-restoration',
-    'fire-damage-assessment',
-    'biohazard-remediation',
-    'contents-restoration',
-    'emergency-response',
-    'insurance-documentation',
-    'healthcare-cleaning',
-    'commercial-kitchen-cleaning',
-    'hard-floor-cleaning',
-    'odour-control',
-    'smoke-damage',
-    'water-extraction',
-    'structural-drying',
-  ]);
+  // Try direct matches first
+  if (COURSE_IMAGES.has(slug)) {
+    return `/images/courses/${slug}.webp`;
+  }
+  if (COURSE_IMAGES.has(titleSlug)) {
+    return `/images/courses/${titleSlug}.webp`;
+  }
 
-  for (const candidate of candidates) {
-    if (knownImages.has(candidate)) {
-      return `/images/courses/${candidate}.webp`;
+  // Try partial matches (for courses with extra words in slug)
+  for (const img of COURSE_IMAGES) {
+    if (slug.includes(img) || titleSlug.includes(img)) {
+      return `/images/courses/${img}.webp`;
     }
+    if (img.includes(slug) || img.includes(titleSlug)) {
+      return `/images/courses/${img}.webp`;
+    }
+  }
+
+  // Try word-overlap matching (handles reordered words like "level-1-mould" vs "mould-level-1")
+  let bestMatch: string | null = null;
+  let bestScore = 0;
+  for (const img of COURSE_IMAGES) {
+    const scoreSlug = wordOverlapScore(slug, img);
+    const scoreTitle = wordOverlapScore(titleSlug, img);
+    const score = Math.max(scoreSlug, scoreTitle);
+    if (score > bestScore && score >= 0.5) {
+      bestScore = score;
+      bestMatch = img;
+    }
+  }
+  if (bestMatch) {
+    return `/images/courses/${bestMatch}.webp`;
   }
 
   return null;
