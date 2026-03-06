@@ -1,46 +1,24 @@
 # Current State
 
-> Last updated: 06/03/2026
+> Updated by PreCompact hook. Session: c4291f0b
 
 ## Active Task
 
-Visual Asset Generation + UI Refinement — **COMPLETED**
+Compaction triggered — context was saved at 06/03/2026 11:18 AEST.
+Re-read CONSTITUTION.md if rules feel unclear after compaction.
 
-## Completed This Session
+## Recent Architectural Choices
 
-### Badge Integration (44335e0)
+See architectural-decisions.md for logged decisions.
 
-- StreakTracker: displays streak badge images (7/30/90 day milestones)
-- CECProgressRing: shows discipline badges + CEC milestone badges (10/25/50/100)
-- CourseCard: fallback thumbnail logic with error handling
+## In-Progress Work
 
-### Error States (44335e0)
+Check recent git status: `git status` and `git log --oneline -5`
 
-- Student dashboard: proper error banners with retry buttons
-- Individual loading states per API call
-- Graceful degradation when API calls fail
+## Next Steps
 
-### Accessibility Improvements (a055a04)
+Re-read .claude/memory/CONSTITUTION.md to restore rule context.
 
-- Mobile touch targets: min-height 44px on tabs and links (WCAG 2.1 AA)
-- Focus ring visibility: cyan-500/50 ring on keyboard navigation
-- CourseCard, CourseGrid updated
+## Last Updated
 
-## Production Status
-
-- **Live URL:** https://carsi-web.vercel.app
-- **Latest deploy:** a055a04
-- **All tests:** Passing
-
-## Remaining Audit Items (Low Priority)
-
-- Hero background image
-- Typography consistency audit
-- Image format optimization (some PNGs could be WebP)
-
-## Recent Commits
-
-- a055a04 fix(a11y): improve mobile touch targets + focus ring visibility
-- 44335e0 feat(gamification): integrate badge images + add error states
-- 11b960b fix(a11y): improve text contrast from 0.35 to 0.6 opacity
-- 2ebb165 fix(branding): add missing logo, favicon, OG image + fix IICRC Map overflow
+06/03/2026 11:18 AEST (PreCompact hook)
