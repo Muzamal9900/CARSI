@@ -1,6 +1,7 @@
 """
 CARSI LMS Credential Routes
 
+GET /api/lms/credentials/me              — student credential wallet (auth required)
 GET /api/lms/credentials/{credential_id}  — public credential verification
   credential_id is the enrollment UUID; no auth required (public verification page)
 """
@@ -16,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from src.api.deps_lms import get_current_lms_user
 from src.config.database import get_async_db
 from src.db.lms_models import LMSCourse, LMSEnrollment, LMSUser
 from src.services.pdf_certificate import generate_certificate_pdf
@@ -35,6 +37,56 @@ class CredentialOut(BaseModel):
     issuing_organisation: str
     verification_url: str
     cppp40421_unit_code: str | None = None
+
+
+class StudentCredentialOut(BaseModel):
+    credential_id: str
+    course_title: str
+    iicrc_discipline: str | None
+    cec_hours: float
+    cppp40421_unit_code: str | None
+    issued_date: str
+    verification_url: str
+    status: str
+
+
+@router.get("/me", response_model=list[StudentCredentialOut])
+async def get_my_credentials(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: LMSUser = Depends(get_current_lms_user),
+) -> list[StudentCredentialOut]:
+    """Return all completed course credentials for the current student."""
+    result = await db.execute(
+        select(LMSEnrollment)
+        .where(
+            LMSEnrollment.student_id == current_user.id,
+            LMSEnrollment.status == "completed",
+        )
+        .options(selectinload(LMSEnrollment.course))
+        .order_by(LMSEnrollment.completed_at.desc())
+    )
+    enrollments = result.scalars().all()
+
+    credentials = []
+    for e in enrollments:
+        course: LMSCourse = e.course
+        issued_ts = e.completed_at or e.enrolled_at
+        issued_date = (
+            issued_ts.strftime("%d %B %Y").lstrip("0") if issued_ts else "—"
+        )
+        credentials.append(
+            StudentCredentialOut(
+                credential_id=str(e.id),
+                course_title=course.title if course else "Unknown",
+                iicrc_discipline=course.iicrc_discipline if course else None,
+                cec_hours=float(course.cec_hours) if course and course.cec_hours else 0.0,
+                cppp40421_unit_code=course.cppp40421_unit_code if course else None,
+                issued_date=issued_date,
+                verification_url=f"https://carsi.com.au/credentials/{e.id}",
+                status=e.status,
+            )
+        )
+    return credentials
 
 
 @router.get("/{credential_id}", response_model=CredentialOut)
