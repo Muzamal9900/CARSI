@@ -19,3 +19,4 @@ from . import lms_course_ideas  # noqa: F401
 from . import lms_rpl  # noqa: F401
 from . import lms_ai_builder  # noqa: F401
 from . import lms_payments  # noqa: F401
+from . import lms_notes  # noqa: F401
