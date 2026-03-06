@@ -42,9 +42,9 @@ class CredentialOut(BaseModel):
 class StudentCredentialOut(BaseModel):
     credential_id: str
     course_title: str
-    iicrc_discipline: str | None
+    iicrc_discipline: str | None = None
     cec_hours: float
-    cppp40421_unit_code: str | None
+    cppp40421_unit_code: str | None = None
     issued_date: str
     verification_url: str
     status: str

@@ -17,6 +17,14 @@ from src.db.lms_models import LMSCourse, LMSEnrollment, LMSUser
 client = TestClient(app)
 
 AUTH_HEADERS = {"X-User-Id": "00000000-0000-0000-0000-000000000001"}
+
+
+@pytest.fixture(autouse=True)
+def clear_overrides():
+    yield
+    app.dependency_overrides.clear()
+
+
 STUDENT_ID = uuid4()
 ENROLLMENT_ID = uuid4()
 COURSE_ID = uuid4()
@@ -93,8 +101,6 @@ class TestGetMyCredentials:
         assert resp.status_code == 200
         assert resp.json() == []
 
-        app.dependency_overrides.clear()
-
     def test_returns_credentials_for_completed_enrollments(self):
         mock_db = make_mock_db()
         mock_student = make_mock_student()
@@ -116,8 +122,6 @@ class TestGetMyCredentials:
         assert data[0]["iicrc_discipline"] == "WRT"
         assert data[0]["cec_hours"] == 8.0
         assert data[0]["status"] == "completed"
-
-        app.dependency_overrides.clear()
 
     def test_requires_authentication(self):
         resp = client.get("/api/lms/credentials/me")
