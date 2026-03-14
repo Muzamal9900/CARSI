@@ -399,6 +399,56 @@ export function JobPostingSchema({
   );
 }
 
+interface NewsArticleSchemaProps {
+  headline: string;
+  description?: string;
+  url: string;
+  image?: string;
+  datePublished?: string;
+  authorName?: string;
+  publisherName?: string;
+  keywords?: string[];
+}
+
+export function NewsArticleSchema({
+  headline,
+  description,
+  url,
+  image,
+  datePublished,
+  authorName,
+  publisherName,
+  keywords,
+}: NewsArticleSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'NewsArticle',
+    headline,
+    url,
+    inLanguage: 'en-AU',
+    publisher: {
+      '@type': 'Organization',
+      name: publisherName ?? 'CARSI',
+      url: 'https://carsi.com.au',
+    },
+  };
+
+  if (description) schema.description = description;
+  if (image) schema.image = image;
+  if (datePublished) schema.datePublished = datePublished;
+  if (authorName) {
+    schema.author = { '@type': 'Person', name: authorName };
+  }
+  if (keywords && keywords.length > 0) schema.keywords = keywords.join(', ');
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 interface ArticleSchemaProps {
   headline: string;
   authorName: string;

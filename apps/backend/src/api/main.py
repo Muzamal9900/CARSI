@@ -55,6 +55,7 @@ from .routes import (
     workflow_builder,
     workflows,
     synthex_data,
+    news,
 )
 
 settings = get_settings()
@@ -160,6 +161,8 @@ app.include_router(articles.router, tags=["Research Articles"])
 app.include_router(events.router, tags=["Industry Calendar"])
 # CARSI Hub — Job Board
 app.include_router(jobs.router, tags=["Job Board"])
+# CARSI Hub — News Feed
+app.include_router(news.router, tags=["News Feed"])
 
 
 @app.get("/")

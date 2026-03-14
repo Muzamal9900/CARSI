@@ -7,4 +7,5 @@ export {
   ArticleSchema,
   EventSchema,
   JobPostingSchema,
+  NewsArticleSchema,
 } from './JsonLd';
