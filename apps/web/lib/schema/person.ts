@@ -20,6 +20,7 @@ export interface PersonSchemaInput {
   worksFor?: string; // company name
   knowsAbout?: string[];
   hasCredential?: string[];
+  memberOf?: { name: string; url?: string }; // e.g. NRPG
 }
 
 export function buildPersonSchema(input: PersonSchemaInput): SchemaObject {
@@ -37,6 +38,7 @@ export function buildPersonSchema(input: PersonSchemaInput): SchemaObject {
     worksFor,
     knowsAbout,
     hasCredential,
+    memberOf,
   } = input;
 
   const schema: SchemaObject = {
@@ -74,6 +76,14 @@ export function buildPersonSchema(input: PersonSchemaInput): SchemaObject {
       '@type': 'EducationalOccupationalCredential',
       name: c,
     }));
+  }
+
+  if (memberOf) {
+    schema.memberOf = {
+      '@type': 'Organization',
+      name: memberOf.name,
+      ...(memberOf.url && { url: memberOf.url }),
+    };
   }
 
   return schema;
