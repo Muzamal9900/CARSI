@@ -88,6 +88,7 @@ class JobSummary(BaseModel):
     salary_max: int | None
     valid_through: datetime
     featured: bool
+    source: str
     created_at: datetime
 
 
@@ -171,6 +172,7 @@ def _to_summary(j: JobListing) -> JobSummary:
         salary_max=j.salary_max,
         valid_through=j.valid_through,
         featured=j.featured,
+        source=j.source,
         created_at=j.created_at,
     )
 

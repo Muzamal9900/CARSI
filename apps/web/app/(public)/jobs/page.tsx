@@ -61,6 +61,7 @@ interface JobSummary {
   salary_max: number | null;
   valid_through: string;
   featured: boolean;
+  source: string;
   created_at: string;
 }
 
@@ -71,9 +72,12 @@ interface JobListResponse {
   offset: number;
 }
 
-async function getJobs(category?: string, state?: string): Promise<JobListResponse> {
+const PAGE_SIZE = 24;
+
+async function getJobs(category?: string, state?: string, page = 1): Promise<JobListResponse> {
   try {
-    const params = new URLSearchParams({ limit: '40', offset: '0' });
+    const offset = (page - 1) * PAGE_SIZE;
+    const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) });
     if (category) params.set('category', category);
     if (state) params.set('state', state);
 
@@ -84,10 +88,10 @@ async function getJobs(category?: string, state?: string): Promise<JobListRespon
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
-    if (!res.ok) return { data: [], total: 0, limit: 40, offset: 0 };
+    if (!res.ok) return { data: [], total: 0, limit: PAGE_SIZE, offset };
     return res.json();
   } catch {
-    return { data: [], total: 0, limit: 40, offset: 0 };
+    return { data: [], total: 0, limit: PAGE_SIZE, offset: 0 };
   }
 }
 
@@ -158,7 +162,12 @@ function JobCard({ job }: { job: JobSummary }) {
         </div>
       )}
 
-      <p className="mt-auto text-xs text-white/25">{timeAgo(job.created_at)}</p>
+      <div className="mt-auto flex items-center justify-between gap-2">
+        <p className="text-xs text-white/25">{timeAgo(job.created_at)}</p>
+        {job.source !== 'manual' && (
+          <span className="text-xs text-white/20 capitalize">via {job.source}</span>
+        )}
+      </div>
     </Link>
   );
 }
@@ -182,12 +191,23 @@ function PlaceholderCard({ index }: { index: number }) {
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string; state?: string }>;
+  searchParams: Promise<{ category?: string; state?: string; page?: string }>;
 }) {
-  const { category, state } = await searchParams;
-  const { data: jobs, total } = await getJobs(category, state);
+  const { category, state, page: pageStr } = await searchParams;
+  const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1);
+  const { data: jobs, total } = await getJobs(category, state, page);
 
   const placeholderCount = Math.max(0, 3 - jobs.length);
+  const totalPages = Math.ceil(total / PAGE_SIZE);
+
+  function buildPageUrl(p: number) {
+    const qs = new URLSearchParams();
+    if (category) qs.set('category', category);
+    if (state) qs.set('state', state);
+    if (p > 1) qs.set('page', String(p));
+    const str = qs.toString();
+    return str ? `/jobs?${str}` : '/jobs';
+  }
 
   const breadcrumbs = [
     { name: 'Home', url: 'https://carsi.com.au' },
@@ -306,6 +326,54 @@ export default async function JobsPage({
                 <PlaceholderCard key={`placeholder-${i}`} index={jobs.length + i + 1} />
               ))}
             </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <nav className="mt-10 flex items-center justify-center gap-2" aria-label="Pagination">
+              {page > 1 && (
+                <Link
+                  href={buildPageUrl(page - 1)}
+                  className="rounded-xl border border-white/[0.08] px-4 py-2 text-sm text-white/50 transition-colors hover:border-[rgba(36,144,237,0.35)] hover:text-white/80"
+                >
+                  ← Previous
+                </Link>
+              )}
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 2)
+                  .reduce<(number | 'ellipsis')[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push('ellipsis');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, idx) =>
+                    p === 'ellipsis' ? (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-white/25">…</span>
+                    ) : (
+                      <Link
+                        key={p}
+                        href={buildPageUrl(p as number)}
+                        className={`min-w-[36px] rounded-xl px-3 py-2 text-sm text-center transition-colors ${
+                          p === page
+                            ? 'bg-[#2490ed] text-white'
+                            : 'border border-white/[0.08] text-white/50 hover:border-[rgba(36,144,237,0.35)] hover:text-white/80'
+                        }`}
+                      >
+                        {p}
+                      </Link>
+                    )
+                  )}
+              </div>
+              {page < totalPages && (
+                <Link
+                  href={buildPageUrl(page + 1)}
+                  className="rounded-xl border border-white/[0.08] px-4 py-2 text-sm text-white/50 transition-colors hover:border-[rgba(36,144,237,0.35)] hover:text-white/80"
+                >
+                  Next →
+                </Link>
+              )}
+            </nav>
           )}
         </div>
       </main>
