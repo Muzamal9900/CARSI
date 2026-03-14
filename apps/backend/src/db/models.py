@@ -413,3 +413,137 @@ class JobListing(Base):
 
     def __repr__(self) -> str:
         return f"<JobListing(id={self.id}, title={self.title!r}, company={self.company_name!r})>"
+
+
+class NewsFeedSource(Base):
+    """
+    RSS feed source registry for the CARSI News Feed pipeline.
+    The RSS ingestion worker (UNI-76) reads this table to fetch and process feeds.
+    """
+
+    __tablename__ = "news_feed_sources"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    name: str = Column(String(255), nullable=False)
+    rss_url: str = Column(String(1000), nullable=False, unique=True)
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+    fetch_interval_minutes: int = Column(Integer, default=60, nullable=False)
+    last_fetched_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+    is_active: bool = Column(Boolean, default=True, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    # Relationship
+    articles = relationship("NewsArticle", back_populates="source", lazy="select")
+
+    def __repr__(self) -> str:
+        return f"<NewsFeedSource(id={self.id}, name={self.name!r})>"
+
+
+class NewsArticle(Base):
+    """
+    AI-processed news article from the RSS ingestion pipeline (UNI-76).
+    The pipeline fetches, deduplicates, and summarises articles with Claude Haiku.
+    This model is the read layer for the frontend news feed (UNI-66).
+    """
+
+    __tablename__ = "news_articles"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    source_id: UUID = Column(PGUUID(as_uuid=True), ForeignKey("news_feed_sources.id", ondelete="CASCADE"), nullable=False)
+    guid: str = Column(String(1000), nullable=False, unique=True)
+
+    # Original
+    original_title: str = Column(String(1000), nullable=False)
+    source_url: str = Column(String(2000), nullable=False)
+    author: str | None = Column(String(255), nullable=True)
+    published_at: datetime | None = Column(DateTime(timezone=True), nullable=True, index=True)
+    image_url: str | None = Column(String(2000), nullable=True)
+
+    # AI-processed fields (from Claude Haiku)
+    ai_title: str | None = Column(String(1000), nullable=True)
+    ai_summary: str | None = Column(Text, nullable=True)
+    ai_tags: list[str] = Column(JSONB, default=list, nullable=False)
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+    relevance_score: float | None = Column(String(10), nullable=True)  # 0.0–1.0
+
+    # Publication
+    is_featured: bool = Column(Boolean, default=False, nullable=False)
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    # Relationship
+    source = relationship("NewsFeedSource", back_populates="articles", lazy="select")
+
+    def __repr__(self) -> str:
+        return f"<NewsArticle(id={self.id}, title={self.original_title!r})>"
+
+
+class Professional(Base):
+    """
+    Industry professional profile for the CARSI directory (UNI-59 Phase 1).
+    Supports LocalBusiness + Person schema injection and NRPG member sync.
+    """
+
+    __tablename__ = "professionals"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    full_name: str = Column(String(255), nullable=False)
+    slug: str = Column(String(255), nullable=False, unique=True, index=True)
+    headline: str | None = Column(String(500), nullable=True)
+    bio: str | None = Column(Text, nullable=True)
+
+    # Contact
+    email: str | None = Column(String(255), nullable=True)
+    phone: str | None = Column(String(50), nullable=True)
+    website: str | None = Column(String(1000), nullable=True)
+    linkedin_url: str | None = Column(String(1000), nullable=True)
+    avatar_url: str | None = Column(String(1000), nullable=True)
+
+    # Location
+    location_city: str | None = Column(String(100), nullable=True)
+    location_state: str | None = Column(String(10), nullable=True)
+
+    # Industry
+    specialisations: list[str] = Column(JSONB, default=list, nullable=False)
+    certifications: list[str] = Column(JSONB, default=list, nullable=False)
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+    years_experience: int | None = Column(Integer, nullable=True)
+
+    # NRPG membership
+    nrpg_member: bool = Column(Boolean, default=False, nullable=False)
+    nrpg_member_id: str | None = Column(String(100), nullable=True, unique=True)
+
+    # Publication
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+    featured: bool = Column(Boolean, default=False, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<Professional(id={self.id}, name={self.full_name!r})>"
