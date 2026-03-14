@@ -5,4 +5,6 @@ export {
   BreadcrumbSchema,
   FAQSchema,
   ArticleSchema,
+  EventSchema,
+  JobPostingSchema,
 } from './JsonLd';

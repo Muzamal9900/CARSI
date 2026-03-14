@@ -206,6 +206,199 @@ export function FAQSchema({ questions }: FAQSchemaProps) {
   );
 }
 
+interface EventSchemaProps {
+  name: string;
+  description?: string;
+  startDate: string; // ISO 8601
+  endDate?: string;
+  url: string;
+  locationName?: string;
+  locationAddress?: string;
+  locationCity?: string;
+  locationState?: string;
+  locationLat?: string;
+  locationLng?: string;
+  isVirtual?: boolean;
+  organiserName?: string;
+  organiserUrl?: string;
+  eventStatus?: string;
+  ticketUrl?: string;
+  isFree?: boolean;
+  image?: string;
+  eventType?: string;
+}
+
+export function EventSchema({
+  name,
+  description,
+  startDate,
+  endDate,
+  url,
+  locationName,
+  locationAddress,
+  locationCity,
+  locationState,
+  locationLat,
+  locationLng,
+  isVirtual = false,
+  organiserName,
+  organiserUrl,
+  eventStatus = 'EventScheduled',
+  ticketUrl,
+  isFree,
+  image,
+  eventType,
+}: EventSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name,
+    startDate,
+    url,
+    eventStatus: `https://schema.org/${eventStatus}`,
+    eventAttendanceMode: isVirtual
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : 'https://schema.org/OfflineEventAttendanceMode',
+    inLanguage: 'en-AU',
+    organizer: {
+      '@type': 'Organization',
+      name: organiserName ?? 'CARSI',
+      url: organiserUrl ?? 'https://carsi.com.au',
+    },
+  };
+
+  if (endDate) schema.endDate = endDate;
+  if (description) schema.description = description;
+  if (image) schema.image = image;
+  if (eventType) schema.additionalType = eventType;
+
+  if (!isVirtual && (locationName || locationCity)) {
+    const location: Record<string, unknown> = { '@type': 'Place' };
+    if (locationName) location.name = locationName;
+    const address: Record<string, unknown> = {
+      '@type': 'PostalAddress',
+      addressCountry: 'AU',
+    };
+    if (locationAddress) address.streetAddress = locationAddress;
+    if (locationCity) address.addressLocality = locationCity;
+    if (locationState) address.addressRegion = locationState;
+    location.address = address;
+    if (locationLat && locationLng) {
+      location.geo = {
+        '@type': 'GeoCoordinates',
+        latitude: locationLat,
+        longitude: locationLng,
+      };
+    }
+    schema.location = location;
+  } else if (isVirtual) {
+    schema.location = {
+      '@type': 'VirtualLocation',
+      url: url,
+    };
+  }
+
+  if (isFree !== undefined) {
+    schema.isAccessibleForFree = isFree;
+    if (!isFree && ticketUrl) {
+      schema.offers = {
+        '@type': 'Offer',
+        url: ticketUrl,
+        availability: 'https://schema.org/InStock',
+      };
+    }
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
+interface JobPostingSchemaProps {
+  title: string;
+  description: string;
+  companyName: string;
+  companyUrl?: string;
+  datePosted: string;
+  validThrough: string;
+  employmentType?: string;
+  locationCity?: string;
+  locationState?: string;
+  isRemote?: boolean;
+  salaryMin?: number;
+  salaryMax?: number;
+  applyUrl?: string;
+}
+
+export function JobPostingSchema({
+  title,
+  description,
+  companyName,
+  companyUrl,
+  datePosted,
+  validThrough,
+  employmentType = 'FULL_TIME',
+  locationCity,
+  locationState,
+  isRemote = false,
+  salaryMin,
+  salaryMax,
+  applyUrl,
+}: JobPostingSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title,
+    description,
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: companyName,
+      ...(companyUrl && { sameAs: companyUrl }),
+    },
+    datePosted,
+    validThrough,
+    employmentType,
+    jobLocationType: isRemote ? 'TELECOMMUTE' : undefined,
+  };
+
+  if (!isRemote && (locationCity || locationState)) {
+    schema.jobLocation = {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'AU',
+        ...(locationCity && { addressLocality: locationCity }),
+        ...(locationState && { addressRegion: locationState }),
+      },
+    };
+  }
+
+  if (salaryMin || salaryMax) {
+    schema.baseSalary = {
+      '@type': 'MonetaryAmount',
+      currency: 'AUD',
+      value: {
+        '@type': 'QuantitativeValue',
+        unitText: 'YEAR',
+        ...(salaryMin && { minValue: salaryMin }),
+        ...(salaryMax && { maxValue: salaryMax }),
+      },
+    };
+  }
+
+  if (applyUrl) schema.url = applyUrl;
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 interface ArticleSchemaProps {
   headline: string;
   authorName: string;

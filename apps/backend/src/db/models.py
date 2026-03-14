@@ -277,3 +277,139 @@ class ResearchArticle(Base):
 
     def __repr__(self) -> str:
         return f"<ResearchArticle(id={self.id}, slug={self.slug}, status={self.status})>"
+
+
+class IndustryEvent(Base):
+    """
+    Industry Calendar event model for CARSI Hub.
+
+    Stores national industry events (conferences, training, webinars, workshops)
+    with full schema.org/Event structured data support for SEO/GEO.
+
+    Table: industry_events
+    """
+
+    __tablename__ = "industry_events"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    title: str = Column(String(500), nullable=False)
+    description: str | None = Column(Text, nullable=True)
+    event_type: str = Column(String(50), nullable=False, index=True)  # conference/training/webinar/workshop
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+
+    # Dates
+    start_date: datetime = Column(DateTime(timezone=True), nullable=False, index=True)
+    end_date: datetime | None = Column(DateTime(timezone=True), nullable=True)
+
+    # Location
+    location_name: str | None = Column(String(255), nullable=True)
+    location_address: str | None = Column(Text, nullable=True)
+    location_city: str | None = Column(String(100), nullable=True)
+    location_state: str | None = Column(String(10), nullable=True)
+    location_lat: float | None = Column(String(20), nullable=True)  # stored as string for precision
+    location_lng: float | None = Column(String(20), nullable=True)
+    is_virtual: bool = Column(Boolean, default=False, nullable=False)
+
+    # Organiser
+    organiser_name: str | None = Column(String(255), nullable=True)
+    organiser_url: str | None = Column(String(1000), nullable=True)
+    event_url: str | None = Column(String(1000), nullable=True)
+
+    # Schema.org EventStatus
+    schema_event_status: str = Column(
+        String(50), default="EventScheduled", nullable=False
+    )
+
+    # Ticketing
+    ticket_url: str | None = Column(String(1000), nullable=True)
+    is_free: bool = Column(Boolean, default=False, nullable=False)
+    price_range: str | None = Column(String(100), nullable=True)
+
+    # Media
+    image_url: str | None = Column(String(1000), nullable=True)
+
+    # Source tracking (for future API aggregation)
+    source: str = Column(String(50), default="manual", nullable=False)
+    source_id: str | None = Column(String(255), nullable=True)
+
+    # Publication
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+    featured: bool = Column(Boolean, default=False, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<IndustryEvent(id={self.id}, title={self.title!r}, start={self.start_date})>"
+
+
+class JobListing(Base):
+    """
+    Job Board listing model for CARSI Hub.
+
+    Supports manual submissions with 30-day auto-expiry and
+    schema.org/JobPosting structured data.
+
+    Table: job_listings
+    """
+
+    __tablename__ = "job_listings"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    title: str = Column(String(500), nullable=False)
+    company_name: str = Column(String(255), nullable=False)
+    company_website: str | None = Column(String(1000), nullable=True)
+    company_logo_url: str | None = Column(String(1000), nullable=True)
+    description: str = Column(Text, nullable=False)
+    employment_type: str = Column(String(50), default="FULL_TIME", nullable=False)
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+
+    # Location
+    location_city: str | None = Column(String(100), nullable=True)
+    location_state: str | None = Column(String(10), nullable=True)
+    location_postcode: str | None = Column(String(10), nullable=True)
+    is_remote: bool = Column(Boolean, default=False, nullable=False)
+
+    # Compensation
+    salary_min: int | None = Column(Integer, nullable=True)
+    salary_max: int | None = Column(Integer, nullable=True)
+
+    # Application
+    apply_url: str | None = Column(String(1000), nullable=True)
+    apply_email: str | None = Column(String(255), nullable=True)
+
+    # Submitter contact
+    submitter_name: str | None = Column(String(255), nullable=True)
+    submitter_email: str | None = Column(String(255), nullable=True)
+    submitter_phone: str | None = Column(String(50), nullable=True)
+
+    # Source (manual Phase 1, Seek/Indeed Phase 2)
+    source: str = Column(String(50), default="manual", nullable=False)
+    source_id: str | None = Column(String(255), nullable=True)
+
+    # Expiry — 30-day auto-expiry
+    valid_through: datetime = Column(DateTime(timezone=True), nullable=False, index=True)
+
+    # Publication
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+    featured: bool = Column(Boolean, default=False, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<JobListing(id={self.id}, title={self.title!r}, company={self.company_name!r})>"
