@@ -89,6 +89,7 @@ class JobSummary(BaseModel):
     valid_through: datetime
     featured: bool
     source: str
+    apply_url: str | None
     created_at: datetime
 
 
@@ -173,6 +174,7 @@ def _to_summary(j: JobListing) -> JobSummary:
         valid_through=j.valid_through,
         featured=j.featured,
         source=j.source,
+        apply_url=j.apply_url,
         created_at=j.created_at,
     )
 

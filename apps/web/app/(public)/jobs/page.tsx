@@ -62,6 +62,7 @@ interface JobSummary {
   valid_through: string;
   featured: boolean;
   source: string;
+  apply_url: string | null;
   created_at: string;
 }
 
@@ -164,9 +165,18 @@ function JobCard({ job }: { job: JobSummary }) {
 
       <div className="mt-auto flex items-center justify-between gap-2">
         <p className="text-xs text-white/25">{timeAgo(job.created_at)}</p>
-        {job.source !== 'manual' && (
-          <span className="text-xs text-white/20 capitalize">via {job.source}</span>
-        )}
+        <div className="flex items-center gap-2">
+          {job.source !== 'manual' && (
+            <span className="text-xs text-white/20 capitalize">via {job.source}</span>
+          )}
+          {job.apply_url ? (
+            <span className="text-xs font-medium text-[#2490ed]/60 group-hover:text-[#2490ed] transition-colors">
+              Apply ↗
+            </span>
+          ) : (
+            <span className="text-xs text-white/20">View →</span>
+          )}
+        </div>
       </div>
     </Link>
   );
