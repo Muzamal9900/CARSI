@@ -547,3 +547,60 @@ class Professional(Base):
 
     def __repr__(self) -> str:
         return f"<Professional(id={self.id}, name={self.full_name!r})>"
+
+
+class YouTubeChannel(Base):
+    """
+    Industry YouTube channel for the CARSI YouTube Channel Directory (UNI-71).
+    Supports VideoObject schema and weekly stats sync via YouTube Data API v3.
+    """
+
+    __tablename__ = "youtube_channels"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    # YouTube identifiers
+    youtube_channel_id: str = Column(String(64), nullable=False, unique=True, index=True)
+    channel_url: str = Column(String(500), nullable=False)
+    custom_url: str | None = Column(String(255), nullable=True)  # @handle
+
+    # Channel metadata
+    name: str = Column(String(255), nullable=False)
+    description: str | None = Column(Text, nullable=True)
+    thumbnail_url: str | None = Column(String(1000), nullable=True)
+
+    # Stats (populated by weekly YouTube API sync)
+    subscriber_count: int | None = Column(Integer, nullable=True)
+    video_count: int | None = Column(Integer, nullable=True)
+    view_count: int | None = Column(Integer, nullable=True)
+
+    # Latest upload (populated by weekly sync)
+    latest_upload_title: str | None = Column(String(500), nullable=True)
+    latest_upload_url: str | None = Column(String(500), nullable=True)
+    latest_upload_date: datetime | None = Column(DateTime(timezone=True), nullable=True)
+    latest_upload_thumbnail: str | None = Column(String(1000), nullable=True)
+
+    # Classification
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+    tags: list[str] = Column(JSONB, default=list, nullable=False)
+
+    # Flags
+    is_carsi_channel: bool = Column(Boolean, default=False, nullable=False)
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+    featured: bool = Column(Boolean, default=False, nullable=False)
+
+    # Sync tracking
+    synced_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<YouTubeChannel(id={self.id}, name={self.name!r})>"

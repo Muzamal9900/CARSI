@@ -56,6 +56,7 @@ from .routes import (
     workflows,
     synthex_data,
     news,
+    youtube,
 )
 
 settings = get_settings()
@@ -163,6 +164,8 @@ app.include_router(events.router, tags=["Industry Calendar"])
 app.include_router(jobs.router, tags=["Job Board"])
 # CARSI Hub — News Feed
 app.include_router(news.router, tags=["News Feed"])
+# CARSI Hub — YouTube Channel Directory
+app.include_router(youtube.router, tags=["YouTube Channel Directory"])
 
 
 @app.get("/")

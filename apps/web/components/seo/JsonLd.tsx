@@ -509,3 +509,50 @@ export function ArticleSchema({
     />
   );
 }
+
+interface VideoObjectSchemaProps {
+  name: string;
+  description?: string;
+  thumbnailUrl?: string;
+  uploadDate?: string; // ISO 8601
+  url: string;
+  channelName?: string;
+  channelUrl?: string;
+}
+
+export function VideoObjectSchema({
+  name,
+  description,
+  thumbnailUrl,
+  uploadDate,
+  url,
+  channelName,
+  channelUrl,
+}: VideoObjectSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name,
+    url,
+    inLanguage: 'en-AU',
+  };
+
+  if (description) schema.description = description;
+  if (thumbnailUrl) schema.thumbnailUrl = thumbnailUrl;
+  if (uploadDate) schema.uploadDate = uploadDate;
+
+  if (channelName) {
+    schema.author = {
+      '@type': 'Organization',
+      name: channelName,
+      ...(channelUrl && { url: channelUrl }),
+    };
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}

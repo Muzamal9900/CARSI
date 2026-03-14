@@ -8,4 +8,5 @@ export {
   EventSchema,
   JobPostingSchema,
   NewsArticleSchema,
+  VideoObjectSchema,
 } from './JsonLd';
