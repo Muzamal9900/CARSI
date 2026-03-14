@@ -19,6 +19,7 @@ from .routes import (
     agent_dashboard,
     agents,
     analytics,
+    articles,
     chat,
     contractors,
     discovery,
@@ -151,6 +152,8 @@ app.include_router(documents.router, tags=["Documents"])
 app.include_router(workflow_builder.router, prefix="/api", tags=["Workflow Builder"])
 app.include_router(discovery.router, prefix="/api", tags=["Discovery"])
 app.include_router(synthex_data.router, tags=["Synthex Integration"])
+# CARSI Hub — Research Articles CMS
+app.include_router(articles.router, tags=["Research Articles"])
 
 
 @app.get("/")

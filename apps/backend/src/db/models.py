@@ -16,6 +16,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Integer,
     String,
     Text,
     Time,
@@ -208,3 +209,71 @@ class Document(Base):
 
     def __repr__(self) -> str:
         return f"<Document(id={self.id}, title={self.title})>"
+
+
+class ArticleStatus(str, enum.Enum):
+    """Publication status for research articles."""
+
+    DRAFT = "draft"
+    PUBLISHED = "published"
+    ARCHIVED = "archived"
+
+
+class ResearchArticle(Base):
+    """
+    Research Article model for CARSI Hub CMS.
+
+    Supports rich-text content, SEO metadata, FAQ schema markup (FAQPage structured data),
+    categorisation, and linkage to NRPG member profiles.
+
+    Table: research_articles
+    """
+
+    __tablename__ = "research_articles"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    slug: str = Column(String(300), unique=True, nullable=False, index=True)
+    title: str = Column(String(500), nullable=False)
+    excerpt: str | None = Column(Text, nullable=True)
+    content: str = Column(Text, nullable=False)  # Rich-text (HTML/Markdown)
+
+    # Categorisation
+    category: str | None = Column(String(100), nullable=True, index=True)
+    tags: list[str] = Column(JSONB, default=list, nullable=False)
+
+    # SEO metadata
+    seo_title: str | None = Column(String(70), nullable=True)
+    seo_description: str | None = Column(String(160), nullable=True)
+    canonical_url: str | None = Column(String(500), nullable=True)
+    og_image_url: str | None = Column(String(500), nullable=True)
+
+    # FAQ schema data — list of {question, answer} dicts for FAQPage structured data
+    faq_items: list[dict] = Column(JSONB, default=list, nullable=False)
+
+    # NRPG member linkage — nullable until UNI-59 NRPG API integration is complete
+    author_nrpg_id: str | None = Column(String(100), nullable=True, index=True)
+    author_name: str | None = Column(String(255), nullable=True)
+    author_bio: str | None = Column(Text, nullable=True)
+
+    # RestoreAssist feature links — list of {feature, url} dicts
+    related_restore_assist: list[dict] = Column(JSONB, default=list, nullable=False)
+
+    # Publication
+    status: ArticleStatus = Column(
+        Enum(ArticleStatus, name="article_status"), default=ArticleStatus.DRAFT, nullable=False, index=True
+    )
+    published_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+    view_count: int = Column(Integer, default=0, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    def __repr__(self) -> str:
+        return f"<ResearchArticle(id={self.id}, slug={self.slug}, status={self.status})>"

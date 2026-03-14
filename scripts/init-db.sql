@@ -196,6 +196,69 @@ VALUES ('1.0.0-init', 'Initial self-contained database setup')
 ON CONFLICT (version) DO NOTHING;
 
 -- =============================================================================
+-- SECTION N: CARSI Hub — Research Articles CMS
+-- =============================================================================
+
+-- Article publication status enum
+DO $$ BEGIN
+    CREATE TYPE article_status AS ENUM ('draft', 'published', 'archived');
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Research articles table
+-- Supports rich-text content, FAQ schema (FAQPage), SEO metadata, and NRPG author linkage.
+CREATE TABLE IF NOT EXISTS research_articles (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    slug VARCHAR(300) UNIQUE NOT NULL,
+    title VARCHAR(500) NOT NULL,
+    excerpt TEXT,
+    content TEXT NOT NULL,
+
+    category VARCHAR(100),
+    tags JSONB NOT NULL DEFAULT '[]',
+
+    seo_title VARCHAR(70),
+    seo_description VARCHAR(160),
+    canonical_url VARCHAR(500),
+    og_image_url VARCHAR(500),
+
+    -- FAQPage structured data: array of {"question": "...", "answer": "..."} objects
+    faq_items JSONB NOT NULL DEFAULT '[]',
+
+    -- NRPG author linkage (nullable until UNI-59 NRPG API integration)
+    author_nrpg_id VARCHAR(100),
+    author_name VARCHAR(255),
+    author_bio TEXT,
+
+    -- Related RestoreAssist features: array of {"feature": "...", "url": "..."} objects
+    related_restore_assist JSONB NOT NULL DEFAULT '[]',
+
+    status article_status NOT NULL DEFAULT 'draft',
+    published_at TIMESTAMPTZ,
+    view_count INTEGER NOT NULL DEFAULT 0,
+
+    created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+
+    CONSTRAINT slug_format CHECK (slug ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$')
+);
+
+CREATE INDEX IF NOT EXISTS idx_research_articles_slug ON research_articles(slug);
+CREATE INDEX IF NOT EXISTS idx_research_articles_status ON research_articles(status);
+CREATE INDEX IF NOT EXISTS idx_research_articles_category ON research_articles(category);
+CREATE INDEX IF NOT EXISTS idx_research_articles_published ON research_articles(published_at DESC) WHERE status = 'published';
+CREATE INDEX IF NOT EXISTS idx_research_articles_author_nrpg ON research_articles(author_nrpg_id) WHERE author_nrpg_id IS NOT NULL;
+
+CREATE TRIGGER research_articles_updated_at
+    BEFORE UPDATE ON research_articles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+INSERT INTO schema_version (version, description)
+VALUES ('1.1.0-carsi-articles', 'CARSI Hub Research Articles CMS + FAQ Schema')
+ON CONFLICT (version) DO NOTHING;
+
+-- =============================================================================
 -- Initialization Complete
 -- =============================================================================
 
@@ -206,7 +269,7 @@ BEGIN
     RAISE NOTICE 'Database initialization complete!';
     RAISE NOTICE '=============================================================================';
     RAISE NOTICE 'Extensions: uuid-ossp, vector (pgvector)';
-    RAISE NOTICE 'Tables: users, contractors, availability_slots, documents, schema_version';
+    RAISE NOTICE 'Tables: users, contractors, availability_slots, documents, research_articles, schema_version';
     RAISE NOTICE 'Views: available_contractors';
     RAISE NOTICE 'Default admin: admin@local.dev / admin123 (CHANGE THIS!)';
     RAISE NOTICE '=============================================================================';

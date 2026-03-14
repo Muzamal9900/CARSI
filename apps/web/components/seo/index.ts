@@ -4,4 +4,5 @@ export {
   CourseSchema,
   BreadcrumbSchema,
   FAQSchema,
+  ArticleSchema,
 } from './JsonLd';
