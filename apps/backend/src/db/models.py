@@ -604,3 +604,110 @@ class YouTubeChannel(Base):
 
     def __repr__(self) -> str:
         return f"<YouTubeChannel(id={self.id}, name={self.name!r})>"
+
+
+class PodcastShow(Base):
+    """
+    Podcast show for the CARSI Podcast Directory (UNI-72).
+    Includes CARSI own productions (is_carsi_show=True) and
+    curated industry podcasts. Episodes are auto-synced via RSS.
+    """
+
+    __tablename__ = "podcast_shows"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+
+    # Identification
+    slug: str = Column(String(255), nullable=False, unique=True, index=True)
+    name: str = Column(String(500), nullable=False)
+    host: str | None = Column(String(500), nullable=True)
+    description: str | None = Column(Text, nullable=True)
+
+    # External links
+    rss_url: str | None = Column(String(2000), nullable=True)
+    spotify_url: str | None = Column(String(2000), nullable=True)
+    apple_podcasts_url: str | None = Column(String(2000), nullable=True)
+    youtube_url: str | None = Column(String(2000), nullable=True)
+    amazon_music_url: str | None = Column(String(2000), nullable=True)
+    website_url: str | None = Column(String(2000), nullable=True)
+
+    # Media
+    cover_image_url: str | None = Column(String(2000), nullable=True)
+
+    # Stats (populated by RSS sync)
+    episode_count: int | None = Column(Integer, nullable=True)
+    latest_episode_title: str | None = Column(String(1000), nullable=True)
+    latest_episode_date: datetime | None = Column(DateTime(timezone=True), nullable=True)
+    latest_episode_url: str | None = Column(String(2000), nullable=True)
+
+    # Classification
+    industry_categories: list[str] = Column(JSONB, default=list, nullable=False)
+    tags: list[str] = Column(JSONB, default=list, nullable=False)
+    country: str = Column(String(10), default="AU", nullable=False)
+
+    # Flags
+    is_carsi_show: bool = Column(Boolean, default=False, nullable=False)
+    featured: bool = Column(Boolean, default=False, nullable=False)
+    published: bool = Column(Boolean, default=False, nullable=False, index=True)
+
+    # RSS sync tracking
+    rss_synced_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+    rss_error: str | None = Column(Text, nullable=True)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+    updated_at: datetime = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    # Relationship
+    episodes = relationship("PodcastEpisode", back_populates="show", lazy="select")
+
+    def __repr__(self) -> str:
+        return f"<PodcastShow(id={self.id}, name={self.name!r})>"
+
+
+class PodcastEpisode(Base):
+    """
+    Individual podcast episode fetched via RSS for a PodcastShow (UNI-72).
+    Stored for schema markup (PodcastEpisode) and episode listing on show pages.
+    """
+
+    __tablename__ = "podcast_episodes"
+
+    id: UUID = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid4)
+    show_id: UUID = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("podcast_shows.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # RSS-sourced fields
+    guid: str = Column(String(2000), nullable=False)
+    title: str = Column(String(1000), nullable=False)
+    description: str | None = Column(Text, nullable=True)
+    episode_url: str | None = Column(String(2000), nullable=True)
+    audio_url: str | None = Column(String(2000), nullable=True)
+    image_url: str | None = Column(String(2000), nullable=True)
+    duration_seconds: int | None = Column(Integer, nullable=True)
+    episode_number: int | None = Column(Integer, nullable=True)
+    season_number: int | None = Column(Integer, nullable=True)
+    published_at: datetime | None = Column(DateTime(timezone=True), nullable=True)
+
+    # Classification
+    tags: list[str] = Column(JSONB, default=list, nullable=False)
+
+    created_at: datetime = Column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
+
+    # Relationship
+    show = relationship("PodcastShow", back_populates="episodes", lazy="select")
+
+    def __repr__(self) -> str:
+        return f"<PodcastEpisode(id={self.id}, title={self.title!r})>"

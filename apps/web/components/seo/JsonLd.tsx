@@ -510,6 +510,48 @@ export function ArticleSchema({
   );
 }
 
+// ---- Podcast Schema (UNI-72) ----
+
+interface PodcastSeriesSchemaProps {
+  name: string;
+  description?: string;
+  url: string;
+  imageUrl?: string;
+  author?: string;
+  rssUrl?: string;
+}
+
+export function PodcastSeriesSchema({
+  name,
+  description,
+  url,
+  imageUrl,
+  author,
+  rssUrl,
+}: PodcastSeriesSchemaProps) {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'PodcastSeries',
+    name,
+    url,
+    inLanguage: 'en-AU',
+  };
+
+  if (description) schema.description = description;
+  if (imageUrl) schema.image = imageUrl;
+  if (rssUrl) schema.webFeed = rssUrl;
+  if (author) {
+    schema.author = { '@type': 'Organization', name: author };
+  }
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 interface VideoObjectSchemaProps {
   name: string;
   description?: string;

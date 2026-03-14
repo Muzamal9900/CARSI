@@ -9,4 +9,5 @@ export {
   JobPostingSchema,
   NewsArticleSchema,
   VideoObjectSchema,
+  PodcastSeriesSchema,
 } from './JsonLd';
