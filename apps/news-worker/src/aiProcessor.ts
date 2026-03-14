@@ -6,7 +6,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config.js';
 
-const client = new Anthropic({ apiKey: config.anthropicApiKey });
+const client = new Anthropic({
+  apiKey: config.anthropicApiKey,
+  ...(config.anthropicBaseUrl ? { baseURL: config.anthropicBaseUrl } : {}),
+});
 
 export interface AiArticleResult {
   ai_title: string;
