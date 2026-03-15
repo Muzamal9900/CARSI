@@ -3,6 +3,7 @@ name: Deploy Staging
 on:
   push:
     branches: [staging]
+  workflow_dispatch:
 
 concurrency:
   group: deploy-staging-${{ github.ref }}
@@ -101,6 +102,8 @@ jobs:
           echo "${{ secrets.KUBECONFIG_STAGING }}" | base64 -d > ~/.kube/config
 
       - name: Apply namespace and configs
+        # Note: applies only top-level files in k8s/staging/ (not subdirs)
+        # secrets-template.yaml is intentionally kept in k8s/staging/templates/ to avoid overwriting real secrets
         run: |
           kubectl apply -f k8s/staging/namespace.yaml
           kubectl apply -f k8s/staging/
