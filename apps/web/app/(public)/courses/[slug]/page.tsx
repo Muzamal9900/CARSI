@@ -4,6 +4,7 @@ import { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { EnrolButton } from '@/components/lms/EnrolButton';
+import { CourseHubContext } from '@/components/lms/CourseHubContext';
 import { CourseSchema, BreadcrumbSchema } from '@/components/seo';
 
 interface CourseDetail {
@@ -158,7 +159,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
             )}
           </div>
 
-          <div>
+          <div className="space-y-4">
             <Card>
               <CardContent className="p-6">
                 <div className="mb-4 text-3xl font-bold">{price}</div>
@@ -184,6 +185,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ s
                 </div>
               </CardContent>
             </Card>
+
+            <CourseHubContext discipline={course.iicrc_discipline ?? ''} slug={course.slug} />
           </div>
         </div>
       </main>

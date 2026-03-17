@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 
 import { BundlePricingCard } from '@/components/lms/BundlePricingCard';
 import { CourseGrid } from '@/components/lms/CourseGrid';
+import { CourseSearchBar } from '@/components/lms/CourseSearchBar';
 import { CECCalculator } from '@/components/tools/CECCalculator';
 import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 import { IICRCDisciplineMap } from '@/components/lms/diagrams/IICRCDisciplineMap';
@@ -233,6 +234,11 @@ export default async function CoursesPage({
             </div>
           </section>
         )}
+
+        {/* AI Search Bar */}
+        <div className="relative mx-auto mb-8 max-w-2xl">
+          <CourseSearchBar />
+        </div>
 
         <div
           className="rounded-xl p-5"
