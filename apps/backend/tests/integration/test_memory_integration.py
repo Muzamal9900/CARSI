@@ -5,6 +5,10 @@ Run with: pytest tests/integration/test_memory_integration.py -v -m integration
 """
 
 import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Requires real Supabase backend. CARSI uses NullStateStore — run with a live DB to enable."
+)
 from uuid import uuid4
 
 from src.memory.models import MemoryDomain, MemoryQuery

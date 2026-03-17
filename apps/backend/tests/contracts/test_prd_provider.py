@@ -6,6 +6,16 @@ the contract defined by the Next.js frontend (consumer).
 
 Installation:
     uv add --dev pact-python
+"""
+
+import pytest
+
+pact = pytest.importorskip(
+    "pact",
+    reason="pact-python not installed. Run: uv add --dev pact-python"
+)
+
+"""
 
 Run tests:
     pytest tests/contracts/test_prd_provider.py -v

@@ -14,6 +14,12 @@ Requirements:
 """
 
 import pytest
+
+pytestmark = pytest.mark.skip(
+    reason="Requires real Supabase backend with RLS. CARSI uses NullStateStore — run with a live Supabase project to enable."
+)
+
+import pytest
 import os
 from supabase import create_client, Client
 from datetime import datetime
