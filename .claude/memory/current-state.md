@@ -1,10 +1,10 @@
 # Current State
 
-> Updated: 17/03/2026 — Session df9bf8a
+> Updated: 17/03/2026 — Session f518952
 
 ## Active Task
 
-P0 Auth replacement — COMPLETE. Pushed to main.
+Industry expansion (SEO/AEO/GEO) — COMPLETE. Pushed to main (f518952).
 
 ## Completed This Session
 
@@ -12,23 +12,25 @@ P0 Auth replacement — COMPLETE. Pushed to main.
 - **Linear**: Updated GP issues for completed work ✅
 - **GitHub secret scan**: Rotated Linear API key, fixed scripts to use os.environ ✅
 - **P0 Auth replacement** (df9bf8a):
-  - Login route fixed to call `/api/lms/auth/login` (was broken — called non-existent `/api/auth/login`)
-  - Dual cookie pattern: `auth_token` (httpOnly) + `carsi_token` (JS-readable, for Bearer header)
+  - Login route fixed to call `/api/lms/auth/login` (was broken)
+  - Dual cookie pattern: `auth_token` (httpOnly) + `carsi_token` (JS-readable)
   - AuthProvider added to root layout
-  - 21 files: localStorage `carsi_user_id` replaced with `apiClient` (auto Bearer JWT via cookie)
-  - Register form: full_name required (min 2), IICRC member number optional field added
+  - 21 files: localStorage `carsi_user_id` replaced with `apiClient`
+  - Register form: full_name required, IICRC member number optional
   - Backend RegisterRequest: `iicrc_member_number` field added
-  - Login redirect: now uses `?next=` param or defaults to `/student`
-  - LMSIconRail: `is_admin` → `roles.includes('admin')`
-  - TypeScript: clean (0 errors), backend: 593 passed 0 failed
+- **Industry expansion** (f518952):
+  - 6 new Tier 1 industry pages with full SEO/AEO/GEO stack
+  - /industries/plumbing-trades, ndis-disability, gyms-fitness
+  - /industries/real-estate, emergency-management, caravan-parks
+  - Each page: FAQPage JSON-LD (4 Q&As), answer-first GEO passages
+  - Hub expanded from 13 → 19 industries; sitemap updated
 
 ## Auth Architecture (confirmed)
 
 - Login: `POST /api/auth/login` (Next.js proxy) → `POST /api/lms/auth/login` (FastAPI)
-- Cookies set at login: `auth_token` (httpOnly) + `carsi_token` (non-httpOnly, same JWT)
-- `apiClient` reads `carsi_token` via `document.cookie`, sets `Authorization: Bearer` header
-- Backend middleware validates Bearer JWT → `get_current_lms_user()` extracts email → looks up user
-- Logout: `POST /api/auth/logout` (Next.js) clears both cookies
+- Cookies: `auth_token` (httpOnly) + `carsi_token` (non-httpOnly, same JWT)
+- `apiClient` reads `carsi_token` via `document.cookie`, sets `Authorization: Bearer`
+- Backend middleware validates Bearer JWT → `get_current_lms_user()` extracts email
 
 ## Next Steps (remaining P0 work)
 
@@ -37,6 +39,7 @@ P0 Auth replacement — COMPLETE. Pushed to main.
 - Course import: WP API + Drive DISCOVER pipeline (~91 courses)
 - GP-207: Fly.io custom domain api.carsi.com.au
 
-## Key Commit
+## Key Commits
 
-df9bf8a — feat(auth): replace localStorage dev auth with real JWT cookie system
+- df9bf8a — feat(auth): replace localStorage dev auth with real JWT cookie system
+- f518952 — feat(industries): add 6 Tier 1 industry pages with full SEO/AEO/GEO stack
