@@ -9,6 +9,7 @@ import { CECProgressRing } from '@/components/lms/CECProgressRing';
 import { IICRCIdentityCard } from '@/components/lms/IICRCIdentityCard';
 import { SubscriptionStatus } from '@/components/lms/SubscriptionStatus';
 import { EnrolledCourseList } from '@/components/lms/EnrolledCourseList';
+import { RecommendationWidget } from '@/components/lms/RecommendationWidget';
 import { useAuth } from '@/components/auth/auth-provider';
 import { apiClient } from '@/lib/api/client';
 
@@ -293,6 +294,14 @@ export default function StudentDashboardPage() {
         ) : (
           <EnrolledCourseList enrollments={enrollments} />
         )}
+      </section>
+
+      {/* --- What's Next For You --- */}
+      <section className="flex flex-col gap-3">
+        <h2 className="font-mono text-xs tracking-widest text-white/40 uppercase">
+          What&apos;s Next For You
+        </h2>
+        <RecommendationWidget />
       </section>
     </div>
   );

@@ -201,6 +201,53 @@ async def list_cec_reports(
     ]
 
 
+# ---------------------------------------------------------------------------
+# At-risk students (C5)
+# ---------------------------------------------------------------------------
+
+
+class AtRiskStudentOut(BaseModel):
+    student_id: str
+    email: str
+    full_name: str
+    risk_score: float
+    last_login_days_ago: int | None
+    streak_status: str | None
+    computed_at: str
+
+
+@router.get("/at-risk-students", response_model=list[AtRiskStudentOut])
+async def list_at_risk_students(
+    db: AsyncSession = Depends(get_async_db),
+    current_user: LMSUser = Depends(get_current_lms_user),
+) -> list[AtRiskStudentOut]:
+    """Return all students with a churn risk score >= 70 (admin only)."""
+    _require_admin(current_user)
+
+    from src.db.lms_models import LMSStudentRiskScore
+
+    result = await db.execute(
+        select(LMSStudentRiskScore)
+        .options(selectinload(LMSStudentRiskScore.student))
+        .where(LMSStudentRiskScore.risk_score >= 70)
+        .order_by(LMSStudentRiskScore.risk_score.desc())
+    )
+    rows = result.scalars().all()
+
+    return [
+        AtRiskStudentOut(
+            student_id=str(r.student_id),
+            email=r.student.email,
+            full_name=r.student.full_name,
+            risk_score=float(r.risk_score),
+            last_login_days_ago=r.last_login_days_ago,
+            streak_status=r.streak_status,
+            computed_at=r.computed_at.isoformat(),
+        )
+        for r in rows
+    ]
+
+
 @router.post("/cec-reports/{report_id}/retry")
 async def retry_cec_report(
     report_id: str,

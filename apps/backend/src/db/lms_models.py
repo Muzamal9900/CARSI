@@ -278,6 +278,7 @@ class LMSQuizQuestion(Base):
     explanation = Column(Text)
     order_index = Column(Integer, nullable=False)
     points = Column(Integer, default=1)
+    ai_explanation = Column(JSONB, nullable=True)  # Cached AI explanation (C4)
 
     quiz = relationship("LMSQuiz", back_populates="questions")
 
@@ -757,5 +758,29 @@ class LMSNotification(Base):
     is_read = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     read_at = Column(DateTime(timezone=True))
+
+    student = relationship("LMSUser")
+
+
+# ---------------------------------------------------------------------------
+# Churn Prediction (C5)
+# ---------------------------------------------------------------------------
+
+
+class LMSStudentRiskScore(Base):
+    __tablename__ = "lms_student_risk_scores"
+
+    id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(
+        PGUUID(as_uuid=True),
+        ForeignKey("lms_users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    risk_score = Column(Numeric(5, 2), nullable=False, default=0)
+    last_login_days_ago = Column(Integer)
+    progress_velocity_score = Column(Numeric(5, 2))
+    streak_status = Column(String(20))
+    computed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
     student = relationship("LMSUser")

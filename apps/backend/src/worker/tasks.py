@@ -726,3 +726,133 @@ def send_reengagement_email(data: dict) -> dict:
         return {"status": "sent"}
     except Exception:
         return {"status": "error"}
+
+
+# ---------------------------------------------------------------------------
+# Churn Prediction (C5)
+# ---------------------------------------------------------------------------
+
+
+def _compute_student_risk(db, student_id: uuid.UUID) -> dict:
+    """Compute risk score components for a single student.
+
+    Factors:
+    - Last login > 30 days: +50 points
+    - Last login > 14 days: +30 points
+    - No lesson progress in last 7 days: +20 points
+    - Broken streak: +15 points; never started: +10 points
+    - No enrollments: +10 points
+    Score is capped at 100.
+    """
+    from sqlalchemy import text as sql_text
+
+    score = 0
+
+    # Last login days
+    login_result = db.execute(
+        sql_text("""
+            SELECT EXTRACT(DAY FROM NOW() - MAX(session_start)) AS days_ago
+            FROM lms_user_sessions WHERE student_id = :sid
+        """),
+        {"sid": student_id},
+    )
+    row = login_result.fetchone()
+    last_login_days: int | None = int(row[0]) if (row and row[0] is not None) else None
+    effective_days = last_login_days if last_login_days is not None else 999
+
+    if effective_days > 30:
+        score += 50
+    elif effective_days > 14:
+        score += 30
+
+    # Progress velocity (lessons completed in last 7 days)
+    progress_result = db.execute(
+        sql_text("""
+            SELECT COUNT(*) AS recent_lessons
+            FROM lms_progress
+            WHERE student_id = :sid AND completed_at >= NOW() - INTERVAL '7 days'
+        """),
+        {"sid": student_id},
+    )
+    recent_lessons = progress_result.scalar() or 0
+    velocity = float(recent_lessons)
+    if recent_lessons == 0:
+        score += 20
+
+    # Streak status
+    streak_result = db.execute(
+        sql_text("SELECT current_streak FROM lms_gamification WHERE student_id = :sid"),
+        {"sid": student_id},
+    )
+    streak_row = streak_result.fetchone()
+    if streak_row is None:
+        streak_status = "never"
+        score += 10
+    elif streak_row[0] == 0:
+        streak_status = "broken"
+        score += 15
+    else:
+        streak_status = "active"
+
+    # No enrollments
+    enroll_result = db.execute(
+        sql_text("SELECT COUNT(*) FROM lms_enrollments WHERE student_id = :sid"),
+        {"sid": student_id},
+    )
+    if (enroll_result.scalar() or 0) == 0:
+        score += 10
+
+    return {
+        "total": min(score, 100),
+        "last_login_days": last_login_days,
+        "velocity": velocity,
+        "streak_status": streak_status,
+    }
+
+
+@celery_app.task(name="compute_churn_scores")
+def compute_churn_scores() -> dict:
+    """Nightly task: compute risk score for all active students and upsert results."""
+    from sqlalchemy import text as sql_text
+
+    with SyncSessionLocal() as db:
+        students_result = db.execute(
+            sql_text("""
+                SELECT u.id
+                FROM lms_users u
+                JOIN lms_user_roles ur ON ur.user_id = u.id
+                JOIN lms_roles r ON r.id = ur.role_id
+                WHERE r.name = 'student' AND u.is_active = true
+            """)
+        )
+        student_ids = [row[0] for row in students_result]
+
+        computed = 0
+        for student_id in student_ids:
+            score = _compute_student_risk(db, student_id)
+            db.execute(
+                sql_text("""
+                    INSERT INTO lms_student_risk_scores
+                        (id, student_id, risk_score, last_login_days_ago,
+                         progress_velocity_score, streak_status, computed_at)
+                    VALUES
+                        (gen_random_uuid(), :sid, :score, :days, :velocity, :streak, NOW())
+                    ON CONFLICT (student_id) DO UPDATE SET
+                        risk_score = EXCLUDED.risk_score,
+                        last_login_days_ago = EXCLUDED.last_login_days_ago,
+                        progress_velocity_score = EXCLUDED.progress_velocity_score,
+                        streak_status = EXCLUDED.streak_status,
+                        computed_at = EXCLUDED.computed_at
+                """),
+                {
+                    "sid": student_id,
+                    "score": score["total"],
+                    "days": score["last_login_days"],
+                    "velocity": score["velocity"],
+                    "streak": score["streak_status"],
+                },
+            )
+            computed += 1
+
+        db.commit()
+        return {"computed": computed}

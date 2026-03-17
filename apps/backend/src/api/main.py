@@ -48,6 +48,7 @@ from .routes import (
     lms_payments,
     lms_notes,
     lms_public_chat,
+    lms_recommendations,
     lms_search,
     lms_modules,
     lms_pathways,
@@ -139,6 +140,7 @@ app.include_router(lms_lessons.modules_router)
 app.include_router(lms_modules.router)
 app.include_router(lms_progress.router)
 app.include_router(lms_quiz.router)
+app.include_router(lms_quiz.explanation_router)
 app.include_router(lms_pathways.router)
 app.include_router(lms_gamification.router)
 app.include_router(lms_migration.router)
@@ -151,6 +153,7 @@ app.include_router(lms_ai_builder.router)
 app.include_router(lms_payments.router)
 app.include_router(lms_notes.router)
 app.include_router(lms_public_chat.router)
+app.include_router(lms_recommendations.router, tags=["LMS Recommendations"])
 app.include_router(lms_search.router)
 app.include_router(lms_bundles.router)
 app.include_router(agents.router, prefix="/api", tags=["Agents"])

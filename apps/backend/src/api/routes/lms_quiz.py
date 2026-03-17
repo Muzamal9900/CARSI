@@ -16,7 +16,7 @@ from src.api.schemas.lms_quiz import (
     QuizSubmitRequest,
 )
 from src.config.database import get_async_db
-from src.db.lms_models import LMSQuiz, LMSQuizAttempt, LMSUser
+from src.db.lms_models import LMSQuiz, LMSQuizAttempt, LMSQuizQuestion, LMSUser
 
 router = APIRouter(prefix="/api/lms/quizzes", tags=["lms-quiz"])
 
@@ -129,3 +129,80 @@ async def submit_quiz(
         correct_count=correct,
         total_questions=total,
     )
+
+
+# ---------------------------------------------------------------------------
+# AI Explanation endpoint (C4)
+# ---------------------------------------------------------------------------
+
+_EXPLANATION_ROUTER_PREFIX = "/api/lms/quiz/questions"
+
+explanation_router = APIRouter(prefix=_EXPLANATION_ROUTER_PREFIX, tags=["lms-quiz"])
+
+
+@explanation_router.get("/{question_id}/explanation")
+async def get_question_explanation(
+    question_id: UUID,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: LMSUser = Depends(get_current_lms_user),
+) -> dict:
+    """
+    Return (or generate and cache) an AI explanation for a quiz question.
+
+    The explanation is generated once and stored in ai_explanation (JSONB).
+    Subsequent calls return the cached value instantly.
+    """
+    from src.services.quiz_explanation_service import generate_quiz_explanation
+
+    result = await db.execute(
+        select(LMSQuizQuestion).where(LMSQuizQuestion.id == question_id)
+    )
+    question = result.scalar_one_or_none()
+    if not question:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")
+
+    # Return cached explanation if present
+    if question.ai_explanation is not None:
+        return {"question_id": str(question_id), "explanation": question.ai_explanation}
+
+    # Derive readable option strings
+    options: list[str] = [
+        opt.get("text", "") for opt in (question.options or [])
+    ]
+    correct_index: int = next(
+        (i for i, opt in enumerate(question.options or []) if opt.get("is_correct", False)),
+        0,
+    )
+
+    # Fetch course title via quiz → lesson → module → course chain
+    course_title = "CARSI Training"
+    try:
+        from src.db.lms_models import LMSLesson, LMSModule, LMSQuiz as Quiz_
+        from sqlalchemy.orm import selectinload as sil
+
+        quiz_result = await db.execute(
+            select(Quiz_)
+            .options(
+                sil(Quiz_.lesson).selectinload(LMSLesson.module).selectinload(LMSModule.course)
+            )
+            .where(Quiz_.id == question.quiz_id)
+        )
+        quiz_obj = quiz_result.scalar_one_or_none()
+        if quiz_obj and quiz_obj.lesson and quiz_obj.lesson.module and quiz_obj.lesson.module.course:
+            course_title = quiz_obj.lesson.module.course.title or course_title
+    except Exception:
+        pass  # Fall back to default title
+
+    explanation = await generate_quiz_explanation(
+        question_text=question.question_text,
+        options=options,
+        correct_index=correct_index,
+        student_answer_index=correct_index,  # Student answer unknown here — explain correct answer
+        course_title=course_title,
+    )
+
+    # Cache to DB
+    question.ai_explanation = explanation
+    await db.commit()
+
+    return {"question_id": str(question_id), "explanation": explanation}
