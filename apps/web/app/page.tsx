@@ -129,7 +129,7 @@ function CourseCard({ course }: { course: Course }) {
   return (
     <Link
       href={`/courses/${course.slug}`}
-      className="group block overflow-hidden rounded-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5"
+      className="group block overflow-hidden rounded-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5"
       style={{
         background: 'rgba(255,255,255,0.03)',
         border: '1px solid rgba(255,255,255,0.08)',
@@ -147,7 +147,7 @@ function CourseCard({ course }: { course: Course }) {
         )}
         {course.discipline && (
           <span
-            className="absolute top-3 left-3 rounded px-2 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase"
+            className="absolute top-3 left-3 rounded-sm px-2 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase"
             style={{
               background: 'rgba(0,0,0,0.7)',
               color: '#2490ed',
@@ -166,7 +166,7 @@ function CourseCard({ course }: { course: Course }) {
           {course.title}
         </h3>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium" style={{ color: isFree ? '#27ae60' : '#ed9d24' }}>
+          <span className="text-xs font-medium" style={{ color: isFree ? '#00FF88' : '#ed9d24' }}>
             {isFree ? 'Free' : `$${priceNum.toFixed(0)} AUD`}
           </span>
           <span
@@ -184,7 +184,7 @@ function CourseCard({ course }: { course: Course }) {
 function SkeletonCard() {
   return (
     <div
-      className="overflow-hidden rounded-lg"
+      className="overflow-hidden rounded-sm"
       style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
     >
       <div className="h-40 animate-pulse bg-slate-800/50" />
@@ -204,7 +204,7 @@ export default async function Home() {
   const featuredCourses = await getFeaturedCourses();
 
   return (
-    <div id="main-content" className="min-h-screen" style={{ background: '#0a0f1a' }}>
+    <div id="main-content" className="min-h-screen bg-[#050505]">
       {/* FAQ structured data for GEO/AI search engines */}
       <FAQSchema questions={faqs} />
 
@@ -213,7 +213,7 @@ export default async function Home() {
         className="pointer-events-none fixed inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(36,144,237,0.08) 0%, transparent 50%)',
+            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(36,144,237,0.07) 0%, transparent 55%)',
         }}
         aria-hidden="true"
       />
@@ -223,7 +223,7 @@ export default async function Home() {
         aria-label="Main navigation"
         className="sticky top-0 z-50"
         style={{
-          background: 'rgba(10,15,26,0.9)',
+          background: 'rgba(5,5,5,0.85)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
         }}
@@ -232,7 +232,7 @@ export default async function Home() {
           <div className="flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <div
-                className="flex h-8 w-8 items-center justify-center rounded-md font-bold text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-sm font-bold text-white"
                 style={{ background: '#2490ed' }}
               >
                 C
@@ -265,7 +265,7 @@ export default async function Home() {
               </Link>
               <Link
                 href="/courses"
-                className="rounded-md px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+                className="rounded-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
                 style={{ background: '#ed9d24' }}
               >
                 Browse Courses
@@ -298,7 +298,7 @@ export default async function Home() {
               <Link
                 key={d.code}
                 href={`/courses?discipline=${d.code}`}
-                className="rounded-md px-3 py-1.5 text-xs transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
+                className="rounded-sm px-3 py-1.5 text-xs transition-all duration-200 hover:-translate-y-0.5 hover:text-white"
                 style={{
                   background: 'rgba(255,255,255,0.04)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -367,7 +367,7 @@ export default async function Home() {
             <AnimatedCard key={industry.slug} index={i}>
               <Link
                 href={`/industries/${industry.slug}`}
-                className="group flex items-center justify-between rounded-lg px-4 py-3 transition-all duration-200 hover:-translate-y-0.5"
+                className="group flex items-center justify-between rounded-sm px-4 py-3 transition-all duration-200 hover:-translate-y-0.5"
                 style={{
                   background: industry.highlight
                     ? 'rgba(36,144,237,0.08)'
@@ -414,7 +414,7 @@ export default async function Home() {
             {
               title: 'No Travel Required',
               desc: 'No flights, no hotels, no time away from work. Train your entire team without leaving the office.',
-              color: '#27ae60',
+              color: '#00FF88',
             },
             {
               title: 'Instant Credentials',
@@ -424,7 +424,7 @@ export default async function Home() {
           ].map((item, i) => (
             <AnimatedCard key={item.title} index={i}>
               <div
-                className="rounded-lg p-6"
+                className="rounded-sm p-6"
                 style={{
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.06)',
@@ -584,7 +584,7 @@ export default async function Home() {
       <section className="px-6 py-16" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="mx-auto max-w-6xl">
           <div
-            className="rounded-lg p-8 sm:p-10"
+            className="rounded-sm p-8 sm:p-10"
             style={{
               background:
                 'linear-gradient(135deg, rgba(36,144,237,0.08) 0%, rgba(237,157,36,0.08) 100%)',
@@ -609,7 +609,7 @@ export default async function Home() {
               </div>
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-14 w-14 items-center justify-center rounded-lg text-lg font-bold"
+                  className="flex h-14 w-14 items-center justify-center rounded-sm text-lg font-bold"
                   style={{
                     background: 'rgba(255,255,255,0.06)',
                     border: '1px solid rgba(255,255,255,0.1)',
@@ -637,7 +637,7 @@ export default async function Home() {
           {faqs.map((faq, i) => (
             <AnimatedCard key={faq.question} index={i}>
               <details
-                className="group rounded-lg"
+                className="group rounded-sm"
                 style={{
                   background: 'rgba(255,255,255,0.03)',
                   border: '1px solid rgba(255,255,255,0.06)',
@@ -692,7 +692,7 @@ export default async function Home() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/courses?filter=free"
-              className="group inline-flex items-center gap-2 rounded-md px-8 py-3 font-medium transition-all duration-200 hover:scale-[1.02] hover:text-white"
+              className="group inline-flex items-center gap-2 rounded-sm px-8 py-3 font-medium transition-all duration-200 hover:scale-[1.02] hover:text-white"
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -703,7 +703,7 @@ export default async function Home() {
             </Link>
             <Link
               href="/courses"
-              className="group inline-flex items-center gap-2 rounded-md px-8 py-3 font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+              className="group inline-flex items-center gap-2 rounded-sm px-8 py-3 font-medium text-white transition-all duration-200 hover:scale-[1.02]"
               style={{ background: '#ed9d24' }}
             >
               Browse All Courses{' '}
@@ -720,7 +720,7 @@ export default async function Home() {
             <div>
               <div className="mb-3 flex items-center gap-2">
                 <div
-                  className="flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white"
+                  className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-white"
                   style={{ background: '#2490ed' }}
                 >
                   C

@@ -60,7 +60,7 @@ async function getBundles(): Promise<Bundle[]> {
 }
 
 const SUBSCRIPTION_FEATURES = [
-  'Unlimited access to 30+ IICRC-approved courses',
+  'Unlimited access to 40+ IICRC CEC-approved courses',
   'IICRC CEC tracking dashboard by discipline',
   'XP points, streaks, and monthly leaderboard',
   'PDF certificates stored to your credential wallet',

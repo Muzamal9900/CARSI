@@ -109,7 +109,7 @@ function TrustSignals() {
           <motion.div
             key={partner.name}
             variants={fadeIn}
-            className="flex h-7 items-center justify-center rounded px-2 text-[10px] font-bold tracking-wide"
+            className="flex h-7 items-center justify-center rounded-sm px-2 text-[10px] font-bold tracking-wide"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.08)',
@@ -172,7 +172,7 @@ export function AnimatedHero({ benefits }: AnimatedHeroProps) {
           >
             <Link
               href="/courses"
-              className="group inline-flex items-center gap-2 rounded-md px-6 py-3 font-medium text-white transition-all duration-200 hover:scale-[1.02]"
+              className="group inline-flex items-center gap-2 rounded-sm px-6 py-3 font-medium text-white transition-all duration-200 hover:scale-[1.02]"
               style={{ background: '#ed9d24' }}
             >
               Browse Courses{' '}
@@ -180,7 +180,7 @@ export function AnimatedHero({ benefits }: AnimatedHeroProps) {
             </Link>
             <Link
               href="/pathways"
-              className="inline-flex items-center gap-2 rounded-md px-6 py-3 font-medium transition-all duration-200 hover:scale-[1.02] hover:text-white"
+              className="inline-flex items-center gap-2 rounded-sm px-6 py-3 font-medium transition-all duration-200 hover:scale-[1.02] hover:text-white"
               style={{
                 background: 'rgba(255,255,255,0.05)',
                 border: '1px solid rgba(255,255,255,0.1)',
@@ -206,7 +206,7 @@ export function AnimatedHero({ benefits }: AnimatedHeroProps) {
                 className="flex items-center gap-2 text-sm"
                 style={{ color: 'rgba(255,255,255,0.5)' }}
               >
-                <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color: '#27ae60' }} />
+                <CheckCircle2 className="h-4 w-4 flex-shrink-0" style={{ color: '#00FF88' }} />
                 {benefit}
               </motion.li>
             ))}
