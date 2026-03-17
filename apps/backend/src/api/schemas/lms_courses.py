@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 IICRC_DISCIPLINES = {"WRT", "CRT", "OCT", "ASD", "CCT"}
 COURSE_LEVELS = {"beginner", "intermediate", "advanced"}
+COURSE_TIERS = {"free", "foundation", "growth"}
 
 
 class CourseCreate(BaseModel):
@@ -26,6 +27,7 @@ class CourseCreate(BaseModel):
     cec_hours: Decimal | None = Field(None, ge=0)
     cppp40421_unit_code: str | None = Field(None, max_length=20)
     cppp40421_unit_name: str | None = None
+    tier: str = Field(default="foundation", description="free|foundation|growth")
 
 
 class CourseUpdate(BaseModel):
@@ -44,6 +46,7 @@ class CourseUpdate(BaseModel):
     cec_hours: Decimal | None = Field(None, ge=0)
     cppp40421_unit_code: str | None = Field(None, max_length=20)
     cppp40421_unit_name: str | None = None
+    tier: str | None = Field(None, description="free|foundation|growth")
 
 
 class CourseOut(BaseModel):
@@ -62,6 +65,7 @@ class CourseOut(BaseModel):
     cec_hours: Decimal | None
     cppp40421_unit_code: str | None
     cppp40421_unit_name: str | None
+    tier: str
     instructor_id: UUID
     status: str
     created_at: datetime

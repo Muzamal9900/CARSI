@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BreadcrumbSchema, FAQSchema } from '@/components/seo';
-import { BundlePricingCard } from '@/components/lms/BundlePricingCard';
 
 export const metadata: Metadata = {
   title: 'Pricing | CARSI — Restoration Training Online',
   description:
-    'CARSI Pro subscription $795/yr AUD — unlimited access to 30+ restoration courses, IICRC CEC tracking, XP leaderboards, and PDF certificates. Start with a 7-day free trial.',
+    'CARSI membership from $44/month — access IICRC CEC-approved restoration courses, track your credits, and earn verified certificates. Free Library available to all.',
   keywords: [
     'CARSI pricing',
-    'restoration training cost',
+    'restoration training membership',
     'IICRC CEC courses online',
     'building restoration courses Australia',
     'water damage training subscription',
@@ -18,77 +17,38 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Pricing | CARSI — Restoration Training Online',
     description:
-      'One subscription. Every restoration discipline. $795 AUD/year with a 7-day free trial.',
+      'Free Library, Foundation $44/mo, Growth $99/mo. Every plan includes a 7-day free trial.',
     type: 'website',
     url: 'https://carsi.com.au/pricing',
   },
   alternates: { canonical: 'https://carsi.com.au/pricing' },
 };
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
-
-interface BundleCourse {
-  id: string;
-  title: string;
-  slug: string;
-  iicrc_discipline?: string | null;
-}
-
-interface Bundle {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  price_aud: number | string;
-  original_price_aud?: number | string | null;
-  savings_aud?: number | string | null;
-  industry_tag?: string | null;
-  course_count: number;
-  courses: BundleCourse[];
-}
-
-async function getBundles(): Promise<Bundle[]> {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/lms/bundles`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
-
-const SUBSCRIPTION_FEATURES = [
-  'Unlimited access to 40+ IICRC CEC-approved courses',
-  'IICRC CEC tracking dashboard by discipline',
-  'XP points, streaks, and monthly leaderboard',
-  'PDF certificates stored to your credential wallet',
-  'Professional Identity Hub (shareable public profile)',
-  'NRPG membership prerequisite fulfilled',
-  'All new courses included as they launch',
-];
-
 const FAQ_ITEMS = [
   {
     question: 'How does the 7-day free trial work?',
     answer:
-      'Your trial begins the moment you sign up. You have full access to every course on the platform for 7 days at no cost. Your card is only charged on day 8 if you choose to continue. Cancel any time before then with no questions asked.',
+      'Your trial begins the moment you sign up. You have full access to every course in your chosen plan for 7 days at no cost. Your card is only charged on day 8 if you choose to continue. Cancel any time before then with no questions asked.',
   },
   {
-    question: 'Can I cancel my subscription at any time?',
+    question: 'Can I cancel my membership at any time?',
     answer:
-      'Yes — cancel any time from your student dashboard. Your access continues until the end of the current billing period. There are no lock-in contracts and no cancellation fees.',
+      'Yes — cancel any time from your student dashboard. Your access continues until the end of the current billing period. No lock-in contracts, no cancellation fees.',
+  },
+  {
+    question: "What's the difference between Foundation and Growth?",
+    answer:
+      'Foundation covers entry-level and practical CEC courses — PPE, moisture metering, carpet cleaning basics, Level 1 Mould Remediation, and more. Growth unlocks the full catalogue including advanced disciplines: Level 2 Mould, Admin, Social Media Marketing, Asthma & Allergy, NeoSan Labs, and all Introduction to courses valued at $500+.',
   },
   {
     question: 'Do CARSI courses count toward IICRC CECs?',
     answer:
-      "CARSI's existing catalogue of approximately 40 courses carries IICRC CEC approval. Your subscription includes a CEC tracking dashboard that logs every credit you earn, broken down by discipline (WRT, CRT, OCT, ASD, CCT and more). New courses are submitted to the IICRC board for approval before CECs are displayed.",
+      "CARSI's catalogue of approximately 40 courses carries IICRC CEC approval. Your membership includes a CEC tracking dashboard that logs every credit you earn, broken down by discipline (WRT, CRT, OCT, ASD, CCT and more).",
   },
   {
-    question: "I'm already enrolled in a course — do I need to subscribe?",
+    question: 'What happens if my membership lapses?',
     answer:
-      'Individual course enrolments are unaffected. The Pro subscription unlocks unlimited access to every course on the platform — including all future releases — for a single annual fee of $795 AUD.',
+      'Your course access closes when the billing period ends. Your progress and certificates are saved — resume immediately when you renew. There is no data loss.',
   },
 ];
 
@@ -97,118 +57,198 @@ const breadcrumbs = [
   { name: 'Pricing', url: 'https://carsi.com.au/pricing' },
 ];
 
-export default async function PricingPage() {
-  const bundles = await getBundles();
+const FREE_FEATURES = [
+  'Australian Government Resources',
+  'Standard Operating Procedures',
+  'Cleaning Essentials guide',
+  'Job Safety & Environmental Analysis',
+  'Safe Work Method Statement',
+  'Free Webinar Series',
+  'Industry Terminology guide',
+  'Technician Flow Chart',
+  'Moisture & Dehumidification guide',
+  'ChatGPT Cheat Sheet for Restorers',
+];
 
+const FOUNDATION_EXTRAS = [
+  'Everything in Free Library',
+  'Policies & Procedures',
+  'Donning & Doffing PPE (valued at $39)',
+  'Microbe Clean Basic Understanding (valued at $99)',
+  'Level 1 Mould Remediation (valued at $49)',
+  'Starting a Business course',
+  'Moisture Meter Course (valued at $39)',
+  'Carpet Cleaning Basics (valued at $55)',
+  'Safety Data Sheets Course',
+  'ToolBox Meetings Assistance',
+];
+
+const GROWTH_EXTRAS = [
+  'Everything in Foundation',
+  'BONUS Policies & Procedures',
+  'NeoSan Labs Product Course (valued at $99)',
+  'Social Media Marketing (valued at $79)',
+  'Admin Course (valued at $275)',
+  'Level 2 Mould Remediation (valued at $99)',
+  'Asthma & Allergy Course (valued at $129)',
+  'ALL Introduction To courses (value $500+)',
+  'IICRC CEC tracking dashboard',
+  'XP leaderboard & streak tracker',
+  'PDF certificate wallet',
+  'Shareable credential profile',
+];
+
+export default function PricingPage() {
   return (
     <>
       <BreadcrumbSchema items={breadcrumbs} />
       <FAQSchema questions={FAQ_ITEMS} />
 
       <main className="min-h-screen bg-[#050505] px-4 py-16 text-white">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-6xl">
           {/* ── Hero ───────────────────────────────────────── */}
           <section className="mb-16 text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[rgba(0,245,255,0.08)] px-4 py-1.5 text-sm font-medium text-[#00F5FF]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#00F5FF]" />
-              CARSI Professional
-            </div>
-            <h1 className="mb-5 text-4xl font-bold tracking-tight text-white md:text-5xl">
-              Invest in Your Restoration Career
+            <h1 className="mb-4 text-4xl font-bold tracking-tight text-white md:text-5xl">
+              Membership &amp; Pricing
             </h1>
             <p className="mx-auto max-w-2xl text-lg leading-relaxed text-white/50">
-              One subscription gives you every IICRC-approved course on the platform — plus CEC
-              tracking, leaderboards, and a verified credential wallet.
+              For the cleaning and restoration industry. Start free — upgrade when you&apos;re
+              ready.
             </p>
           </section>
 
-          {/* ── Subscription Tier ──────────────────────────── */}
-          <section aria-label="Pro subscription" className="mb-16">
+          {/* ── 3-Tier Grid ────────────────────────────────── */}
+          <section
+            aria-label="Membership tiers"
+            className="mb-16 grid grid-cols-1 gap-6 md:grid-cols-3"
+          >
+            {/* Free Library */}
             <div
-              className="relative rounded-sm border p-8 md:p-10"
+              className="flex flex-col rounded-sm border p-6"
               style={{
-                background:
-                  'linear-gradient(135deg, rgba(0,245,255,0.06) 0%, rgba(0,245,255,0.02) 100%)',
-                borderColor: 'rgba(0,245,255,0.2)',
+                borderColor: 'rgba(255,255,255,0.08)',
+                background: 'rgba(255,255,255,0.02)',
               }}
             >
-              {/* Trial badge */}
-              <div className="absolute -top-3 left-8">
+              <div className="mb-6">
+                <h2 className="mb-1 font-mono text-lg font-bold text-white">Free Library</h2>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-mono text-3xl font-bold text-white">FREE</span>
+                </div>
+                <p className="mt-1 text-xs text-white/30">No card required</p>
+              </div>
+
+              <ul className="mb-8 flex flex-col gap-2.5 text-sm text-white/60">
+                {FREE_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0 text-white/30">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <Link
+                  href="/register"
+                  className="flex w-full items-center justify-center rounded-sm border border-white/[0.12] px-4 py-2.5 text-sm font-medium text-white/70 transition-colors hover:border-white/25 hover:text-white"
+                >
+                  Create Free Account
+                </Link>
+              </div>
+            </div>
+
+            {/* Foundation */}
+            <div
+              className="flex flex-col rounded-sm border p-6"
+              style={{
+                borderColor: 'rgba(36,144,237,0.3)',
+                background: 'rgba(36,144,237,0.04)',
+              }}
+            >
+              <div className="mb-6">
+                <h2 className="mb-1 font-mono text-lg font-bold text-white">Foundation</h2>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-mono text-3xl font-bold text-white">$44</span>
+                  <span className="font-mono text-sm text-white/40">AUD / month</span>
+                </div>
+                <p className="mt-1 text-xs text-white/30">GST included · Cancel anytime</p>
+              </div>
+
+              <ul className="mb-8 flex flex-col gap-2.5 text-sm text-white/70">
+                {FOUNDATION_EXTRAS.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0" style={{ color: '#2490ed' }}>
+                      ✓
+                    </span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <Link
+                  href="/subscribe?plan=foundation"
+                  className="flex w-full items-center justify-center rounded-sm px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+                  style={{ background: '#2490ed' }}
+                >
+                  Start 7-Day Free Trial
+                </Link>
+                <p className="mt-2 text-center text-xs text-white/25">
+                  Card required. No charge for 7 days.
+                </p>
+              </div>
+            </div>
+
+            {/* Growth — highlighted */}
+            <div
+              className="relative flex flex-col rounded-sm border p-6"
+              style={{
+                borderColor: 'rgba(0,245,255,0.3)',
+                background:
+                  'linear-gradient(135deg, rgba(0,245,255,0.06) 0%, rgba(0,245,255,0.02) 100%)',
+              }}
+            >
+              {/* Most Popular badge */}
+              <div className="absolute -top-3 left-6">
                 <span
                   className="rounded-sm px-3 py-1 text-xs font-semibold tracking-wide uppercase"
                   style={{ background: '#00FF88', color: '#050505' }}
                 >
-                  7-Day Free Trial
+                  Most Popular
                 </span>
               </div>
 
-              <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
-                {/* Left — pricing */}
-                <div className="flex flex-col gap-4">
-                  <div>
-                    <p className="mb-1 text-xs font-semibold tracking-wider text-white/30 uppercase">
-                      Annual Subscription
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-mono text-5xl font-bold text-white">$795</span>
-                      <span className="font-mono text-white/40">AUD / year</span>
-                    </div>
-                    <p className="mt-1 text-xs text-white/30">
-                      GST included. Billed annually via Stripe.
-                    </p>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:gap-3">
-                    <Link
-                      href="/subscribe"
-                      className="inline-flex items-center justify-center rounded-sm bg-[#00F5FF] px-6 py-3 text-sm font-semibold text-[#050505] transition-opacity hover:opacity-90"
-                    >
-                      Start Free Trial
-                    </Link>
-                    <Link
-                      href="/courses"
-                      className="inline-flex items-center justify-center rounded-sm border border-white/[0.08] px-6 py-3 text-sm font-medium text-white/60 transition-colors hover:border-white/20 hover:text-white/90"
-                    >
-                      Browse Courses
-                    </Link>
-                  </div>
-
-                  <p className="text-xs text-white/25">
-                    Card required. No charge during trial. Cancel any time.
-                  </p>
+              <div className="mb-6">
+                <h2 className="mb-1 font-mono text-lg font-bold text-white">Growth</h2>
+                <div className="flex items-baseline gap-1">
+                  <span className="font-mono text-3xl font-bold text-white">$99</span>
+                  <span className="font-mono text-sm text-white/40">AUD / month</span>
                 </div>
+                <p className="mt-1 text-xs text-white/30">GST included · Cancel anytime</p>
+              </div>
 
-                {/* Right — feature checklist */}
-                <ul className="flex flex-col gap-3 md:min-w-[280px]">
-                  {SUBSCRIPTION_FEATURES.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-sm text-white/70">
-                      <span className="mt-0.5 flex-shrink-0 text-[#00FF88]">✓</span>
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+              <ul className="mb-8 flex flex-col gap-2.5 text-sm text-white/70">
+                {GROWTH_EXTRAS.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="mt-0.5 flex-shrink-0 text-[#00FF88]">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto">
+                <Link
+                  href="/subscribe?plan=growth"
+                  className="flex w-full items-center justify-center rounded-sm bg-[#00F5FF] px-4 py-2.5 text-sm font-semibold text-[#050505] transition-opacity hover:opacity-90"
+                >
+                  Start 7-Day Free Trial
+                </Link>
+                <p className="mt-2 text-center text-xs text-white/25">
+                  Card required. No charge for 7 days.
+                </p>
               </div>
             </div>
           </section>
-
-          {/* ── Course Bundles ─────────────────────────────── */}
-          {bundles.length > 0 && (
-            <section aria-label="Course bundles" className="mb-16">
-              <div className="mb-6">
-                <h2 className="mb-2 text-2xl font-bold text-white">Course Bundles</h2>
-                <p className="text-sm text-white/40">
-                  Prefer to pay per bundle? Each bundle covers a specific discipline or industry
-                  vertical.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {bundles.map((bundle) => (
-                  <BundlePricingCard key={bundle.id} bundle={bundle} />
-                ))}
-              </div>
-            </section>
-          )}
 
           {/* ── Per-Course CTA ─────────────────────────────── */}
           <section
@@ -252,7 +292,7 @@ export default async function PricingPage() {
 
           {/* ── Footer note ────────────────────────────────── */}
           <p className="text-center text-xs text-white/20">
-            Prices in AUD. GST included. Subscription managed via Stripe — secure payment
+            Prices in AUD. GST included. Billed monthly. Managed via Stripe — secure payment
             processing.
             <br />
             Questions?{' '}

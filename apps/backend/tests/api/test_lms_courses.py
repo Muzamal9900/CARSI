@@ -107,6 +107,7 @@ def make_mock_course(status: str = "draft") -> MagicMock:
     course.cec_hours = Decimal("14.0")
     course.cppp40421_unit_code = None
     course.cppp40421_unit_name = None
+    course.tier = "foundation"
     course.instructor_id = INSTRUCTOR_ID
     course.status = status
     course.created_at = datetime(2026, 3, 3, 10, 0, 0)

@@ -147,6 +147,8 @@ class Settings(BaseSettings):
     stripe_secret_key: str = Field(default="", description="Stripe secret API key")
     stripe_webhook_secret: str = Field(default="", description="Stripe webhook signing secret")
     stripe_yearly_price_id: str = Field(default="", description="Stripe yearly subscription price ID")
+    stripe_foundation_price_id: str = Field(default="", description="Stripe Foundation plan monthly price ID ($44/mo)")
+    stripe_growth_price_id: str = Field(default="", description="Stripe Growth plan monthly price ID ($99/mo)")
     frontend_url: str = Field(
         default="http://localhost:3009",
         description="Frontend URL for Stripe redirects",

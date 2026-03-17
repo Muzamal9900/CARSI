@@ -202,20 +202,30 @@ async def get_enrollment_status(
     enrollment = enrol_result.scalar_one_or_none()
 
     if not enrollment:
-        # Subscribers have access to all published courses without a per-course enrollment
+        # Check subscription — plan must cover the course tier
         sub_result = await db.execute(
             select(LMSSubscription).where(
                 LMSSubscription.student_id == current_user.id,
                 LMSSubscription.status.in_(["trialling", "active"]),
             )
         )
-        if sub_result.scalar_one_or_none():
-            return {
-                "enrolled": True,
-                "status": "subscription",
-                "completion_percentage": 0.0,
-                "enrollment_id": None,
+        sub_row = sub_result.scalar_one_or_none()
+        if sub_row:
+            course_tier = getattr(course, "tier", "foundation") or "foundation"
+            plan = sub_row.plan or "growth"
+            plan_tiers: dict[str, frozenset[str]] = {
+                "foundation": frozenset({"free", "foundation"}),
+                "growth": frozenset({"free", "foundation", "growth"}),
+                "yearly": frozenset({"free", "foundation", "growth"}),
             }
+            allowed = plan_tiers.get(plan, frozenset({"free", "foundation", "growth"}))
+            if course_tier in allowed:
+                return {
+                    "enrolled": True,
+                    "status": "subscription",
+                    "completion_percentage": 0.0,
+                    "enrollment_id": None,
+                }
         return {
             "enrolled": False,
             "status": None,

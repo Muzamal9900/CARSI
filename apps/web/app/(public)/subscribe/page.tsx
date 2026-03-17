@@ -1,10 +1,53 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
 const API = process.env.NEXT_PUBLIC_BACKEND_URL ?? 'http://localhost:8000';
 
-async function startCheckout(userId: string): Promise<string> {
+const PLAN_DETAILS = {
+  foundation: {
+    name: 'Foundation Membership',
+    price: '$44',
+    period: 'AUD / month',
+    color: '#2490ed',
+    features: [
+      'All Free Library resources',
+      'Policies & Procedures',
+      'Donning & Doffing PPE',
+      'Microbe Clean Basic Understanding',
+      'Level 1 Mould Remediation',
+      'Starting a Business course',
+      'Moisture Meter Course',
+      'Carpet Cleaning Basics',
+      'Safety Data Sheets Course',
+      'ToolBox Meetings Assistance',
+    ],
+  },
+  growth: {
+    name: 'Growth Membership',
+    price: '$99',
+    period: 'AUD / month',
+    color: '#00F5FF',
+    features: [
+      'Everything in Foundation',
+      'NeoSan Labs Product Course',
+      'Social Media Marketing',
+      'Admin Course (valued at $275)',
+      'Level 2 Mould Remediation',
+      'Asthma & Allergy Course',
+      'ALL Introduction To courses ($500+ value)',
+      'IICRC CEC tracking dashboard',
+      'XP leaderboard & streak tracker',
+      'PDF certificate wallet',
+    ],
+  },
+} as const;
+
+type Plan = keyof typeof PLAN_DETAILS;
+
+async function startCheckout(userId: string, plan: Plan): Promise<string> {
   const resp = await fetch(`${API}/api/lms/subscription/checkout`, {
     method: 'POST',
     headers: {
@@ -12,8 +55,9 @@ async function startCheckout(userId: string): Promise<string> {
       'X-User-Id': userId,
     },
     body: JSON.stringify({
+      plan,
       success_url: `${window.location.origin}/subscribe/success`,
-      cancel_url: `${window.location.origin}/subscribe`,
+      cancel_url: `${window.location.origin}/subscribe?plan=${plan}`,
     }),
   });
   if (!resp.ok) throw new Error('Failed to create checkout session');
@@ -22,6 +66,11 @@ async function startCheckout(userId: string): Promise<string> {
 }
 
 export default function SubscribePage() {
+  const searchParams = useSearchParams();
+  const rawPlan = searchParams.get('plan');
+  const plan: Plan = rawPlan === 'foundation' ? 'foundation' : 'growth';
+  const details = PLAN_DETAILS[plan];
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +79,7 @@ export default function SubscribePage() {
     setError(null);
     try {
       const userId = localStorage.getItem('carsi_user_id') ?? '';
-      const url = await startCheckout(userId);
+      const url = await startCheckout(userId, plan);
       window.location.href = url;
     } catch {
       setError('Could not start checkout. Please try again.');
@@ -42,32 +91,57 @@ export default function SubscribePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#050505] px-4 py-16 text-white">
       <div className="flex w-full max-w-lg flex-col gap-8">
-        {/* Header */}
-        <div className="flex flex-col gap-3">
-          <h1 className="font-mono text-3xl font-bold text-white">CARSI Professional</h1>
-          <p className="text-sm leading-relaxed text-white/60">
-            Unlimited access to all CARSI courses. One subscription — every restoration discipline.
-            Required for NRPG membership.
-          </p>
+        {/* Plan switcher */}
+        <div className="flex gap-2 rounded-sm border border-white/[0.08] p-1">
+          <Link
+            href="/subscribe?plan=foundation"
+            className="flex-1 rounded-sm px-4 py-2 text-center text-sm font-medium transition-colors"
+            style={
+              plan === 'foundation'
+                ? { background: '#2490ed', color: '#fff' }
+                : { color: 'rgba(255,255,255,0.4)' }
+            }
+          >
+            Foundation · $44/mo
+          </Link>
+          <Link
+            href="/subscribe?plan=growth"
+            className="flex-1 rounded-sm px-4 py-2 text-center text-sm font-medium transition-colors"
+            style={
+              plan === 'growth'
+                ? { background: '#00F5FF', color: '#050505' }
+                : { color: 'rgba(255,255,255,0.4)' }
+            }
+          >
+            Growth · $99/mo
+          </Link>
         </div>
 
         {/* Pricing card */}
-        <div className="flex flex-col gap-6 rounded-sm border border-white/[0.08] bg-zinc-900/50 p-8">
-          <div className="flex items-baseline gap-2">
-            <span className="font-mono text-5xl font-bold text-white">$795</span>
-            <span className="font-mono text-white/40">AUD / year</span>
+        <div
+          className="flex flex-col gap-6 rounded-sm border p-8"
+          style={{
+            borderColor: `${details.color}33`,
+            background: `${details.color}08`,
+          }}
+        >
+          <div>
+            <h1 className="font-mono text-2xl font-bold text-white">{details.name}</h1>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="font-mono text-5xl font-bold text-white">{details.price}</span>
+              <span className="font-mono text-white/40">{details.period}</span>
+            </div>
+            <p className="mt-1 text-xs text-white/30">
+              GST included · 7-day free trial · Cancel anytime
+            </p>
           </div>
 
           <ul className="flex flex-col gap-3 text-sm text-white/70">
-            {[
-              'All published CARSI courses — unlimited access',
-              'IICRC CEC tracking dashboard',
-              'Professional Identity Hub',
-              'Monthly XP leaderboard',
-              'NRPG membership prerequisite',
-            ].map((feature) => (
+            {details.features.map((feature) => (
               <li key={feature} className="flex items-start gap-2">
-                <span className="mt-0.5 text-emerald-400">✓</span>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: details.color }}>
+                  ✓
+                </span>
                 {feature}
               </li>
             ))}
@@ -77,7 +151,12 @@ export default function SubscribePage() {
             <button
               onClick={handleSubscribe}
               disabled={loading}
-              className="w-full rounded-sm bg-cyan-600 py-3 font-mono text-sm font-semibold text-white transition-colors hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-sm py-3 font-mono text-sm font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              style={
+                plan === 'growth'
+                  ? { background: '#00F5FF', color: '#050505' }
+                  : { background: '#2490ed', color: '#fff' }
+              }
             >
               {loading ? 'Opening checkout…' : 'Start 7-Day Free Trial'}
             </button>
@@ -90,7 +169,11 @@ export default function SubscribePage() {
         </div>
 
         <p className="text-center text-xs leading-relaxed text-white/20">
-          Prices in AUD. GST included. Billed annually. Subscription via Stripe — secure payment.
+          Prices in AUD. GST included. Billed monthly. Subscription via Stripe — secure payment.
+          <br />
+          <Link href="/pricing" className="underline hover:text-white/40">
+            Compare all plans
+          </Link>
         </p>
       </div>
     </main>

@@ -19,6 +19,19 @@ from src.db.lms_models import LMSCourse, LMSEnrollment, LMSSubscription, LMSUser
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3009")
 
+# Which course tiers each plan can access
+_PLAN_TIERS: dict[str, frozenset[str]] = {
+    "foundation": frozenset({"free", "foundation"}),
+    "growth": frozenset({"free", "foundation", "growth"}),
+    "yearly": frozenset({"free", "foundation", "growth"}),  # legacy = growth access
+}
+
+
+def _plan_can_access(plan: str | None, course_tier: str) -> bool:
+    """Return True if the subscription plan grants access to the course tier."""
+    allowed = _PLAN_TIERS.get(plan or "growth", frozenset({"free", "foundation", "growth"}))
+    return course_tier in allowed
+
 router = APIRouter(prefix="/api/lms/courses", tags=["lms-payments"])
 
 
@@ -74,7 +87,14 @@ async def create_course_checkout(
             LMSSubscription.status.in_(["trialling", "active"]),
         )
     )
-    if sub_result.scalar_one_or_none():
+    sub_row = sub_result.scalar_one_or_none()
+    if sub_row:
+        course_tier = getattr(course, "tier", "foundation") or "foundation"
+        if not _plan_can_access(sub_row.plan, course_tier):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"This course requires a Growth membership. Upgrade at carsi.com.au/pricing.",
+            )
         enrollment = LMSEnrollment(
             student_id=current_user.id,
             course_id=course.id,

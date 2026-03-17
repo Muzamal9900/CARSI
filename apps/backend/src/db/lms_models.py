@@ -131,6 +131,7 @@ class LMSCourse(Base):
     category_id = Column(PGUUID(as_uuid=True), ForeignKey("lms_categories.id", ondelete="SET NULL"))
     learning_objectives = Column(JSONB, default=list)
     migration_source = Column(String(50))          # google_drive|manual|import
+    tier = Column(String(50), nullable=False, default="foundation")  # free|foundation|growth
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 

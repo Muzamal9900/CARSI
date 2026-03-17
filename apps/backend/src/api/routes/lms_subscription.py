@@ -26,9 +26,21 @@ def _configure_stripe() -> None:
     stripe.api_key = get_settings().stripe_secret_key
 
 
-def _get_stripe_price_id() -> str:
+_PLAN_PRICE_MAP = {
+    "foundation": "stripe_foundation_price_id",
+    "growth": "stripe_growth_price_id",
+    # Legacy yearly plan — maps to Growth access level
+    "yearly": "stripe_yearly_price_id",
+}
+
+
+def _get_stripe_price_id(plan: str) -> str:
     s = get_settings()
-    price_id = s.stripe_yearly_price_id if s.stripe_yearly_price_id else os.getenv("STRIPE_YEARLY_PRICE_ID", "")
+    attr = _PLAN_PRICE_MAP.get(plan, "stripe_growth_price_id")
+    price_id = getattr(s, attr, "") or os.getenv(attr.upper(), "")
+    # Fallback to yearly price if the specific plan price is not yet configured
+    if not price_id:
+        price_id = s.stripe_yearly_price_id or os.getenv("STRIPE_YEARLY_PRICE_ID", "")
     if not price_id:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -42,6 +54,7 @@ router = APIRouter(prefix="/api/lms/subscription", tags=["lms-subscription"])
 class CheckoutRequest(BaseModel):
     success_url: str
     cancel_url: str
+    plan: str = "growth"  # foundation | growth
 
 
 class CheckoutResponse(BaseModel):
@@ -66,9 +79,10 @@ async def create_checkout_session(
     db: AsyncSession = Depends(get_async_db),
     current_user: LMSUser = Depends(get_current_lms_user),
 ) -> CheckoutResponse:
-    """Create a Stripe Checkout Session. 7-day free trial, $795 AUD/year thereafter."""
+    """Create a Stripe Checkout Session for Foundation or Growth plan. 7-day free trial."""
+    plan = data.plan if data.plan in ("foundation", "growth") else "growth"
     _configure_stripe()
-    price_id = _get_stripe_price_id()
+    price_id = _get_stripe_price_id(plan)
 
     existing = await db.execute(
         select(LMSSubscription).where(
@@ -92,7 +106,7 @@ async def create_checkout_session(
         subscription_data={"trial_period_days": 7},
         success_url=data.success_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url=data.cancel_url,
-        metadata={"student_id": str(current_user.id)},
+        metadata={"student_id": str(current_user.id), "plan": plan},
         idempotency_key=idempotency_key,
     )
     return CheckoutResponse(url=session.url)
