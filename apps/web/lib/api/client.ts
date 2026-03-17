@@ -23,7 +23,7 @@ export class ApiClientError extends Error {
     message: string,
     public status: number,
     public errorCode?: string,
-    public requestId?: string,
+    public requestId?: string
   ) {
     super(message);
     this.name = 'ApiClientError';
@@ -37,7 +37,7 @@ function getAuthToken(): string | null {
   if (typeof document === 'undefined') return null;
 
   const cookies = document.cookie.split('; ');
-  const tokenCookie = cookies.find((c) => c.startsWith('auth_token='));
+  const tokenCookie = cookies.find((c) => c.startsWith('carsi_token='));
 
   if (!tokenCookie) return null;
 
@@ -81,7 +81,7 @@ async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {},
   retriesLeft = MAX_RETRIES,
-  didRefresh = false,
+  didRefresh = false
 ): Promise<T> {
   const token = getAuthToken();
 
@@ -135,12 +135,7 @@ async function fetchApi<T>(
         detail: `HTTP ${response.status}: ${response.statusText}`,
       }));
 
-      throw new ApiClientError(
-        error.detail,
-        response.status,
-        error.error_code,
-        error.request_id,
-      );
+      throw new ApiClientError(error.detail, response.status, error.error_code, error.request_id);
     }
 
     // Handle 204 No Content
@@ -163,7 +158,7 @@ async function fetchApi<T>(
     throw new ApiClientError(
       err instanceof Error ? err.message : 'Network error',
       0,
-      'NETWORK_ERROR',
+      'NETWORK_ERROR'
     );
   }
 }

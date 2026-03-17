@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { OnboardingWizard } from './OnboardingWizard';
+import { apiClient } from '@/lib/api/client';
 
 interface UserProfile {
   onboarding_completed: boolean;
@@ -19,14 +20,12 @@ export function OnboardingCheck() {
 
     async function checkOnboarding() {
       try {
-        const res = await fetch('/api/lms/auth/me', { credentials: 'include' });
-        if (!res.ok) return; // not authenticated — let middleware handle it
-        const profile: UserProfile = await res.json();
+        const profile = await apiClient.get<UserProfile>('/api/lms/auth/me');
         if (!cancelled && !profile.onboarding_completed) {
           setShowWizard(true);
         }
       } catch {
-        // network error — silently skip onboarding check
+        // not authenticated or network error — silently skip onboarding check
       } finally {
         if (!cancelled) setChecked(true);
       }

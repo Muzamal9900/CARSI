@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Linkedin, Sparkles, Copy, CheckCheck, X } from 'lucide-react';
+import { apiClient } from '@/lib/api/client';
 
 interface LinkedInShareButtonProps {
   courseTitle: string;
@@ -51,16 +52,10 @@ export function LinkedInShareButton({
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/lms/credentials/${credentialId}/linkedin-draft`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) {
-        throw new Error('Failed to generate draft');
-      }
-      const data = await res.json();
+      const data = await apiClient.post<{ draft: string }>(
+        `/api/lms/credentials/${credentialId}/linkedin-draft`,
+        {}
+      );
       setDraft(data.draft);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');

@@ -17,6 +17,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { apiClient } from '@/lib/api/client';
 
 interface OnboardingWizardProps {
   isOpen: boolean;
@@ -167,19 +168,11 @@ export function OnboardingWizard({ isOpen, onComplete }: OnboardingWizardProps) 
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/lms/auth/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(finalAnswers),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.detail ?? 'Something went wrong');
-      }
-
-      const data = await res.json();
+      const data = await apiClient.post<{
+        recommended_pathway: string;
+        pathway_description: string;
+        suggested_courses_url: string;
+      }>('/api/lms/auth/onboarding', finalAnswers);
       setResult({
         pathway: data.recommended_pathway,
         description: data.pathway_description,

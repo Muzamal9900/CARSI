@@ -8,7 +8,7 @@ These work alongside the existing starter auth system using lms_users table.
 from collections.abc import Callable
 from uuid import UUID
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,6 +22,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_lms_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     x_user_id: str | None = Header(default=None),
     db: AsyncSession = Depends(get_async_db),
@@ -30,6 +31,7 @@ async def get_current_lms_user(
     Resolve the current LMS user from:
       1. Bearer JWT token (production)
       2. X-User-Id header (dev fallback — looked up by UUID)
+      3. request.state.user_email (set by AuthMiddleware from httpOnly cookie)
     """
     user: LMSUser | None = None
 
@@ -52,6 +54,17 @@ async def get_current_lms_user(
             result = await db.execute(
                 select(LMSUser)
                 .where(LMSUser.id == uid)
+                .options(selectinload(LMSUser.user_roles).selectinload(LMSUserRole.role))
+            )
+            user = result.scalar_one_or_none()
+
+    # Fallback: AuthMiddleware sets request.state.user_email from httpOnly cookie
+    if user is None and hasattr(request.state, "user_email"):
+        email_from_cookie = request.state.user_email
+        if email_from_cookie:
+            result = await db.execute(
+                select(LMSUser)
+                .where(LMSUser.email == email_from_cookie)
                 .options(selectinload(LMSUser.user_roles).selectinload(LMSUserRole.role))
             )
             user = result.scalar_one_or_none()

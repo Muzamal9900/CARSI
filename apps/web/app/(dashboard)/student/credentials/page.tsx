@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Award } from 'lucide-react';
 import { ErrorBanner } from '@/components/lms/ErrorBanner';
+import { LinkedInShareButton } from '@/components/lms/LinkedInShareButton';
 import { useAuth } from '@/components/auth/auth-provider';
 import { apiClient } from '@/lib/api/client';
 
@@ -39,6 +40,7 @@ function disciplineColour(discipline: string | null): string {
 
 function CredentialCard({ credential }: { credential: CredentialOut }) {
   const pdfUrl = `${API}/api/lms/credentials/${credential.credential_id}/pdf`;
+  const issuedDate = new Date(credential.issued_date);
 
   return (
     <div className="flex flex-col gap-4 rounded-sm border border-white/[0.06] bg-zinc-900/50 p-5">
@@ -75,6 +77,16 @@ function CredentialCard({ credential }: { credential: CredentialOut }) {
           </div>
         )}
       </div>
+
+      {/* LinkedIn share */}
+      <LinkedInShareButton
+        courseTitle={credential.course_title}
+        iicrcDiscipline={credential.iicrc_discipline ?? ''}
+        issuedYear={issuedDate.getFullYear()}
+        issuedMonth={issuedDate.getMonth() + 1}
+        credentialId={credential.credential_id}
+        credentialUrl={credential.verification_url}
+      />
 
       {/* Action links */}
       <div className="flex gap-3 border-t border-white/[0.06] pt-4">
