@@ -6,6 +6,7 @@ Create Date: 2026-03-18
 """
 
 from alembic import op
+from sqlalchemy import text
 
 # revision identifiers, used by Alembic.
 revision = "016"
@@ -14,25 +15,33 @@ branch_labels = None
 depends_on = None
 
 
+def _extension_available(name: str) -> bool:
+    """Check if a PostgreSQL extension is available on the server."""
+    conn = op.get_bind()
+    result = conn.execute(
+        text("SELECT EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = :n)"),
+        {"n": name},
+    )
+    return result.scalar()
+
+
 def upgrade() -> None:
-    # Enable pgvector extension (safe if already present)
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
-
-    # Add vector embedding column for future semantic search (nullable — populated async)
-    op.execute(
-        "ALTER TABLE lms_courses ADD COLUMN IF NOT EXISTS embedding vector(1536)"
-    )
-
-    # IVFFlat index for cosine similarity vector search
-    op.execute(
-        """
-        CREATE INDEX IF NOT EXISTS ix_lms_courses_embedding
-        ON lms_courses USING ivfflat (embedding vector_cosine_ops)
-        WITH (lists = 100)
-        """
-    )
+    # pgvector: only install if available on the server (not present on Fly unmanaged Postgres)
+    if _extension_available("vector"):
+        op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        op.execute(
+            "ALTER TABLE lms_courses ADD COLUMN IF NOT EXISTS embedding vector(1536)"
+        )
+        op.execute(
+            """
+            CREATE INDEX IF NOT EXISTS ix_lms_courses_embedding
+            ON lms_courses USING ivfflat (embedding vector_cosine_ops)
+            WITH (lists = 100)
+            """
+        )
 
     # GIN inverted index for full-text search — makes tsvector @@ tsquery O(log n)
+    # This works on all PostgreSQL servers (no extension needed)
     op.execute(
         """
         CREATE INDEX IF NOT EXISTS ix_lms_courses_search

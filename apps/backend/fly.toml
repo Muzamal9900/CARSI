@@ -27,7 +27,7 @@ primary_region = "syd"
   ENVIRONMENT = "production"
   PORT = "8000"
   AI_PROVIDER = "anthropic"
-  CORS_ORIGINS = '["https://carsi.com.au","https://www.carsi.com.au","https://carsi-backend.fly.dev"]'
+  CORS_ORIGINS = '["https://carsi.com.au","https://www.carsi.com.au","https://carsi-web.vercel.app","https://carsi-backend.fly.dev"]'
 
   # Email configuration (SMTP_PASS is a secret — set via fly secrets)
   SMTP_HOST = "smtp.resend.com"
