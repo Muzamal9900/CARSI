@@ -6,8 +6,10 @@ POST /api/lms/auth/login     — returns JWT access token
 GET  /api/lms/auth/me        — current user profile
 """
 
+import hashlib
 import json
-from datetime import timedelta
+import secrets
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, EmailStr, Field
@@ -21,6 +23,7 @@ from src.config.settings import get_settings
 from src.db.lms_models import LMSRole, LMSUser, LMSUserRole, LMSUserSession
 from src.api.deps_lms import get_current_lms_user
 from src.services.audit_service import audit_log
+from src.services.email_service import EmailService
 
 router = APIRouter(prefix="/api/lms/auth", tags=["lms-auth"])
 
@@ -501,3 +504,115 @@ async def export_my_data(
         media_type="application/json",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
+
+
+# ---------------------------------------------------------------------------
+# Password Reset Flow
+# ---------------------------------------------------------------------------
+
+_RESET_TOKEN_TTL_MINUTES = 60
+_RESET_SUCCESS_MSG = "If that email is registered, a reset link has been sent."
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=32)
+    new_password: str = Field(min_length=8)
+
+
+def _hash_token(raw: str) -> str:
+    """SHA-256 hash a reset token before storing — prevents token theft via DB dump."""
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def _send_reset_email(to_email: str, full_name: str, reset_url: str) -> None:
+    """Send password reset email via SMTP (runs in background task)."""
+    svc = EmailService()
+    html = f"""
+    <div style="font-family:sans-serif;max-width:560px;margin:auto">
+      <h2 style="color:#050505">Reset your CARSI password</h2>
+      <p>Hi {full_name},</p>
+      <p>We received a request to reset your password. Click the link below — it expires in {_RESET_TOKEN_TTL_MINUTES} minutes.</p>
+      <p style="margin:24px 0">
+        <a href="{reset_url}"
+           style="background:#ed9d24;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:600">
+          Reset password
+        </a>
+      </p>
+      <p style="color:#666;font-size:13px">If you didn't request this, you can safely ignore this email.</p>
+      <p style="color:#666;font-size:13px">Or copy this link: {reset_url}</p>
+    </div>
+    """
+    svc.send_email(to=to_email, subject="Reset your CARSI password", html_body=html)
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_async_db),
+) -> dict:
+    """
+    Request a password reset email.
+
+    Always returns the same message whether or not the email exists —
+    prevents user enumeration attacks.
+    """
+    settings = get_settings()
+    result = await db.execute(select(LMSUser).where(LMSUser.email == data.email))
+    user = result.scalar_one_or_none()
+
+    if user and user.is_active:
+        raw_token = secrets.token_urlsafe(32)
+        user.password_reset_token = _hash_token(raw_token)
+        user.password_reset_expires = datetime.now(timezone.utc) + timedelta(
+            minutes=_RESET_TOKEN_TTL_MINUTES
+        )
+        await db.commit()
+
+        frontend_url = getattr(settings, "frontend_url", "https://carsi.com.au")
+        reset_url = f"{frontend_url}/reset-password?token={raw_token}"
+        background_tasks.add_task(
+            _send_reset_email, user.email, user.full_name, reset_url
+        )
+
+    return {"message": _RESET_SUCCESS_MSG}
+
+
+@router.post("/reset-password")
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_async_db),
+) -> dict:
+    """
+    Consume a reset token and set a new password.
+
+    The token is single-use — cleared immediately after a successful reset.
+    """
+    hashed = _hash_token(data.token)
+    now = datetime.now(timezone.utc)
+
+    result = await db.execute(
+        select(LMSUser).where(LMSUser.password_reset_token == hashed)
+    )
+    user = result.scalar_one_or_none()
+
+    if (
+        not user
+        or not user.password_reset_expires
+        or user.password_reset_expires.replace(tzinfo=timezone.utc) < now
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset link is invalid or has expired. Please request a new one.",
+        )
+
+    user.hashed_password = get_password_hash(data.new_password)
+    user.password_reset_token = None
+    user.password_reset_expires = None
+    await db.commit()
+
+    return {"message": "Password updated successfully. You can now sign in."}

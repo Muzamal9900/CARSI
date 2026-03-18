@@ -69,6 +69,9 @@ class LMSUser(Base):
     # Onboarding wizard (migration 019)
     onboarding_completed = Column(Boolean, default=False, nullable=False)
     recommended_pathway = Column(String(50), nullable=True)
+    # Password reset (migration 023)
+    password_reset_token = Column(String(64), nullable=True, index=True)
+    password_reset_expires = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -5,7 +5,16 @@ import { updateSession } from '@/lib/api/middleware';
  * CARSI LMS protected route prefixes.
  * Users without a valid carsi_token cookie are redirected to /login.
  */
-const PROTECTED_PREFIXES = ['/student', '/instructor', '/admin', '/subscribe'];
+const PROTECTED_PREFIXES = [
+  '/student',
+  '/instructor',
+  '/admin',
+  '/subscribe',
+  '/courses', // lessons + quizzes require enrolment — gate at middleware level
+  '/dashboard', // hide starter template from unauthenticated users
+  '/tasks',
+  '/agents',
+];
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(

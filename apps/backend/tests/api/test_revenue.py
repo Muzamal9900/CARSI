@@ -107,8 +107,11 @@ class TestRevenueMRRCalculation:
             result = MagicMock()
 
             if call_count == 1:
-                # active count
-                result.scalar.return_value = 2
+                # active_by_plan — grouped by plan, returns rows with .plan + .cnt
+                plan_row = MagicMock()
+                plan_row.plan = "yearly"
+                plan_row.cnt = 2
+                result.all.return_value = [plan_row]
             elif call_count == 2:
                 # trialling count
                 result.scalar.return_value = 1

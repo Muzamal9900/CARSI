@@ -510,7 +510,19 @@ async def get_admin_analytics(
 # Revenue Intelligence (Phase D1)
 # ---------------------------------------------------------------------------
 
-_YEARLY_PRICE_AUD = 795.0
+# Plan pricing (AUD) — monthly and annual equivalents
+_PLAN_MONTHLY_PRICE: dict[str, float] = {
+    "foundation": 44.0,
+    "growth": 99.0,
+    "yearly": 795.0 / 12,
+}
+_PLAN_ANNUAL_PRICE: dict[str, float] = {
+    "foundation": 44.0 * 12,   # $528/yr
+    "growth": 99.0 * 12,        # $1,188/yr
+    "yearly": 795.0,
+}
+_DEFAULT_MONTHLY = 795.0 / 12
+_DEFAULT_ANNUAL = 795.0
 
 
 class RevenueByMonthOut(BaseModel):
@@ -546,14 +558,23 @@ async def get_revenue(
     now = datetime.now(timezone.utc)
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    # Active subscriber count
-    active_count = (
+    # Active subscriber count + plan breakdown for revenue
+    active_by_plan = (
         await db.execute(
-            select(func.count(LMSSubscription.id)).where(
-                LMSSubscription.status == "active"
-            )
+            select(LMSSubscription.plan, func.count(LMSSubscription.id).label("cnt"))
+            .where(LMSSubscription.status == "active")
+            .group_by(LMSSubscription.plan)
         )
-    ).scalar() or 0
+    ).all()
+    active_count = sum(row.cnt for row in active_by_plan)
+    mrr_aud = sum(
+        _PLAN_MONTHLY_PRICE.get(row.plan, _DEFAULT_MONTHLY) * row.cnt
+        for row in active_by_plan
+    )
+    arr_aud = sum(
+        _PLAN_ANNUAL_PRICE.get(row.plan, _DEFAULT_ANNUAL) * row.cnt
+        for row in active_by_plan
+    )
 
     # Trialling count
     trialling_count = (
@@ -579,32 +600,38 @@ async def get_revenue(
     ).scalar() or 0
     trial_to_paid = round((active_count / total_ever * 100) if total_ever > 0 else 0.0, 1)
 
-    # Revenue by month — last 6 calendar months
+    # Revenue by month — last 6 calendar months, grouped by plan for accurate revenue
     six_months_ago = now.replace(day=1) - timedelta(days=31 * 5)
-    monthly_result = await db.execute(
+    monthly_rows = await db.execute(
         select(
             func.to_char(LMSSubscription.created_at, "YYYY-MM").label("month"),
+            LMSSubscription.plan,
             func.count(LMSSubscription.id).label("new_subs"),
         )
         .where(
             LMSSubscription.created_at >= six_months_ago,
             LMSSubscription.status != "cancelled",
         )
-        .group_by("month")
+        .group_by("month", LMSSubscription.plan)
         .order_by("month")
     )
+    month_totals: dict[str, dict] = {}
+    for row in monthly_rows:
+        entry = month_totals.setdefault(row.month, {"new_subs": 0, "revenue": 0.0})
+        entry["new_subs"] += row.new_subs
+        entry["revenue"] += row.new_subs * _PLAN_ANNUAL_PRICE.get(row.plan, _DEFAULT_ANNUAL)
     revenue_by_month = [
         RevenueByMonthOut(
-            month=row.month,
-            new_subs=row.new_subs,
-            revenue_aud=round(row.new_subs * _YEARLY_PRICE_AUD, 2),
+            month=month,
+            new_subs=data["new_subs"],
+            revenue_aud=round(data["revenue"], 2),
         )
-        for row in monthly_result
+        for month, data in sorted(month_totals.items())
     ]
 
     return RevenueOut(
-        mrr_aud=round(active_count * _YEARLY_PRICE_AUD / 12, 2),
-        arr_aud=round(active_count * _YEARLY_PRICE_AUD, 2),
+        mrr_aud=round(mrr_aud, 2),
+        arr_aud=round(arr_aud, 2),
         total_subscribers=active_count,
         trialling=trialling_count,
         cancelled_this_month=cancelled_this_month,

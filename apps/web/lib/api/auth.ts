@@ -118,4 +118,14 @@ export const authApi = {
   async requestPasswordReset(email: string): Promise<{ message: string }> {
     return apiClient.post('/api/lms/auth/forgot-password', { email });
   },
+
+  /**
+   * Consume a reset token and set a new password.
+   */
+  async confirmPasswordReset(token: string, newPassword: string): Promise<{ message: string }> {
+    return apiClient.post('/api/lms/auth/reset-password', {
+      token,
+      new_password: newPassword,
+    });
+  },
 };
