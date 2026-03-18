@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
-import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -145,9 +144,14 @@ export function RegisterForm() {
           )}
         />
         {error && <p className="text-destructive text-sm">{error}</p>}
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full rounded-sm py-3 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{ background: '#ed9d24' }}
+        >
           {isLoading ? 'Creating account...' : 'Create account'}
-        </Button>
+        </button>
       </form>
     </Form>
   );
