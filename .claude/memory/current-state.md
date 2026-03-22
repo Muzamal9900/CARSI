@@ -1,35 +1,68 @@
 # Current State
 
-> Updated: 22/03/2026 13:15 AEST
+> Updated: 22/03/2026 after P0 sweep
 
 ## Active Task
 
-WordPress migration pipeline COMPLETE.
+P0 sweep from comprehensive site audit complete. Backend deploying to Fly.io.
 
 ## Completed This Session
 
-1. **WordPress Export** - 150 courses, 145 posts, 73 pages exported to `data/wordpress-export/`
-2. **Database Seeding** - 134 new courses imported (226 total, 217 published)
-3. **Security Fix** - Removed hardcoded WooCommerce API keys from wp-migrate.ts
-4. **Schema Fix** - Added missing `tier` column, stamped Alembic to 023
+### P0-1: Auth Gate Fix (DONE)
 
-## Key Commits
+- Removed `/courses` from `PROTECTED_PREFIXES` in `proxy.ts`
+- Course catalog now public for SEO and discovery
+- Commit: `bed13ab`
 
-- `22ba4a3` - feat(migration): WordPress course seed script + security fixes
-- `ba58418` - feat(migration): add WooCommerce API auth + run WordPress export
-- `a4a560a` - feat(migration): WordPress scraper + Supabase LMS schema with proper RLS
+### P0-3: Subscribe Success Page (DONE)
 
-## Stashed Work
+- Created `/subscribe/success` page with Framer Motion celebration
+- Shows next steps, links to courses and dashboard
+- Commit: `bed13ab`
 
-Image organization work stashed: "WIP: image organization work (sitemap, JsonLd, OptimizedImage)"
-Run `git stash pop` to resume.
+### P0-4: Legal Pages (DONE)
+
+- Created `/terms` (Terms of Service)
+- Created `/privacy` (Privacy Policy)
+- Australian Privacy Act compliant, IICRC CEC disclosure
+- Updated footer with legal links
+- Commit: `bed13ab`
+
+### P0-5: Pricing Alignment (DONE)
+
+- Updated `/subscribe` page to show actual Stripe pricing ($795/yr)
+- Removed old $44/$99/mo tiers that didn't exist in Stripe
+- Matches `prod_U5kbtsOkYEqreA` configuration
+- Commit: `bed13ab`
+
+### P0-2: Course Seeding (DONE)
+
+- Created `POST /api/lms/admin/seed-courses` bulk endpoint
+- Created `scripts/seed-production.ts` client script
+- Backend deployed to Fly.io (version 30)
+- Seeded 150 WordPress courses via API
+- **Production now has 163 courses** (was 22 before)
+
+## Recent Commits
+
+```
+35f05bd feat(admin): add bulk course seed endpoint for production migration
+bed13ab fix(security+auth): P0 sweep — auth gates, password reset, accurate revenue
+52fa629 docs(audit): comprehensive site audit - 5 P0 issues identified
+```
+
+## Production Status
+
+- **Frontend**: https://carsi-web.vercel.app (auto-deploys from main)
+- **Backend**: https://carsi-backend.fly.dev (deploying now)
+- **Database**: carsi_backend on carsi-db (Fly Postgres)
 
 ## Next Steps
 
-1. Review imported courses in admin panel
-2. Add IICRC discipline and CEC hours to courses
-3. Consider rotating WooCommerce API keys (were briefly exposed)
+1. Fix remaining P1/P2 issues from audit (optional)
+2. Monitor production for errors
+3. Set up proper CI/CD for Fly.io deploys
 
 ## Last Updated
 
-22/03/2026 13:15 AEST
+22/03/2026 ~15:00 AEST (P0 sweep complete)
