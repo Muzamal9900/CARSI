@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
-    "types": ["vitest/globals"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -33,6 +32,7 @@
   ],
   "exclude": [
     "node_modules",
+    "src/__tests__/**/*",
     "tests/**/*",
     "src/components/JobCard.tsx",
     "src/lib/image-generation/*",
