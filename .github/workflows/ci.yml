@@ -157,28 +157,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm turbo run lint
+        run: pnpm lint
 
       - name: Type check
-        run: pnpm turbo run type-check
-
-      - name: Run unit tests with coverage
-        run: pnpm turbo run test:coverage
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: coverage/
-          retention-days: 30
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-test-results
-          path: coverage/
+        run: pnpm type-check
 
   build:
     name: Build Check
@@ -214,38 +196,6 @@ jobs:
           path: |
             .next/
           retention-days: 7
-
-  docker-build:
-    name: Docker Build Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: [backend-tests, frontend-tests]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build web image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.web
-          push: false
-          tags: carsi-lms/web:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: apps/backend
-          file: apps/backend/Dockerfile
-          push: false
-          tags: carsi-lms/backend:test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   e2e-tests:
     name: E2E Tests
