@@ -11,9 +11,22 @@ import { StudentJourneyMap } from '@/components/lms/diagrams/StudentJourneyMap';
 import { FAQSchema } from '@/components/seo/JsonLd';
 import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 import { getBackendOrigin } from '@/lib/env/public-url';
-import { ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Clock,
+  DollarSign,
+  ExternalLink,
+  Laptop,
+  MapPin,
+  Sparkles,
+  Users,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -30,11 +43,39 @@ interface Course {
   thumbnail_url?: string | null;
 }
 
+/** Shape of entries in `data/wordpress-export/courses.json` from `wp:migrate`. */
+interface WpExportCourse {
+  slug: string;
+  title: string;
+  short_description?: string;
+  thumbnail_url?: string | null;
+  price_aud: number;
+  is_free?: boolean;
+  iicrc_discipline?: string | null;
+  status?: string;
+  wp_id: number;
+}
+
+function mapWpExportToCourse(row: WpExportCourse): Course {
+  return {
+    id: String(row.wp_id),
+    slug: row.slug,
+    title: row.title,
+    short_description: row.short_description ?? null,
+    price_aud: row.price_aud,
+    is_free: row.is_free,
+    discipline: row.iicrc_discipline ?? null,
+    thumbnail_url: row.thumbnail_url ?? null,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
 
-async function getFeaturedCourses(): Promise<Course[]> {
+const WP_EXPORT_COURSES_PATH = path.join(process.cwd(), 'data', 'wordpress-export', 'courses.json');
+
+async function getFeaturedCoursesFromBackend(): Promise<Course[]> {
   const backendUrl = getBackendOrigin();
   try {
     const res = await fetch(`${backendUrl}/api/lms/courses?limit=3`, {
@@ -45,6 +86,25 @@ async function getFeaturedCourses(): Promise<Course[]> {
     return data.items ?? [];
   } catch {
     return [];
+  }
+}
+
+/** Prefer local WordPress export; fall back to LMS API when the file is absent (e.g. CI). */
+async function getFeaturedCourses(): Promise<Course[]> {
+  try {
+    if (!fs.existsSync(WP_EXPORT_COURSES_PATH)) {
+      return getFeaturedCoursesFromBackend();
+    }
+    const raw = fs.readFileSync(WP_EXPORT_COURSES_PATH, 'utf-8');
+    const parsed = JSON.parse(raw) as WpExportCourse[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return getFeaturedCoursesFromBackend();
+    }
+    const published = parsed.filter((c) => c.status === 'published');
+    const pool = published.length >= 3 ? published : parsed;
+    return pool.slice(0, 3).map(mapWpExportToCourse);
+  } catch {
+    return getFeaturedCoursesFromBackend();
   }
 }
 
@@ -89,6 +149,39 @@ const stats = [
   { value: '91', label: 'Courses' },
   { value: '7', label: 'IICRC Disciplines' },
 ];
+
+const geoDisciplineCodes = [
+  { code: 'WRT', label: 'Water Damage Restoration' },
+  { code: 'CRT', label: 'Carpet Repair & Reinstallation' },
+  { code: 'ASD', label: 'Applied Structural Drying' },
+  { code: 'AMRT', label: 'Applied Microbial Remediation' },
+  { code: 'OCT', label: 'Odour Control' },
+  { code: 'CCT', label: 'Carpet Cleaning' },
+  { code: 'FSRT', label: 'Fire & Smoke Restoration' },
+] as const;
+
+const onlineHighlights = [
+  {
+    icon: MapPin,
+    title: 'No travel barrier',
+    text: 'Ideal for regional techs — Cairns to Kalgoorlie without capital-city trips.',
+  },
+  {
+    icon: Clock,
+    title: '24/7 access',
+    text: 'Learn on your schedule; pause and resume between jobs.',
+  },
+  {
+    icon: Laptop,
+    title: 'Any device',
+    text: 'Phone, tablet, or desktop — wherever you have connectivity.',
+  },
+  {
+    icon: Award,
+    title: 'Instant credentials',
+    text: 'Verifiable certificates ready for employers or LinkedIn.',
+  },
+] as const;
 
 const faqs = [
   {
@@ -194,6 +287,24 @@ function SkeletonCard() {
         <div className="h-3 w-1/2 animate-pulse rounded bg-slate-700/30" />
       </div>
     </div>
+  );
+}
+
+/** Inline GEO citation link — keeps sources visible without breaking reading flow. */
+function SourceLink({ href, label }: { href: string; label: string }) {
+  return (
+    <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+      (source:{' '}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline decoration-dotted underline-offset-2 transition-colors hover:text-white"
+      >
+        {label}
+      </a>
+      )
+    </span>
   );
 }
 
@@ -457,127 +568,269 @@ export default async function Home() {
         </div>
       </AnimatedSection>
 
-      {/* ── Citable Passages (GEO-optimised) ─────────────────────────────── */}
-      <AnimatedSection label="Industry Standards" title="What is IICRC Certification?">
-        <div className="mx-auto max-w-3xl">
-          <p
-            className="text-sm leading-relaxed sm:text-base sm:leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.65)' }}
+      {/* ── Citable passages (GEO) — editorial cards, scannable stats & sources ─ */}
+      <AnimatedSection label="Expert content" title="Standards, training & industry alignment">
+        <div className="mx-auto max-w-5xl space-y-8">
+          {/* IICRC */}
+          <article
+            className="overflow-hidden rounded-sm"
+            style={{
+              background: 'linear-gradient(165deg, rgba(36,144,237,0.06) 0%, rgba(255,255,255,0.02) 45%)',
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
           >
-            The Institute of Inspection Cleaning and Restoration Certification (
-            <AcronymTooltip term="IICRC" />) is the global standard-setting body for the cleaning
-            and restoration industry. Established in 1972 in the United States, the{' '}
-            <AcronymTooltip term="IICRC" /> now operates across 25 countries and has certified over
-            67,000 technicians worldwide{' '}
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              (source:{' '}
-              <a
-                href="https://www.iicrc.org/page/About-the-IICRC"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline decoration-dotted hover:text-white"
-              >
-                IICRC.org
-              </a>
-              )
-            </span>
-            . The organisation maintains standards across seven core disciplines including Water
-            Damage Restoration (<AcronymTooltip term="WRT" />
-            ), Carpet Repair and Reinstallation (<AcronymTooltip term="CRT" />
-            ), Applied Structural Drying (<AcronymTooltip term="ASD" />
-            ), Applied Microbial Remediation (<AcronymTooltip term="AMRT" />
-            ), Odour Control (<AcronymTooltip term="OCT" />
-            ), Carpet Cleaning (<AcronymTooltip term="CCT" />
-            ), and Fire and Smoke Restoration (<AcronymTooltip term="FSRT" />
-            ). In Australia, <AcronymTooltip term="IICRC" /> certification is recognised by major
-            insurers such as IAG, Suncorp, and QBE as evidence of professional competency.
-            Technicians must earn Continuing Education Credits (
-            <AcronymTooltip term="CEC">CECs</AcronymTooltip>) every two years to maintain their
-            certified status{' '}
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              (source:{' '}
-              <a
-                href="https://www.iicrc.org/page/IICRCGlobalLocations"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline decoration-dotted hover:text-white"
-              >
-                IICRC Global
-              </a>
-              )
-            </span>
-            . CARSI offers 40 <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
-            -approved online courses across all seven disciplines, allowing Australian professionals
-            to meet their renewal requirements without travelling interstate.
-          </p>
-          <p className="mt-4 text-xs italic" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Last reviewed: March 2026
-          </p>
-        </div>
-      </AnimatedSection>
+            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,220px)_1fr] lg:gap-12">
+              <div className="space-y-4">
+                <div className="inline-flex items-center gap-2 rounded-sm px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase"
+                  style={{
+                    background: 'rgba(36,144,237,0.12)',
+                    border: '1px solid rgba(36,144,237,0.25)',
+                    color: '#2490ed',
+                  }}
+                >
+                  <BookOpen className="h-3.5 w-3.5" aria-hidden />
+                  Industry standards
+                </div>
+                <h3 className="text-lg font-semibold leading-snug sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                  What is <AcronymTooltip term="IICRC" /> Certification?
+                </h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { k: 'Founded', v: '1972', sub: 'United States' },
+                    { k: 'Global reach', v: '25+', sub: 'Countries' },
+                    { k: 'Certified', v: '67k+', sub: 'Technicians worldwide' },
+                  ].map((s) => (
+                    <div
+                      key={s.k}
+                      className="rounded-sm px-2 py-2.5 text-center"
+                      style={{
+                        background: 'rgba(0,0,0,0.25)',
+                        border: '1px solid rgba(255,255,255,0.06)',
+                      }}
+                    >
+                      <p className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                        {s.k}
+                      </p>
+                      <p className="text-sm font-bold tabular-nums" style={{ color: '#2490ed' }}>
+                        {s.v}
+                      </p>
+                      <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                        {s.sub}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="min-w-0 space-y-4">
+                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                  The Institute of Inspection Cleaning and Restoration Certification (
+                  <AcronymTooltip term="IICRC" />) is the global standard-setting body for the cleaning
+                  and restoration industry. Established in 1972 in the United States, the{' '}
+                  <AcronymTooltip term="IICRC" /> now operates across 25 countries and has certified
+                  over 67,000 technicians worldwide{' '}
+                  <SourceLink href="https://www.iicrc.org/page/About-the-IICRC" label="IICRC.org" />.
+                </p>
+                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                  The organisation maintains standards across seven core disciplines. In Australia,{' '}
+                  <AcronymTooltip term="IICRC" /> certification is recognised by major insurers such
+                  as IAG, Suncorp, and QBE as evidence of professional competency. Technicians must
+                  earn Continuing Education Credits (<AcronymTooltip term="CEC">CECs</AcronymTooltip>)
+                  every two years to maintain certified status{' '}
+                  <SourceLink href="https://www.iicrc.org/page/IICRCGlobalLocations" label="IICRC Global" />
+                  . CARSI offers 40 <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
+                  -approved online courses across all seven disciplines, allowing Australian
+                  professionals to meet renewal requirements without travelling interstate.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-1" role="list" aria-label="IICRC disciplines covered">
+                  {geoDisciplineCodes.map((d) => (
+                    <span
+                      key={d.code}
+                      role="listitem"
+                      className="inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[11px]"
+                      style={{
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        color: 'rgba(255,255,255,0.75)',
+                      }}
+                      title={d.label}
+                    >
+                      <span className="font-mono font-bold" style={{ color: '#2490ed' }}>
+                        {d.code}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs not-italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                  Last reviewed: March 2026
+                </p>
+              </div>
+            </div>
+          </article>
 
-      <AnimatedSection label="Online Learning" title="Why Choose Online Restoration Training?">
-        <div className="mx-auto max-w-3xl">
-          <p
-            className="text-sm leading-relaxed sm:text-base sm:leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.65)' }}
+          {/* Online learning */}
+          <article
+            className="rounded-sm p-6 sm:p-8"
+            style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
           >
-            Traditional face-to-face restoration training in Australia requires travel,
-            accommodation, and time away from active job sites. For technicians in regional areas —
-            from Cairns to Kalgoorlie — attending a two-day course in a capital city can cost over
-            $2,000 in travel expenses alone, on top of course fees and lost billable hours.
-            CARSI&apos;s online platform eliminates these barriers entirely. Courses are available
-            24 hours a day, 7 days a week, accessible from any device with an internet connection.
-            Learners can complete modules at their own pace, pause mid-lesson and resume between
-            jobs, and fit study around shift work or on-call rosters. Upon completion, certificates
-            are generated instantly as verifiable digital credentials that can be shared with
-            employers or added to a LinkedIn profile within minutes. With courses starting from $20
-            AUD and a full all-access subscription at $795 AUD per year, CARSI provides the most
-            cost-effective path to <AcronymTooltip term="IICRC" /> certification maintenance in
-            Australia.
-          </p>
-          <p className="mt-4 text-xs italic" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Last reviewed: March 2026
-          </p>
-        </div>
-      </AnimatedSection>
-
-      <AnimatedSection label="Industry Partnership" title="What is CARSI's Role in the NRPG?">
-        <div className="mx-auto max-w-3xl">
-          <p
-            className="text-sm leading-relaxed sm:text-base sm:leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.65)' }}
-          >
-            CARSI is one of the four core pillars of the National Restoration Professionals Group
-            (NRPG) onboarding pathway. The NRPG is Australia&apos;s peak body for the restoration
-            and remediation industry, setting workforce standards that insurers, loss adjusters, and
-            building managers rely on when selecting qualified contractors{' '}
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              (source:{' '}
-              <a
-                href="https://www.nrpg.com.au"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline decoration-dotted hover:text-white"
+            <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold tracking-wide uppercase"
+                  style={{ color: 'rgba(255,255,255,0.4)' }}
+                >
+                  <Laptop className="h-3.5 w-3.5" style={{ color: '#ed9d24' }} aria-hidden />
+                  Online learning
+                </div>
+                <h3 className="text-lg font-semibold sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                  Why choose online restoration training?
+                </h3>
+              </div>
+              <div
+                className="flex shrink-0 items-center gap-2 rounded-sm px-3 py-2 text-xs"
+                style={{
+                  background: 'rgba(237,157,36,0.08)',
+                  border: '1px solid rgba(237,157,36,0.2)',
+                  color: 'rgba(255,255,255,0.75)',
+                }}
               >
-                NRPG.com.au
-              </a>
-              )
-            </span>
-            . The NRPG onboarding pathway requires new technicians to complete foundational training
-            before entering the field. CARSI fulfils the education pillar of this pathway, providing
-            the <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
-            -approved coursework that new entrants must complete alongside practical mentoring,
-            equipment familiarisation, and workplace health and safety induction. This partnership
-            means CARSI-trained technicians are recognised across the NRPG network from day one. For
-            restoration companies, enrolling staff through CARSI ensures compliance with NRPG
-            workforce standards without disrupting operations. With over 91 courses spanning all
-            seven <AcronymTooltip term="IICRC" /> disciplines, CARSI provides the most comprehensive
-            online training library available to Australian restoration professionals.
-          </p>
-          <p className="mt-4 text-xs italic" style={{ color: 'rgba(255,255,255,0.3)' }}>
-            Last reviewed: March 2026
-          </p>
+                <DollarSign className="h-4 w-4 shrink-0" style={{ color: '#ed9d24' }} aria-hidden />
+                <span>
+                  From <strong className="text-white/90">$20 AUD</strong> · All-access{' '}
+                  <strong className="text-white/90">$795/yr</strong>
+                </span>
+              </div>
+            </div>
+            <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {onlineHighlights.map(({ icon: Icon, title, text }) => (
+                <div
+                  key={title}
+                  className="flex gap-3 rounded-sm p-3 transition-colors duration-200 hover:bg-white/3"
+                  style={{ border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-sm"
+                    style={{
+                      background: 'rgba(36,144,237,0.1)',
+                      border: '1px solid rgba(36,144,237,0.2)',
+                    }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: '#2490ed' }} aria-hidden />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                      {title}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      {text}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+              Traditional face-to-face restoration training in Australia requires travel,
+              accommodation, and time away from active job sites. For technicians in regional areas —
+              from Cairns to Kalgoorlie — attending a two-day course in a capital city can cost over
+              $2,000 in travel expenses alone, on top of course fees and lost billable hours.
+              CARSI&apos;s online platform eliminates these barriers entirely. Courses are available
+              24 hours a day, 7 days a week, accessible from any device with an internet connection.
+              Learners can complete modules at their own pace, pause mid-lesson and resume between
+              jobs, and fit study around shift work or on-call rosters. Upon completion, certificates
+              are generated instantly as verifiable digital credentials that can be shared with
+              employers or added to a LinkedIn profile within minutes. With courses starting from $20
+              AUD and a full all-access subscription at $795 AUD per year, CARSI provides the most
+              cost-effective path to <AcronymTooltip term="IICRC" /> certification maintenance in
+              Australia.
+            </p>
+            <p className="mt-4 text-xs not-italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
+              Last reviewed: March 2026
+            </p>
+          </article>
+
+          {/* NRPG */}
+          <article
+            className="relative overflow-hidden rounded-sm p-6 sm:p-8"
+            style={{
+              background:
+                'linear-gradient(125deg, rgba(36,144,237,0.1) 0%, rgba(5,5,5,0.9) 55%, rgba(237,157,36,0.06) 100%)',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div
+              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl"
+              style={{ background: 'rgba(36,144,237,0.15)' }}
+              aria-hidden
+            />
+            <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:gap-10">
+              <div className="flex shrink-0 items-start gap-4">
+                <div
+                  className="flex h-14 w-14 items-center justify-center rounded-sm text-lg font-bold"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    color: '#2490ed',
+                  }}
+                >
+                  <Sparkles className="h-6 w-6" aria-hidden />
+                </div>
+                <div>
+                  <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wide uppercase"
+                    style={{ color: 'rgba(255,255,255,0.45)' }}
+                  >
+                    <Users className="h-3 w-3" aria-hidden />
+                    Industry partnership
+                  </div>
+                  <h3 className="text-lg font-semibold sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                    What is CARSI&apos;s role in the NRPG?
+                  </h3>
+                </div>
+              </div>
+              <div className="min-w-0 flex-1 space-y-4">
+                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                  CARSI is one of the four core pillars of the National Restoration Professionals Group
+                  (NRPG) onboarding pathway. The NRPG is Australia&apos;s peak body for the restoration
+                  and remediation industry, setting workforce standards that insurers, loss adjusters,
+                  and building managers rely on when selecting qualified contractors{' '}
+                  <SourceLink href="https://www.nrpg.com.au" label="NRPG.com.au" />.
+                </p>
+                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                  The NRPG onboarding pathway requires new technicians to complete foundational training
+                  before entering the field. CARSI fulfils the education pillar of this pathway,
+                  providing the <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
+                  -approved coursework that new entrants must complete alongside practical mentoring,
+                  equipment familiarisation, and workplace health and safety induction. This partnership
+                  means CARSI-trained technicians are recognised across the NRPG network from day one.
+                  For restoration companies, enrolling staff through CARSI ensures compliance with NRPG
+                  workforce standards without disrupting operations. With over 91 courses spanning all
+                  seven <AcronymTooltip term="IICRC" /> disciplines, CARSI provides the most
+                  comprehensive online training library available to Australian restoration professionals.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <Link
+                    href="/pathways"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-white"
+                    style={{ color: '#2490ed' }}
+                  >
+                    Explore pathways <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <a
+                    href="https://www.nrpg.com.au"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs transition-colors hover:text-white/90"
+                    style={{ color: 'rgba(255,255,255,0.4)' }}
+                  >
+                    NRPG website <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <p className="text-xs not-italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
+                  Last reviewed: March 2026
+                </p>
+              </div>
+            </div>
+          </article>
         </div>
       </AnimatedSection>
 
@@ -634,7 +887,7 @@ export default async function Home() {
 
       {/* ── FAQ (visible + schema) ─────────────────────────────────────────── */}
       <AnimatedSection label="Common Questions" title="Frequently Asked Questions">
-        <div className="mx-auto max-w-3xl space-y-4">
+        <div className="mx-auto max-w-6xl space-y-4">
           {faqs.map((faq, i) => (
             <AnimatedCard key={faq.question} index={i}>
               <details
