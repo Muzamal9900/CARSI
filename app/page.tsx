@@ -4,13 +4,20 @@ import {
   AnimatedSection,
   AnimatedStats,
 } from '@/components/landing/AnimatedHero';
-import { MobileNav } from '@/components/landing/MobileNav';
+import { PublicFooter } from '@/components/landing/PublicFooter';
+import { PublicNavbar } from '@/components/landing/PublicNavbar';
 import { CertificatePreview } from '@/components/lms/diagrams/CertificatePreview';
 import { IICRCDisciplineMap } from '@/components/lms/diagrams/IICRCDisciplineMap';
 import { StudentJourneyMap } from '@/components/lms/diagrams/StudentJourneyMap';
 import { FAQSchema } from '@/components/seo/JsonLd';
 import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 import { getBackendOrigin } from '@/lib/env/public-url';
+import {
+  loadWpExportCourses,
+  mapWpExportToCourseListItem,
+  pickFeaturedFromExport,
+  type CourseListItem,
+} from '@/lib/wordpress-export-courses';
 import {
   ArrowRight,
   Award,
@@ -25,55 +32,15 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import fs from 'node:fs';
-import path from 'node:path';
-
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface Course {
-  id: string;
-  slug: string;
-  title: string;
-  short_description?: string | null;
-  price_aud: number | string;
-  is_free?: boolean;
-  discipline?: string | null;
-  thumbnail_url?: string | null;
-}
-
-/** Shape of entries in `data/wordpress-export/courses.json` from `wp:migrate`. */
-interface WpExportCourse {
-  slug: string;
-  title: string;
-  short_description?: string;
-  thumbnail_url?: string | null;
-  price_aud: number;
-  is_free?: boolean;
-  iicrc_discipline?: string | null;
-  status?: string;
-  wp_id: number;
-}
-
-function mapWpExportToCourse(row: WpExportCourse): Course {
-  return {
-    id: String(row.wp_id),
-    slug: row.slug,
-    title: row.title,
-    short_description: row.short_description ?? null,
-    price_aud: row.price_aud,
-    is_free: row.is_free,
-    discipline: row.iicrc_discipline ?? null,
-    thumbnail_url: row.thumbnail_url ?? null,
-  };
-}
+type Course = CourseListItem;
 
 // ---------------------------------------------------------------------------
 // Data
 // ---------------------------------------------------------------------------
-
-const WP_EXPORT_COURSES_PATH = path.join(process.cwd(), 'data', 'wordpress-export', 'courses.json');
 
 async function getFeaturedCoursesFromBackend(): Promise<Course[]> {
   const backendUrl = getBackendOrigin();
@@ -91,21 +58,11 @@ async function getFeaturedCoursesFromBackend(): Promise<Course[]> {
 
 /** Prefer local WordPress export; fall back to LMS API when the file is absent (e.g. CI). */
 async function getFeaturedCourses(): Promise<Course[]> {
-  try {
-    if (!fs.existsSync(WP_EXPORT_COURSES_PATH)) {
-      return getFeaturedCoursesFromBackend();
-    }
-    const raw = fs.readFileSync(WP_EXPORT_COURSES_PATH, 'utf-8');
-    const parsed = JSON.parse(raw) as WpExportCourse[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return getFeaturedCoursesFromBackend();
-    }
-    const published = parsed.filter((c) => c.status === 'published');
-    const pool = published.length >= 3 ? published : parsed;
-    return pool.slice(0, 3).map(mapWpExportToCourse);
-  } catch {
-    return getFeaturedCoursesFromBackend();
+  const data = loadWpExportCourses();
+  if (data && data.length > 0) {
+    return pickFeaturedFromExport(data, 3).map(mapWpExportToCourseListItem);
   }
+  return getFeaturedCoursesFromBackend();
 }
 
 // ---------------------------------------------------------------------------
@@ -331,64 +288,7 @@ export default async function Home() {
       />
 
       {/* ── Navigation ─────────────────────────────────────────────────────── */}
-      <nav
-        aria-label="Main navigation"
-        className="sticky top-0 z-50"
-        style={{
-          background: 'rgba(5,5,5,0.85)',
-          backdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-sm font-bold text-white"
-                style={{ background: '#2490ed' }}
-              >
-                C
-              </div>
-              <span className="font-semibold" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                CARSI
-              </span>
-            </Link>
-
-            <div className="hidden items-center gap-8 md:flex">
-              {['Courses', 'Industries', 'Pathways', 'Pricing'].map((item) => (
-                <Link
-                  key={item}
-                  href={`/${item.toLowerCase()}`}
-                  className="text-sm transition-colors duration-150 hover:text-white"
-                  style={{ color: 'rgba(255,255,255,0.5)' }}
-                >
-                  {item}
-                </Link>
-              ))}
-            </div>
-
-            <div className="hidden items-center gap-4 md:flex">
-              <Link
-                href="/login"
-                className="text-sm transition-colors duration-150 hover:text-white"
-                style={{ color: 'rgba(255,255,255,0.5)' }}
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/courses"
-                className="rounded-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
-                style={{ background: '#ed9d24' }}
-              >
-                Browse Courses
-              </Link>
-            </div>
-
-            {/* Mobile hamburger menu */}
-            <MobileNav />
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* ── Hero (Animated) ────────────────────────────────────────────────── */}
       <AnimatedHero benefits={benefits} />
@@ -575,13 +475,15 @@ export default async function Home() {
           <article
             className="overflow-hidden rounded-sm"
             style={{
-              background: 'linear-gradient(165deg, rgba(36,144,237,0.06) 0%, rgba(255,255,255,0.02) 45%)',
+              background:
+                'linear-gradient(165deg, rgba(36,144,237,0.06) 0%, rgba(255,255,255,0.02) 45%)',
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
             <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[minmax(0,220px)_1fr] lg:gap-12">
               <div className="space-y-4">
-                <div className="inline-flex items-center gap-2 rounded-sm px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase"
+                <div
+                  className="inline-flex items-center gap-2 rounded-sm px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase"
                   style={{
                     background: 'rgba(36,144,237,0.12)',
                     border: '1px solid rgba(36,144,237,0.25)',
@@ -591,7 +493,10 @@ export default async function Home() {
                   <BookOpen className="h-3.5 w-3.5" aria-hidden />
                   Industry standards
                 </div>
-                <h3 className="text-lg font-semibold leading-snug sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                <h3
+                  className="text-lg leading-snug font-semibold sm:text-xl"
+                  style={{ color: 'rgba(255,255,255,0.95)' }}
+                >
                   What is <AcronymTooltip term="IICRC" /> Certification?
                 </h3>
                 <div className="grid grid-cols-3 gap-2">
@@ -608,13 +513,19 @@ export default async function Home() {
                         border: '1px solid rgba(255,255,255,0.06)',
                       }}
                     >
-                      <p className="text-[10px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                      <p
+                        className="text-[10px] tracking-wider uppercase"
+                        style={{ color: 'rgba(255,255,255,0.35)' }}
+                      >
                         {s.k}
                       </p>
                       <p className="text-sm font-bold tabular-nums" style={{ color: '#2490ed' }}>
                         {s.v}
                       </p>
-                      <p className="text-[10px] leading-tight" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                      <p
+                        className="text-[10px] leading-tight"
+                        style={{ color: 'rgba(255,255,255,0.4)' }}
+                      >
                         {s.sub}
                       </p>
                     </div>
@@ -622,26 +533,41 @@ export default async function Home() {
                 </div>
               </div>
               <div className="min-w-0 space-y-4">
-                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                <p
+                  className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.68)' }}
+                >
                   The Institute of Inspection Cleaning and Restoration Certification (
-                  <AcronymTooltip term="IICRC" />) is the global standard-setting body for the cleaning
-                  and restoration industry. Established in 1972 in the United States, the{' '}
+                  <AcronymTooltip term="IICRC" />) is the global standard-setting body for the
+                  cleaning and restoration industry. Established in 1972 in the United States, the{' '}
                   <AcronymTooltip term="IICRC" /> now operates across 25 countries and has certified
                   over 67,000 technicians worldwide{' '}
-                  <SourceLink href="https://www.iicrc.org/page/About-the-IICRC" label="IICRC.org" />.
+                  <SourceLink href="https://www.iicrc.org/page/About-the-IICRC" label="IICRC.org" />
+                  .
                 </p>
-                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+                <p
+                  className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.68)' }}
+                >
                   The organisation maintains standards across seven core disciplines. In Australia,{' '}
                   <AcronymTooltip term="IICRC" /> certification is recognised by major insurers such
                   as IAG, Suncorp, and QBE as evidence of professional competency. Technicians must
-                  earn Continuing Education Credits (<AcronymTooltip term="CEC">CECs</AcronymTooltip>)
-                  every two years to maintain certified status{' '}
-                  <SourceLink href="https://www.iicrc.org/page/IICRCGlobalLocations" label="IICRC Global" />
+                  earn Continuing Education Credits (
+                  <AcronymTooltip term="CEC">CECs</AcronymTooltip>) every two years to maintain
+                  certified status{' '}
+                  <SourceLink
+                    href="https://www.iicrc.org/page/IICRCGlobalLocations"
+                    label="IICRC Global"
+                  />
                   . CARSI offers 40 <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
                   -approved online courses across all seven disciplines, allowing Australian
                   professionals to meet renewal requirements without travelling interstate.
                 </p>
-                <div className="flex flex-wrap gap-1.5 pt-1" role="list" aria-label="IICRC disciplines covered">
+                <div
+                  className="flex flex-wrap gap-1.5 pt-1"
+                  role="list"
+                  aria-label="IICRC disciplines covered"
+                >
                   {geoDisciplineCodes.map((d) => (
                     <span
                       key={d.code}
@@ -677,13 +603,17 @@ export default async function Home() {
           >
             <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <div className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold tracking-wide uppercase"
+                <div
+                  className="mb-2 inline-flex items-center gap-2 text-[10px] font-semibold tracking-wide uppercase"
                   style={{ color: 'rgba(255,255,255,0.4)' }}
                 >
                   <Laptop className="h-3.5 w-3.5" style={{ color: '#ed9d24' }} aria-hidden />
                   Online learning
                 </div>
-                <h3 className="text-lg font-semibold sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                <h3
+                  className="text-lg font-semibold sm:text-xl"
+                  style={{ color: 'rgba(255,255,255,0.95)' }}
+                >
                   Why choose online restoration training?
                 </h3>
               </div>
@@ -719,30 +649,39 @@ export default async function Home() {
                     <Icon className="h-4 w-4" style={{ color: '#2490ed' }} aria-hidden />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                    <p
+                      className="text-xs font-semibold"
+                      style={{ color: 'rgba(255,255,255,0.88)' }}
+                    >
                       {title}
                     </p>
-                    <p className="mt-0.5 text-[11px] leading-snug" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    <p
+                      className="mt-0.5 text-[11px] leading-snug"
+                      style={{ color: 'rgba(255,255,255,0.45)' }}
+                    >
                       {text}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
+            <p
+              className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed"
+              style={{ color: 'rgba(255,255,255,0.68)' }}
+            >
               Traditional face-to-face restoration training in Australia requires travel,
-              accommodation, and time away from active job sites. For technicians in regional areas —
-              from Cairns to Kalgoorlie — attending a two-day course in a capital city can cost over
-              $2,000 in travel expenses alone, on top of course fees and lost billable hours.
+              accommodation, and time away from active job sites. For technicians in regional areas
+              — from Cairns to Kalgoorlie — attending a two-day course in a capital city can cost
+              over $2,000 in travel expenses alone, on top of course fees and lost billable hours.
               CARSI&apos;s online platform eliminates these barriers entirely. Courses are available
               24 hours a day, 7 days a week, accessible from any device with an internet connection.
               Learners can complete modules at their own pace, pause mid-lesson and resume between
-              jobs, and fit study around shift work or on-call rosters. Upon completion, certificates
-              are generated instantly as verifiable digital credentials that can be shared with
-              employers or added to a LinkedIn profile within minutes. With courses starting from $20
-              AUD and a full all-access subscription at $795 AUD per year, CARSI provides the most
-              cost-effective path to <AcronymTooltip term="IICRC" /> certification maintenance in
-              Australia.
+              jobs, and fit study around shift work or on-call rosters. Upon completion,
+              certificates are generated instantly as verifiable digital credentials that can be
+              shared with employers or added to a LinkedIn profile within minutes. With courses
+              starting from $20 AUD and a full all-access subscription at $795 AUD per year, CARSI
+              provides the most cost-effective path to <AcronymTooltip term="IICRC" /> certification
+              maintenance in Australia.
             </p>
             <p className="mt-4 text-xs not-italic" style={{ color: 'rgba(255,255,255,0.28)' }}>
               Last reviewed: March 2026
@@ -759,7 +698,7 @@ export default async function Home() {
             }}
           >
             <div
-              className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl"
+              className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl"
               style={{ background: 'rgba(36,144,237,0.15)' }}
               aria-hidden
             />
@@ -776,36 +715,48 @@ export default async function Home() {
                   <Sparkles className="h-6 w-6" aria-hidden />
                 </div>
                 <div>
-                  <div className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wide uppercase"
+                  <div
+                    className="mb-1 inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-wide uppercase"
                     style={{ color: 'rgba(255,255,255,0.45)' }}
                   >
                     <Users className="h-3 w-3" aria-hidden />
                     Industry partnership
                   </div>
-                  <h3 className="text-lg font-semibold sm:text-xl" style={{ color: 'rgba(255,255,255,0.95)' }}>
+                  <h3
+                    className="text-lg font-semibold sm:text-xl"
+                    style={{ color: 'rgba(255,255,255,0.95)' }}
+                  >
                     What is CARSI&apos;s role in the NRPG?
                   </h3>
                 </div>
               </div>
               <div className="min-w-0 flex-1 space-y-4">
-                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
-                  CARSI is one of the four core pillars of the National Restoration Professionals Group
-                  (NRPG) onboarding pathway. The NRPG is Australia&apos;s peak body for the restoration
-                  and remediation industry, setting workforce standards that insurers, loss adjusters,
-                  and building managers rely on when selecting qualified contractors{' '}
+                <p
+                  className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.68)' }}
+                >
+                  CARSI is one of the four core pillars of the National Restoration Professionals
+                  Group (NRPG) onboarding pathway. The NRPG is Australia&apos;s peak body for the
+                  restoration and remediation industry, setting workforce standards that insurers,
+                  loss adjusters, and building managers rely on when selecting qualified contractors{' '}
                   <SourceLink href="https://www.nrpg.com.au" label="NRPG.com.au" />.
                 </p>
-                <p className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed" style={{ color: 'rgba(255,255,255,0.68)' }}>
-                  The NRPG onboarding pathway requires new technicians to complete foundational training
-                  before entering the field. CARSI fulfils the education pillar of this pathway,
-                  providing the <AcronymTooltip term="IICRC" /> <AcronymTooltip term="CEC" />
-                  -approved coursework that new entrants must complete alongside practical mentoring,
-                  equipment familiarisation, and workplace health and safety induction. This partnership
-                  means CARSI-trained technicians are recognised across the NRPG network from day one.
-                  For restoration companies, enrolling staff through CARSI ensures compliance with NRPG
-                  workforce standards without disrupting operations. With over 91 courses spanning all
-                  seven <AcronymTooltip term="IICRC" /> disciplines, CARSI provides the most
-                  comprehensive online training library available to Australian restoration professionals.
+                <p
+                  className="text-sm leading-relaxed sm:text-[15px] sm:leading-relaxed"
+                  style={{ color: 'rgba(255,255,255,0.68)' }}
+                >
+                  The NRPG onboarding pathway requires new technicians to complete foundational
+                  training before entering the field. CARSI fulfils the education pillar of this
+                  pathway, providing the <AcronymTooltip term="IICRC" />{' '}
+                  <AcronymTooltip term="CEC" />
+                  -approved coursework that new entrants must complete alongside practical
+                  mentoring, equipment familiarisation, and workplace health and safety induction.
+                  This partnership means CARSI-trained technicians are recognised across the NRPG
+                  network from day one. For restoration companies, enrolling staff through CARSI
+                  ensures compliance with NRPG workforce standards without disrupting operations.
+                  With over 91 courses spanning all seven <AcronymTooltip term="IICRC" />{' '}
+                  disciplines, CARSI provides the most comprehensive online training library
+                  available to Australian restoration professionals.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 pt-1">
                   <Link
@@ -968,136 +919,7 @@ export default async function Home() {
       </section>
 
       {/* ── Footer ─────────────────────────────────────────────────────────── */}
-      <footer className="px-6 py-12" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-8 grid gap-8 sm:grid-cols-4">
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <div
-                  className="flex h-6 w-6 items-center justify-center rounded-sm text-xs font-bold text-white"
-                  style={{ background: '#2490ed' }}
-                >
-                  C
-                </div>
-                <span className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                  CARSI
-                </span>
-              </div>
-              <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                Australia&apos;s industry training leader.
-                <br />
-                24/7 online. <AcronymTooltip term="IICRC" />
-                -approved.
-              </p>
-            </div>
-
-            <div>
-              <p
-                className="mb-3 text-[10px] font-semibold tracking-wide uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Platform
-              </p>
-              <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {[
-                  { label: 'Courses', href: '/courses' },
-                  { label: 'Pathways', href: '/pathways' },
-                  { label: 'Pricing', href: '/pricing' },
-                  { label: 'About', href: '/about' },
-                  { label: 'Testimonials', href: '/testimonials' },
-                  { label: 'Podcast', href: '/podcast' },
-                  { label: 'Contact', href: '/contact' },
-                ].map((item) => (
-                  <li key={item.label}>
-                    <Link href={item.href} className="hover:text-white">
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <p
-                className="mb-3 text-[10px] font-semibold tracking-wide uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Industries
-              </p>
-              <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {industries.slice(0, 4).map((industry) => (
-                  <li key={industry.slug}>
-                    <Link href={`/industries/${industry.slug}`} className="hover:text-white">
-                      {industry.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <p
-                className="mb-3 text-[10px] font-semibold tracking-wide uppercase"
-                style={{ color: 'rgba(255,255,255,0.3)' }}
-              >
-                Contact
-              </p>
-              <ul className="space-y-2 text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                <li>PO Box 4309, Forest Lake QLD 4078</li>
-                <li>
-                  <a href="mailto:support@carsi.com.au" className="hover:text-white">
-                    support@carsi.com.au
-                  </a>
-                </li>
-                <li>
-                  <a href="tel:+61457123005" className="hover:text-white">
-                    0457 123 005
-                  </a>
-                </li>
-              </ul>
-              <div className="mt-4 flex items-center gap-3">
-                {[
-                  { label: 'Facebook', href: 'https://www.facebook.com/CARSIaus' },
-                  {
-                    label: 'YouTube',
-                    href: 'https://www.youtube.com/channel/UC3HpNvGJXivLGoPo4m7Qleg/featured',
-                  },
-                  { label: 'LinkedIn', href: 'https://www.linkedin.com/company/carsiaus' },
-                  {
-                    label: 'Podcast',
-                    href: 'https://open.spotify.com/show/4FVBn8Cfyx2jOx0m4MksuG',
-                  },
-                ].map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] transition-colors hover:text-white"
-                    style={{ color: 'rgba(255,255,255,0.35)' }}
-                    aria-label={social.label}
-                  >
-                    {social.label}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="flex flex-col items-center justify-between gap-2 pt-6 sm:flex-row"
-            style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              © 2026 CARSI Pty Ltd. All rights reserved.
-            </p>
-            <p className="text-[11px]" style={{ color: 'rgba(255,255,255,0.25)' }}>
-              <AcronymTooltip term="IICRC" />
-              -aligned continuing education — not an <AcronymTooltip term="RTO" />
-            </p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 }
