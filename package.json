@@ -37,10 +37,8 @@
     "wp:migrate:dry-run": "npx ts-node scripts/wp-migrate.ts --dry-run",
     "wp:redirects": "npx ts-node scripts/generate-redirects.ts",
     "wp:seed": "node -e \"console.log('wp:seed: no in-repo backend; use wp:migrate or add scripts/wordpress-seed.ts if needed.')\"",
-    "start": "next start",
-    "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui",
-    "test:e2e:debug": "playwright test --debug"
+    "start": "next start"
+    
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
