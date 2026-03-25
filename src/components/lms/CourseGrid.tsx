@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Search, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CourseCard } from './CourseCard';
 import { CourseGridSkeleton } from './CourseCardSkeleton';
 
@@ -45,13 +45,16 @@ interface CourseGridProps {
 
 type SortKey = 'title' | 'price' | 'updated';
 
+function priceNum(p: number | string): number {
+  const n = typeof p === 'string' ? parseFloat(p) : p;
+  return Number.isFinite(n) ? n : 0;
+}
+
 function sortCourses(courses: Course[], sortBy: SortKey): Course[] {
   return [...courses].sort((a, b) => {
     if (sortBy === 'title') return a.title.localeCompare(b.title);
     if (sortBy === 'price') {
-      const pa = typeof a.price_aud === 'string' ? parseFloat(a.price_aud) : a.price_aud;
-      const pb = typeof b.price_aud === 'string' ? parseFloat(b.price_aud) : b.price_aud;
-      return pa - pb;
+      return priceNum(a.price_aud) - priceNum(b.price_aud);
     }
     const da = a.updated_at ? new Date(a.updated_at).getTime() : 0;
     const db = b.updated_at ? new Date(b.updated_at).getTime() : 0;
@@ -62,12 +65,12 @@ function sortCourses(courses: Course[], sortBy: SortKey): Course[] {
 function matchesDiscipline(course: Course, tab: DisciplineTab): boolean {
   if (tab === 'All') return true;
   if (tab === 'Free') {
-    const p =
-      typeof course.price_aud === 'string' ? parseFloat(course.price_aud) : course.price_aud;
+    const p = priceNum(course.price_aud);
     return course.is_free === true || p === 0;
   }
-  const disc = course.discipline ?? course.category ?? '';
-  return disc.toUpperCase().includes(tab);
+  const disc = (course.discipline ?? course.category ?? '').toUpperCase();
+  if (disc.includes(tab)) return true;
+  return false;
 }
 
 export function CourseGrid({ courses, initialTab = 'All', loading = false }: CourseGridProps) {
@@ -77,7 +80,20 @@ export function CourseGrid({ courses, initialTab = 'All', loading = false }: Cou
 
   const [activeTab, setActiveTab] = useState<DisciplineTab>(validInitial);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortKey>('updated');
+  /** WordPress export has no `updated_at`; default to title so the grid is deterministic. */
+  const [sortBy, setSortBy] = useState<SortKey>('title');
+  const didFallbackTab = useRef(false);
+
+  // URL ?discipline=WRT with sparse `discipline` fields used to yield zero rows; reset to All once.
+  useEffect(() => {
+    if (didFallbackTab.current || loading || courses.length === 0) return;
+    if (validInitial === 'All') return;
+    const n = courses.filter((c) => matchesDiscipline(c, validInitial)).length;
+    if (n === 0) {
+      didFallbackTab.current = true;
+      setActiveTab('All');
+    }
+  }, [courses, loading, validInitial]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase();
