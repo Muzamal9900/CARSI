@@ -3,10 +3,11 @@ import type { Metadata } from 'next';
 import { BundlePricingCard } from '@/components/lms/BundlePricingCard';
 import { CourseGrid } from '@/components/lms/CourseGrid';
 import { CourseSearchBar } from '@/components/lms/CourseSearchBar';
+import { IICRCDisciplineMap } from '@/components/lms/diagrams/IICRCDisciplineMap';
 import { CECCalculator } from '@/components/tools/CECCalculator';
 import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
-import { IICRCDisciplineMap } from '@/components/lms/diagrams/IICRCDisciplineMap';
 import { getBackendOrigin } from '@/lib/env/public-url';
+import { loadWpExportCourses, mapWpExportToCourseListItem } from '@/lib/wordpress-export-courses';
 
 export const dynamic = 'force-dynamic';
 
@@ -40,7 +41,7 @@ async function getBundles() {
   }
 }
 
-async function getCourses() {
+async function getCoursesFromBackend() {
   const backendUrl = getBackendOrigin();
   try {
     const controller = new AbortController();
@@ -58,23 +59,47 @@ async function getCourses() {
   }
 }
 
+async function getCourses() {
+  const exported = loadWpExportCourses();
+  if (exported && exported.length > 0) {
+    const items = exported.map(mapWpExportToCourseListItem);
+    return { items, total: items.length };
+  }
+  return getCoursesFromBackend();
+}
+
 export default async function CoursesPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { discipline } = await searchParams;
+  const sp = await searchParams;
+  const rawDiscipline = sp.discipline;
+  const discipline =
+    typeof rawDiscipline === 'string'
+      ? rawDiscipline
+      : Array.isArray(rawDiscipline)
+        ? rawDiscipline[0]
+        : undefined;
+  const disciplineTab =
+    typeof discipline === 'string' && discipline.trim() !== ''
+      ? discipline.trim().toUpperCase()
+      : undefined;
   const [bundles, { items: courses, total }] = await Promise.all([getBundles(), getCourses()]);
 
   return (
-    <main id="main-content" className="relative min-h-screen" style={{ background: '#060a14' }}>
-      {/* Mesh background */}
-      <div className="mesh-bg" aria-hidden="true">
-        <div className="mesh-blob mesh-blob-1" />
-        <div className="mesh-blob mesh-blob-2" />
-      </div>
+    <main id="main-content" className="relative z-10 min-h-screen bg-[#050505]">
+      {/* Match home: single top radial accent */}
+      <div
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background:
+            'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(36,144,237,0.07) 0%, transparent 55%)',
+        }}
+        aria-hidden="true"
+      />
 
-      <div className="relative z-10 mx-auto max-w-[1600px] px-4 py-8 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-8 sm:py-10">
         {/* ── Hero header ── */}
         <header className="mb-6">
           <h1
@@ -106,7 +131,7 @@ export default async function CoursesPage({
               border: '1px solid rgba(255,255,255,0.07)',
             }}
           >
-            <CourseGrid courses={courses} initialTab={discipline ?? 'All'} />
+            <CourseGrid courses={courses} initialTab={disciplineTab ?? 'All'} />
           </div>
         </section>
 
