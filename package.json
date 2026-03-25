@@ -8,7 +8,7 @@
   "scripts": {
     "setup": "bash scripts/setup.sh",
     "setup:windows": "powershell -ExecutionPolicy Bypass -File scripts/setup.ps1",
-    "dev": "concurrently -n next,worker \"next dev\" \"pnpm --filter @carsi/news-worker dev\"",
+    "dev": "next dev",
     "build": "pnpm -r --filter \"./packages/*\" run build && next build",
     "lint": "eslint .",
     "type-check": "pnpm -r --filter \"./packages/*\" run type-check && tsc --noEmit",
