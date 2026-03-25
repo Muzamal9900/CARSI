@@ -6,6 +6,8 @@
  * - data/wordpress-export/posts.json
  * - data/wordpress-export/pages.json
  * - data/wordpress-export/products.json (WooCommerce courses)
+ * - data/wordpress-export/courses.json (LMS-shaped courses, same as lms-courses.json)
+ * - data/wordpress-export/users.json (WooCommerce customers, when API keys are set)
  * - data/wordpress-export/categories.json
  * - data/wordpress-export/tags.json
  * - data/wordpress-export/media.json
@@ -141,6 +143,20 @@ interface WPMedia {
     height: number;
     file: string;
   };
+}
+
+/** WooCommerce REST API customer (used as “users” export for migration). */
+interface WCCustomer {
+  id: number;
+  date_created: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  username: string;
+  role: string;
+  billing?: Record<string, unknown>;
+  shipping?: Record<string, unknown>;
+  meta_data?: Array<{ key: string; value: unknown }>;
 }
 
 interface URLRedirect {
@@ -385,6 +401,68 @@ async function fetchWooCommerceProducts(): Promise<WPProduct[]> {
   }
 
   return results;
+}
+
+async function fetchWooCommerceCustomers(): Promise<WCCustomer[]> {
+  console.log('\n--- Fetching Customers (WooCommerce API) ---');
+  const results: WCCustomer[] = [];
+  let page = 1;
+  let hasMore = true;
+
+  const authHeader =
+    'Basic ' + Buffer.from(`${WC_CONSUMER_KEY}:${WC_CONSUMER_SECRET}`).toString('base64');
+
+  while (hasMore) {
+    const url = `${WC_API_BASE}/customers?per_page=${PER_PAGE}&page=${page}`;
+    console.log(`Fetching: ${url}`);
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'CARSI-Migration-Script/1.0',
+          Authorization: authHeader,
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.error('WooCommerce customers: authentication failed. Check your API keys.');
+          return results;
+        }
+        if (response.status === 403 || response.status === 404) {
+          console.warn(
+            `WooCommerce customers: HTTP ${response.status} (${response.statusText}). Ensure the key has read access to customers.`
+          );
+          return results;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = (await response.json()) as WCCustomer[];
+      results.push(...data);
+      console.log(`  Fetched ${data.length} customers (total: ${results.length})`);
+
+      const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1');
+      hasMore = page < totalPages;
+      page++;
+
+      await delay(DELAY_MS);
+    } catch (error) {
+      console.error(`Error fetching ${url}:`, error);
+      hasMore = false;
+    }
+  }
+
+  return results;
+}
+
+async function fetchCustomers(): Promise<WCCustomer[]> {
+  if (!WC_CONSUMER_KEY || !WC_CONSUMER_SECRET) {
+    console.log('\n--- Customers: skipping (WC_CONSUMER_KEY / WC_CONSUMER_SECRET not set) ---');
+    return [];
+  }
+  return fetchWooCommerceCustomers();
 }
 
 async function fetchProducts(): Promise<WPProduct[]> {
@@ -742,13 +820,14 @@ async function main() {
   ensureDir(OUTPUT_DIR);
 
   // Fetch all data
-  const [posts, pages, categories, tags, media, products] = await Promise.all([
+  const [posts, pages, categories, tags, media, products, customers] = await Promise.all([
     fetchPosts(),
     fetchPages(),
     fetchCategories(),
     fetchTags(),
     fetchMedia(),
     fetchProducts(),
+    fetchCustomers(),
   ]);
 
   console.log('\n--- Summary ---');
@@ -758,6 +837,7 @@ async function main() {
   console.log(`Tags: ${tags.length}`);
   console.log(`Media: ${media.length}`);
   console.log(`Products/Courses: ${products.length}`);
+  console.log(`WooCommerce customers (users.json): ${customers.length}`);
 
   if (dryRun) {
     console.log('\n[DRY RUN] Would save files to:', OUTPUT_DIR);
@@ -775,6 +855,8 @@ async function main() {
   // Transform to LMS format
   const lmsCourses = transformToLMSCourses(products, categories);
   saveJSON('lms-courses.json', lmsCourses);
+  saveJSON('courses.json', lmsCourses);
+  saveJSON('users.json', customers);
 
   // Generate URL redirects
   const redirects = generateURLRedirects(posts, pages, products);
