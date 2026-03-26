@@ -1,6 +1,6 @@
+import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 import Image from 'next/image';
 import Link from 'next/link';
-import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 
 /**
  * Shared public footer — identical to the homepage footer.
@@ -16,13 +16,13 @@ const industries = [
 
 export function PublicFooter() {
   return (
-    <footer className="px-6 py-12" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <div className="mx-auto max-w-6xl">
+    <footer className="py-12" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="mx-auto w-[94%] xl:w-[85%] 2xl:max-w-[1800px]">
         <div className="mb-8 grid gap-8 sm:grid-cols-4">
           <div>
             <div className="mb-3 flex items-center gap-2">
               <Image
-                src="/logo/logo.png"
+                src="/logo/logo1.png"
                 alt="CARSI"
                 width={480}
                 height={96}

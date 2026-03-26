@@ -17,11 +17,11 @@ export function PublicNavbar() {
         borderBottom: '1px solid rgba(255,255,255,0.06)',
       }}
     >
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="mx-auto w-[94%] xl:w-[85%] 2xl:max-w-[1800px]">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="/logo/logo.png"
+              src="/logo/logo1.png"
               alt="CARSI"
               width={360}
               height={72}

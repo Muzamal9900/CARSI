@@ -1,8 +1,8 @@
-import { Suspense } from 'react';
+import { PublicFooter } from '@/components/landing/PublicFooter';
+import { PublicNavbar } from '@/components/landing/PublicNavbar';
 import FloatingChat from '@/components/lms/FloatingChat';
 import { UtmCapture } from '@/components/lms/UtmCapture';
-import { PublicNavbar } from '@/components/landing/PublicNavbar';
-import { PublicFooter } from '@/components/landing/PublicFooter';
+import { Suspense } from 'react';
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -12,7 +12,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         <UtmCapture />
       </Suspense>
       <PublicNavbar />
-      {children}
+      <div className="mx-auto w-[94%] xl:w-[85%] 2xl:max-w-[1800px]">{children}</div>
       <PublicFooter />
       <FloatingChat />
     </div>
