@@ -12,6 +12,7 @@ function fallbackSrc() {
 }
 
 export function CourseThumbnail({ src, title }: CourseThumbnailProps) {
+  const [useFallbackAsset, setUseFallbackAsset] = useState(false);
   const [failed, setFailed] = useState(false);
 
   const resolvedSrc = useMemo(() => {
@@ -40,14 +41,22 @@ export function CourseThumbnail({ src, title }: CourseThumbnailProps) {
     );
   }
 
+  const imageSrc = useFallbackAsset ? fallbackSrc() : resolvedSrc;
+
   return (
     <div className="mb-4 overflow-hidden rounded-sm" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={resolvedSrc}
+        src={imageSrc}
         alt={title}
         className="aspect-video w-full object-cover"
-        onError={() => setFailed(true)}
+        onError={() => {
+          if (!useFallbackAsset) {
+            setUseFallbackAsset(true);
+            return;
+          }
+          setFailed(true);
+        }}
       />
     </div>
   );
