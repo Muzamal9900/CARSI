@@ -49,7 +49,7 @@ const navItems = [
 // Component
 // ---------------------------------------------------------------------------
 
-export function MobileNav() {
+export default function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
 
   // Close menu on route change or escape key

@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { MobileNav } from './MobileNav';
+import MobileNav from './MobileNav';
 
 /**
  * Shared public navigation bar — identical to the homepage nav.
