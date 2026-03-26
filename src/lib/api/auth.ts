@@ -42,11 +42,13 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  access_token: string;
-  user_id: string;
-  email: string;
-  full_name: string;
-  role: string;
+  success: boolean;
+  user: {
+    id: string;
+    email: string;
+    full_name: string;
+    role: string;
+  };
 }
 
 /**
@@ -78,12 +80,17 @@ export const authApi = {
    * Calls the LMS backend directly — returns a token on success.
    */
   async register(data: RegisterRequest): Promise<RegisterResponse> {
-    return apiClient.post<RegisterResponse>('/api/lms/auth/register', {
-      email: data.email,
-      password: data.password,
-      full_name: data.full_name,
-      role: 'student',
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Registration failed' }));
+      throw new Error(err.error || 'Registration failed');
+    }
+    return res.json();
   },
 
   /**
@@ -99,7 +106,7 @@ export const authApi = {
    */
   async getCurrentUser(): Promise<User | null> {
     try {
-      return await apiClient.get<User>('/api/lms/auth/me');
+      return await apiClient.get<User>('/api/auth/me');
     } catch {
       return null;
     }
@@ -116,16 +123,36 @@ export const authApi = {
    * Request a password reset email.
    */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
-    return apiClient.post('/api/lms/auth/forgot-password', { email });
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+      credentials: 'include',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error((data as { error?: string }).error || 'Failed to send reset link');
+    }
+    return data as { message: string };
   },
 
   /**
    * Consume a reset token and set a new password.
    */
   async confirmPasswordReset(token: string, newPassword: string): Promise<{ message: string }> {
-    return apiClient.post('/api/lms/auth/reset-password', {
-      token,
-      new_password: newPassword,
+    const res = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        new_password: newPassword,
+      }),
+      credentials: 'include',
     });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error((data as { error?: string }).error || 'Reset failed');
+    }
+    return data as { message: string };
   },
 };
