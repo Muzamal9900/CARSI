@@ -9,8 +9,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 interface User {
   id: string;
   email: string;
-  is_active: boolean;
-  is_admin: boolean;
+  roles?: string[];
+  is_active?: boolean;
 }
 
 /**
@@ -51,10 +51,11 @@ export async function updateSession(request: NextRequest) {
 
     if (!user) {
       response.cookies.delete('auth_token');
+      response.cookies.delete('carsi_token');
     }
   }
 
-  const protectedPaths = ['/dashboard'];
+  const protectedPaths = ['/dashboard', '/student', '/admin', '/instructor'];
   const isProtectedPath = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (isProtectedPath && !user) {
@@ -67,7 +68,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const authPaths = ['/login', '/register'];
+  const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
   const isAuthPath = authPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
   if (isAuthPath && user) {
@@ -75,7 +76,7 @@ export async function updateSession(request: NextRequest) {
     const next =
       request.nextUrl.searchParams.get('next') ?? request.nextUrl.searchParams.get('redirect');
     const safePath =
-      next && next.startsWith('/') && !next.startsWith('//') ? next : '/dashboard';
+      next && next.startsWith('/') && !next.startsWith('//') ? next : '/student';
     url.pathname = safePath;
     url.searchParams.delete('next');
     url.searchParams.delete('redirect');
