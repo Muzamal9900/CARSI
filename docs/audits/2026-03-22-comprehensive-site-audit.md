@@ -295,7 +295,7 @@ Three different pricing models are visible to users:
 
 ### P2-10: OG image and logo reference `carsi.com.au` domain — may 404 if DNS not configured
 
-**Issue:** `OrganizationSchema` defaults `logo` to `https://carsi.com.au/logo.png` and OG images to `https://carsi.com.au/og-image.png`. If the domain is not yet pointing to Vercel, these images 404 for social crawlers.
+**Issue:** `OrganizationSchema` defaults `logo` to `https://carsi.com.au/logo1.png` and OG images to `https://carsi.com.au/og-image.png`. If the domain is not yet pointing to Vercel, these images 404 for social crawlers.
 
 **Recommended fix:** Verify `og-image.png` exists at the deployed URL. The file exists locally at `apps/web/public/og-image.png`, so it should be accessible at the Vercel URL.
 

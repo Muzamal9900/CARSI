@@ -38,7 +38,7 @@ export function buildNewsArticleSchema(article: NewsArticleData): Record<string,
       url: 'https://carsi.com.au',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://carsi.com.au/logo.png',
+        url: 'https://carsi.com.au/logo1.png',
       },
     },
   };

@@ -18,7 +18,7 @@ export function buildOrganizationSchema(input: OrganizationSchemaInput = {}): Sc
   const {
     name = 'CARSI',
     url = 'https://carsi.com.au',
-    logo = 'https://carsi.com.au/logo.png',
+    logo = 'https://carsi.com.au/logo1.png',
     sameAs = [
       'https://www.facebook.com/CARSIaus',
       'https://www.linkedin.com/company/carsiaus',
