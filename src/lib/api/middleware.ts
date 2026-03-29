@@ -75,8 +75,7 @@ export async function updateSession(request: NextRequest) {
     const url = request.nextUrl.clone();
     const next =
       request.nextUrl.searchParams.get('next') ?? request.nextUrl.searchParams.get('redirect');
-    const safePath =
-      next && next.startsWith('/') && !next.startsWith('//') ? next : '/student';
+    const safePath = next && next.startsWith('/') && !next.startsWith('//') ? next : '/student';
     url.pathname = safePath;
     url.searchParams.delete('next');
     url.searchParams.delete('redirect');
