@@ -1,18 +1,18 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import {
-  LayoutDashboard,
-  Search,
-  BookOpen,
-  Award,
-  GraduationCap,
-  Shield,
-  Settings,
-} from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { NotificationBell } from '@/components/lms/NotificationBell';
+import {
+  Award,
+  BookOpen,
+  GraduationCap,
+  LayoutDashboard,
+  Search,
+  Settings,
+  Shield,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface NavItem {
   icon: typeof LayoutDashboard;
@@ -24,11 +24,11 @@ interface NavItem {
 
 const topNav: NavItem[] = [
   { icon: LayoutDashboard, href: '/dashboard', label: 'Dashboard' },
-  { icon: Search, href: '/courses', label: 'Browse Courses' },
-  { icon: BookOpen, href: '/student', label: 'My Learning' },
-  { icon: Award, href: '/student/credentials', label: 'Credentials' },
-  { icon: GraduationCap, href: '/instructor', label: 'Instructor', instructorOnly: true },
-  { icon: Shield, href: '/admin', label: 'Admin', adminOnly: true },
+  { icon: Search, href: '/dashboard/courses', label: 'Browse Courses' },
+  { icon: BookOpen, href: '/dashboard/student', label: 'My Learning' },
+  { icon: Award, href: '/dashboard/student/credentials', label: 'Credentials' },
+  { icon: GraduationCap, href: '/dashboard/instructor', label: 'Instructor', instructorOnly: true },
+  { icon: Shield, href: '/dashboard/admin', label: 'Admin', adminOnly: true },
 ];
 
 export function LMSIconRail() {
