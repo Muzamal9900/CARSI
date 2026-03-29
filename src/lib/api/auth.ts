@@ -16,6 +16,8 @@ export interface User {
   theme_preference: string;
   is_active: boolean;
   is_verified: boolean;
+  /** When false/undefined, client may show first-run onboarding. */
+  onboarding_completed?: boolean;
   iicrc_member_number?: string | null;
 }
 
