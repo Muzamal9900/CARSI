@@ -113,10 +113,10 @@ export function LMSContextPanel() {
         className="space-y-0.5 px-2 py-3"
         style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}
       >
-        <NavLink href="/student">My Learning</NavLink>
-        <NavLink href="/student/credentials">Certificates</NavLink>
-        <NavLink href="/courses">All Courses</NavLink>
-        <NavLink href="/pathways">Pathways</NavLink>
+        <NavLink href="/dashboard/student">My Learning</NavLink>
+        <NavLink href="/dashboard/student/credentials">Certificates</NavLink>
+        <NavLink href="/dashboard/courses">All Courses</NavLink>
+        <NavLink href="/dashboard/pathways">Pathways</NavLink>
       </div>
 
       {/* IICRC Disciplines */}
@@ -125,7 +125,7 @@ export function LMSContextPanel() {
           {disciplines.map((d) => (
             <Link
               key={d.code}
-              href={`/courses?discipline=${d.code}`}
+              href={`/dashboard/courses?discipline=${d.code}`}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-200"
               style={{ border: '1px solid transparent', color: 'rgba(255, 255, 255, 0.5)' }}
             >
@@ -168,8 +168,8 @@ export function LMSContextPanel() {
       {/* My Progress */}
       <div className="px-2 py-3">
         <CollapsibleSection title="My Progress" defaultOpen={false}>
-          <NavLink href="/student?filter=in_progress">In Progress</NavLink>
-          <NavLink href="/student?filter=completed">Completed</NavLink>
+          <NavLink href="/dashboard/student?filter=in_progress">In Progress</NavLink>
+          <NavLink href="/dashboard/student?filter=completed">Completed</NavLink>
         </CollapsibleSection>
       </div>
     </aside>
