@@ -23,9 +23,6 @@ if (typeof window === 'undefined') {
 }
 
 export const config = {
-  backend: {
-    url: process.env.NEXT_PUBLIC_BACKEND_URL || '',
-  },
   frontend: {
     url: process.env.NEXT_PUBLIC_FRONTEND_URL || OPTIONAL_ENV_VARS.NEXT_PUBLIC_FRONTEND_URL,
   },
