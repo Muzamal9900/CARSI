@@ -7,9 +7,6 @@ import { ErrorBanner } from '@/components/lms/ErrorBanner';
 import { LinkedInShareButton } from '@/components/lms/LinkedInShareButton';
 import { useAuth } from '@/components/auth/auth-provider';
 import { apiClient } from '@/lib/api/client';
-import { getBackendOrigin } from '@/lib/env/public-url';
-
-const API = getBackendOrigin();
 
 interface CredentialOut {
   credential_id: string;
@@ -40,7 +37,7 @@ function disciplineColour(discipline: string | null): string {
 }
 
 function CredentialCard({ credential }: { credential: CredentialOut }) {
-  const pdfUrl = `${API}/api/lms/credentials/${credential.credential_id}/pdf`;
+  const pdfUrl = `/api/lms/credentials/${encodeURIComponent(credential.credential_id)}?pdf=1`;
   const issuedDate = new Date(credential.issued_date);
 
   return (
@@ -92,7 +89,7 @@ function CredentialCard({ credential }: { credential: CredentialOut }) {
       {/* Action links */}
       <div className="flex gap-3 border-t border-white/[0.06] pt-4">
         <Link
-          href={`/credentials/${credential.credential_id}`}
+          href={`/dashboard/credentials/${credential.credential_id}`}
           className="flex-1 rounded-sm border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-center font-mono text-xs text-white/70 transition-colors hover:border-white/20 hover:text-white"
         >
           View Certificate
