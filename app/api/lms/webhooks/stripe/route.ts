@@ -1,38 +1,80 @@
 /**
- * GP-268: Stripe Webhook — Next.js passthrough
- *
  * POST /api/lms/webhooks/stripe
  *
- * Proxies raw body to the Python backend /api/lms/webhooks/stripe
- * which handles Stripe signature verification and event processing.
+ * Verifies Stripe signatures and completes course enrolment for paid checkout sessions.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import type Stripe from 'stripe';
 
-import { getUpstreamBaseUrl, upstreamNotConfigured } from '@/lib/server/upstream-api';
+import { constructWebhookEvent } from '@/lib/api/stripe';
+import { enrollStudentInCourse } from '@/lib/server/enrollment-service';
+import { sessionClaimsForUserId } from '@/lib/server/lms-auth';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: NextRequest) {
-  const upstream = getUpstreamBaseUrl();
-  if (!upstream) return upstreamNotConfigured();
+  const rawBody = await request.text();
+  const stripeSignature = request.headers.get('stripe-signature') ?? '';
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET?.trim()) {
+    return NextResponse.json(
+      { error: 'Stripe webhook not configured (STRIPE_WEBHOOK_SECRET).' },
+      { status: 503 }
+    );
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = constructWebhookEvent(rawBody, stripeSignature);
+  } catch (e) {
+    console.error('[stripe webhook] signature verification failed:', e);
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  if (event.type !== 'checkout.session.completed') {
+    return NextResponse.json({ received: true });
+  }
+
+  const session = event.data.object as Stripe.Checkout.Session;
+
+  if (session.payment_status && session.payment_status !== 'paid') {
+    return NextResponse.json({ received: true });
+  }
+
+  const slug = session.metadata?.course_slug?.trim().toLowerCase();
+  if (!slug) {
+    return NextResponse.json({ received: true });
+  }
+
+  if (!process.env.DATABASE_URL?.trim()) {
+    return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+  }
+
+  const studentIdMeta = session.metadata?.student_id?.trim();
+  const email =
+    (session.customer_email ?? session.customer_details?.email)?.trim().toLowerCase() ?? '';
+
+  let claims = studentIdMeta ? await sessionClaimsForUserId(studentIdMeta) : null;
+  if (!claims && email) {
+    const user = await prisma.lmsUser.findUnique({ where: { email } });
+    if (user) claims = await sessionClaimsForUserId(user.id);
+  }
+
+  if (!claims) {
+    console.warn('[stripe webhook] checkout.session.completed: could not resolve learner', {
+      slug,
+      hasStudentMeta: Boolean(studentIdMeta),
+      hasEmail: Boolean(email),
+    });
+    return NextResponse.json({ received: true });
+  }
 
   try {
-    // Pass raw body and Stripe signature header through
-    const rawBody = await request.arrayBuffer();
-    const stripeSignature = request.headers.get('stripe-signature') ?? '';
-
-    const backendRes = await fetch(`${upstream.replace(/\/$/, '')}/api/lms/webhooks/stripe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'stripe-signature': stripeSignature,
-      },
-      body: rawBody,
-    });
-
-    const data = await backendRes.json();
-    return NextResponse.json(data, { status: backendRes.status });
-  } catch (error) {
-    console.error('[GP-268] Stripe webhook proxy error:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+    const ref = typeof session.id === 'string' ? session.id : 'stripe_webhook';
+    await enrollStudentInCourse(claims, slug, ref);
+  } catch (e) {
+    console.error('[stripe webhook] enrolment error:', e);
   }
+
+  return NextResponse.json({ received: true });
 }
