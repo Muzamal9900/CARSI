@@ -5,13 +5,15 @@ import { useMemo, useState } from 'react';
 interface CourseThumbnailProps {
   src?: string | null;
   title: string;
+  /** Omit bottom margin when nested in dense layouts (e.g. enrolment cards). */
+  compact?: boolean;
 }
 
 function fallbackSrc() {
   return '/logo/logo1.png';
 }
 
-export function CourseThumbnail({ src, title }: CourseThumbnailProps) {
+export function CourseThumbnail({ src, title, compact }: CourseThumbnailProps) {
   const [useFallbackAsset, setUseFallbackAsset] = useState(false);
   const [failed, setFailed] = useState(false);
 
@@ -44,7 +46,10 @@ export function CourseThumbnail({ src, title }: CourseThumbnailProps) {
   const imageSrc = useFallbackAsset ? fallbackSrc() : resolvedSrc;
 
   return (
-    <div className="mb-4 overflow-hidden rounded-sm" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+    <div
+      className={compact ? 'overflow-hidden rounded-sm' : 'mb-4 overflow-hidden rounded-sm'}
+      style={{ border: '1px solid rgba(255,255,255,0.07)' }}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageSrc}
