@@ -2,9 +2,9 @@ import { PublicFooter } from '@/components/landing/PublicFooter';
 import { PublicNavbar } from '@/components/landing/PublicNavbar';
 import FloatingChat from '@/components/lms/FloatingChat';
 import { UtmCapture } from '@/components/lms/UtmCapture';
-import { Suspense } from 'react';
+import { Suspense, type ReactNode } from 'react';
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-[#050505]">
       {/* Silent UTM attribution — no UI rendered */}
