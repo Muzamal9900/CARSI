@@ -1,5 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+
+import { AuthNavLinks } from '@/components/landing/AuthNavLinks';
+
 import MobileNav from './MobileNav';
 
 /**
@@ -44,20 +47,7 @@ export function PublicNavbar() {
           </div>
 
           <div className="hidden items-center gap-4 md:flex">
-            <Link
-              href="/login"
-              className="text-sm transition-colors duration-150 hover:text-white"
-              style={{ color: 'rgba(255,255,255,0.5)' }}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/courses"
-              className="rounded-sm px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:scale-[1.02]"
-              style={{ background: '#ed9d24' }}
-            >
-              Browse Courses
-            </Link>
+            <AuthNavLinks variant="desktop" />
           </div>
 
           {/* Mobile hamburger menu */}
