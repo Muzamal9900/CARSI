@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getBackendOrigin } from '@/lib/env/public-url';
+import { loadWpExportCourses } from '@/lib/wordpress-export-courses';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,8 +82,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: page.priority,
   }));
 
-  // Dynamic course pages
-  const courses = await getCourses();
+  // Dynamic course pages — prefer local LMS seed / export over remote API
+  const localCourses = loadWpExportCourses();
+  const courses = localCourses?.length ? localCourses : await getCourses();
   const courseEntries: MetadataRoute.Sitemap = courses.map((course) => ({
     url: `${baseUrl}/courses/${course.slug}`,
     lastModified: course.updated_at ? new Date(course.updated_at) : new Date(),
