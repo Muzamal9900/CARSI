@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { authApi } from '@/lib/api/auth';
 
 export default function ForgotPasswordPage() {
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -19,8 +21,13 @@ export default function ForgotPasswordPage() {
     try {
       const result = await authApi.requestPasswordReset(email);
       setMessage(result.message || 'Check your email for a password reset link.');
+      toast({ title: result.message || 'Check your email for a password reset link.' });
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'Failed to send reset link');
+      toast({
+        title: err instanceof Error ? err.message : 'Failed to send reset link',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
