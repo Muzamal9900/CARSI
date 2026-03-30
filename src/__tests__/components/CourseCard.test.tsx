@@ -4,7 +4,7 @@ import { CourseCard } from '@/components/lms/CourseCard';
 
 const mockCourse = {
   id: '1',
-  slug: 'roof-restoration',
+  slug: 'wrt-water-damage-essentials',
   title: 'Roof Restoration Fundamentals',
   short_description: 'Learn the basics of roof restoration',
   price_aud: 349,
@@ -49,6 +49,6 @@ describe('CourseCard', () => {
   it('links to the course detail page', () => {
     render(<CourseCard course={mockCourse} />);
     const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/courses/roof-restoration');
+    expect(link).toHaveAttribute('href', '/courses/wrt-water-damage-essentials');
   });
 });
