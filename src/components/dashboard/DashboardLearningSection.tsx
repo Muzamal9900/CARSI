@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BookOpen, GraduationCap, PlayCircle, Sparkles, Trophy } from 'lucide-react';
+import { ArrowRight, BookOpen, GraduationCap, PlayCircle, Sparkles, Trophy } from 'lucide-react';
 
 import type { SessionClaims } from '@/lib/auth/session-jwt';
 import { EnrolledCourseList } from '@/components/lms/EnrolledCourseList';
@@ -18,19 +18,17 @@ function StatCard({
   icon: typeof BookOpen;
 }) {
   return (
-    <Card
-      className="border-white/[0.08] bg-white/[0.02]"
+    <div
+      className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-5 transition-colors hover:border-white/[0.12] hover:bg-white/[0.03]"
       style={{ borderColor: 'rgba(255,255,255,0.08)' }}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-white/70">{label}</CardTitle>
-        <Icon className="h-4 w-4 text-[#2490ed]" aria-hidden />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold tracking-tight text-white">{value}</div>
-        {hint ? <p className="text-muted-foreground mt-1 text-xs">{hint}</p> : null}
-      </CardContent>
-    </Card>
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-xs font-medium tracking-wide text-white/50 uppercase">{label}</p>
+        <Icon className="h-4 w-4 shrink-0 text-[#2490ed] opacity-90" aria-hidden />
+      </div>
+      <p className="mt-3 text-3xl font-semibold tracking-tight tabular-nums text-white">{value}</p>
+      {hint ? <p className="mt-2 text-xs leading-relaxed text-white/40">{hint}</p> : null}
+    </div>
   );
 }
 
@@ -43,7 +41,6 @@ export function DashboardLearningSection({
   claims: SessionClaims | null;
   summary: LearnerDashboardSummary | null;
   dbConfigured: boolean;
-  /** DB is configured but Prisma query failed (connection, schema drift, etc.). */
   enrolmentQueryFailed: boolean;
 }) {
   const name = claims?.full_name?.split(' ')[0] ?? 'Learner';
@@ -55,110 +52,108 @@ export function DashboardLearningSection({
   const enrollments = summary?.enrollments ?? [];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Welcome back, {name}</h1>
-        <p className="mt-1 text-sm text-white/50">
-          Pick up where you left off — your progress is saved as you complete lessons and quizzes.
+    <div className="w-full max-w-none space-y-10">
+      <header className="border-b border-white/[0.06] pb-8">
+        <p className="text-[11px] font-semibold tracking-[0.2em] text-[#2490ed]/90 uppercase">Overview</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-[2rem]">Welcome back, {name}</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/45">
+          Continue your training where you left off. Progress syncs as you complete lessons and assessments.
         </p>
-      </div>
+      </header>
 
       {!dbConfigured ? (
-        <p
-          className="rounded-lg border px-4 py-3 text-sm text-amber-200/90"
+        <div
+          className="rounded-xl border px-4 py-3 text-sm text-amber-100/90"
           style={{
-            background: 'rgba(245, 158, 11, 0.08)',
-            borderColor: 'rgba(245, 158, 11, 0.25)',
+            background: 'rgba(245, 158, 11, 0.07)',
+            borderColor: 'rgba(245, 158, 11, 0.22)',
           }}
         >
-          Set <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">DATABASE_URL</code>{' '}
-          and run migrations so enrolments load from Postgres. Until then, the catalogue and checkout
-          still work; this overview stays empty.
-        </p>
+          Set <code className="rounded-md bg-black/35 px-1.5 py-0.5 font-mono text-xs">DATABASE_URL</code> and run
+          migrations to load enrolments. The catalogue still works without it.
+        </div>
       ) : null}
 
       {enrolmentQueryFailed ? (
-        <p
-          className="rounded-lg border px-4 py-3 text-sm text-red-200/90"
+        <div
+          className="rounded-xl border px-4 py-3 text-sm text-red-100/90"
           style={{
-            background: 'rgba(239, 68, 68, 0.1)',
-            borderColor: 'rgba(239, 68, 68, 0.3)',
+            background: 'rgba(239, 68, 68, 0.08)',
+            borderColor: 'rgba(239, 68, 68, 0.28)',
           }}
         >
-          Could not read enrolments from the database. Check the connection, run{' '}
-          <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">pnpm prisma migrate</code>
-          , and confirm <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">lms_enrollments</code>{' '}
-          exists.
-        </p>
+          Could not load enrolments. Check the database connection and Prisma migrations.
+        </div>
       ) : null}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label="Enrolled courses"
-          value={total}
-          hint="Total seats you hold in the catalogue"
-          icon={BookOpen}
-        />
-        <StatCard
-          label="In progress"
-          value={active}
-          hint="Courses you have started"
-          icon={PlayCircle}
-        />
-        <StatCard
-          label="Completed"
-          value={completed}
-          hint="Finished certificates"
-          icon={Trophy}
-        />
-        <StatCard
-          label="CEC hours (completed)"
-          value={cec > 0 ? cec.toFixed(1) : '—'}
-          hint={
-            catalogHours > 0
-              ? `~${catalogHours.toFixed(0)}h catalog time across enrolments`
-              : 'From course metadata in the database'
-          }
-          icon={GraduationCap}
-        />
-      </div>
+      <section aria-labelledby="stats-heading">
+        <h2 id="stats-heading" className="sr-only">
+          Learning statistics
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Enrolled"
+            value={total}
+            hint="Active seats in your account"
+            icon={BookOpen}
+          />
+          <StatCard label="In progress" value={active} hint="Started but not finished" icon={PlayCircle} />
+          <StatCard label="Completed" value={completed} hint="Finished programs" icon={Trophy} />
+          <StatCard
+            label="CEC hours"
+            value={cec > 0 ? cec.toFixed(1) : '—'}
+            hint={
+              catalogHours > 0
+                ? `~${catalogHours.toFixed(0)}h catalog time across enrolments`
+                : 'From completed courses'
+            }
+            icon={GraduationCap}
+          />
+        </div>
+      </section>
 
-      <div className="flex flex-wrap gap-3">
-        <Link
-          href="/dashboard/student"
-          className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition hover:opacity-95"
-          style={{ background: '#2490ed' }}
-        >
-          <Sparkles className="h-4 w-4" aria-hidden />
-          Full learning hub
-        </Link>
-        <Link
-          href="/dashboard/courses"
-          className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/[0.07]"
-        >
-          Browse all courses
-        </Link>
-        <Link
-          href="/dashboard/pathways"
-          className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] px-4 py-2 text-sm font-medium text-white/85 transition hover:bg-white/[0.07]"
-        >
-          Learning pathways
-        </Link>
-      </div>
+      <section
+        className="flex flex-col gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+      >
+        <p className="text-sm text-white/50">Jump to your tools</p>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard/student"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#2490ed] px-4 py-2.5 text-sm font-medium text-white shadow-[0_0_20px_rgba(36,144,237,0.25)] transition hover:bg-[#3a9ef5]"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden />
+            My learning
+            <ArrowRight className="h-3.5 w-3.5 opacity-80" aria-hidden />
+          </Link>
+          <Link
+            href="/dashboard/courses"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/[0.07]"
+          >
+            Browse courses
+          </Link>
+          <Link
+            href="/dashboard/pathways"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/12 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/90 transition hover:bg-white/[0.07]"
+          >
+            Pathways
+          </Link>
+        </div>
+      </section>
 
       <Card
-        className="border-white/[0.08] bg-white/[0.02]"
+        className="overflow-hidden border-white/[0.08] bg-white/[0.02] shadow-[0_24px_48px_-24px_rgba(0,0,0,0.5)]"
         style={{ borderColor: 'rgba(255,255,255,0.08)' }}
       >
-        <CardHeader>
-          <CardTitle className="text-white">Continue learning</CardTitle>
+        <CardHeader className="border-b border-white/[0.06] pb-4">
+          <CardTitle className="text-lg text-white">Continue learning</CardTitle>
           <CardDescription className="text-white/45">
             {enrollments.length === 0
-              ? 'No enrolments yet — explore the catalogue and enrol to see courses here.'
-              : 'Open a course to resume lessons, videos, and assessments.'}
+              ? 'No enrolments yet — browse the catalogue and enrol to see courses here.'
+              : 'Resume lessons and track completion from your last session.'}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <EnrolledCourseList enrollments={enrollments} />
         </CardContent>
       </Card>
