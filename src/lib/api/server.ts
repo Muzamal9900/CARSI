@@ -1,12 +1,10 @@
 /**
- * API Client for Server Components
- *
- * Server-side API client that reads JWT from cookies.
+ * API client for Server Components — same-origin `/api/*` on this app.
  */
 
 import { cookies } from 'next/headers';
 
-const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim();
+const API_BASE = '';
 
 export interface ApiError {
   detail: string;
@@ -48,7 +46,7 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,
