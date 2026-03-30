@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/auth-provider';
-import { apiClient } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
 import { authApi } from '@/lib/api/auth';
-import { ApiClientError } from '@/lib/api/client';
+import { apiClient, ApiClientError } from '@/lib/api/client';
 import { buildCourseCheckoutUrls } from '@/lib/checkout-urls';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface EnrolButtonProps {
   slug: string;
@@ -81,7 +80,15 @@ export function EnrolButton({ slug, priceAud = 0, isFree = false }: EnrolButtonP
       });
 
       if (data.enrolled) {
-        window.location.href = '/student';
+        try {
+          await apiClient.post('/api/lms/enrollments/confirm', { slug });
+        } catch (err) {
+          const msg =
+            err instanceof ApiClientError ? err.message : 'Could not complete free enrolment.';
+          setError(msg);
+          return;
+        }
+        window.location.href = '/dashboard/student';
         return;
       }
 
