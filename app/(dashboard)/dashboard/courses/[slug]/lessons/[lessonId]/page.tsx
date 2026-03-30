@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
 import { LessonPlayer } from '@/components/lms/LessonPlayer';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ClipboardList } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
+import { ArrowLeft, ClipboardList } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface Lesson {
   id: string;
