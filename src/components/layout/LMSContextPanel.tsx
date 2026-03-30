@@ -1,176 +1,160 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import {
+  Award,
+  BookOpen,
+  ChevronDown,
+  GraduationCap,
+  LayoutDashboard,
+  LogOut,
+  Presentation,
+  Route,
+  Shield,
+} from 'lucide-react';
+import { useState } from 'react';
+
+import { useAuth } from '@/components/auth/auth-provider';
+import { getDashboardSectionLabel, isDashboardNavActive } from '@/lib/dashboard-nav-active';
 
 const disciplines = [
-  { code: 'WRT', label: 'Water Restoration', color: '#2490ed' },
-  { code: 'CRT', label: 'Carpet Restoration', color: '#26c4a0' },
-  { code: 'ASD', label: 'Applied Structural Drying', color: '#6c63ff' },
-  { code: 'OCT', label: 'Odour Control', color: '#9b59b6' },
-  { code: 'CCT', label: 'Commercial Carpet', color: '#17b8d4' },
-  { code: 'FSRT', label: 'Fire & Smoke', color: '#f05a35' },
-  { code: 'AMRT', label: 'Applied Microbial', color: '#27ae60' },
+  { code: 'WRT', label: 'Water', color: '#2490ed' },
+  { code: 'ASD', label: 'Structural drying', color: '#6c63ff' },
+  { code: 'AMRT', label: 'Microbial', color: '#27ae60' },
+  { code: 'FSRT', label: 'Fire & smoke', color: '#f05a35' },
+  { code: 'CCT', label: 'Commercial carpet', color: '#17b8d4' },
 ];
 
-const industries = [
-  { slug: 'mining', label: 'Mining', icon: '\u26CF\uFE0F', color: '#f59e0b' },
-  { slug: 'aged-care', label: 'Aged Care', icon: '\uD83C\uDFE5', color: '#10b981' },
-  {
-    slug: 'commercial-cleaning',
-    label: 'Commercial Cleaning',
-    icon: '\uD83E\uDDF9',
-    color: '#17b8d4',
-  },
-];
-
-function NavLink({
-  href,
-  activePrefix,
-  children,
-}: {
+type NavItem = {
   href: string;
-  activePrefix?: string;
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
-  const isActive = activePrefix ? pathname.startsWith(activePrefix) : pathname === href;
+  label: string;
+  icon: typeof LayoutDashboard;
+  adminOnly?: boolean;
+  instructorOnly?: boolean;
+};
 
-  return (
-    <Link
-      href={href}
-      className="flex items-center rounded-lg px-3 py-2 text-sm transition-all duration-200"
-      style={
-        isActive
-          ? {
-              background: 'rgba(36, 144, 237, 0.15)',
-              color: '#2490ed',
-              border: '1px solid rgba(36, 144, 237, 0.25)',
-              boxShadow: '0 0 12px rgba(36, 144, 237, 0.1)',
-            }
-          : {
-              color: 'rgba(255, 255, 255, 0.55)',
-              border: '1px solid transparent',
-            }
-      }
-    >
-      {children}
-    </Link>
-  );
-}
-
-function CollapsibleSection({
-  title,
-  defaultOpen = true,
-  children,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-
-  return (
-    <div className="mb-1">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold tracking-widest uppercase transition-colors duration-150"
-        style={{ color: 'rgba(255, 255, 255, 0.3)' }}
-      >
-        <span>{title}</span>
-        {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-      </button>
-      {open && <div className="mt-0.5 space-y-0.5">{children}</div>}
-    </div>
-  );
-}
+const primaryNav: NavItem[] = [
+  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard/courses', label: 'Browse courses', icon: BookOpen },
+  { href: '/dashboard/student', label: 'My learning', icon: GraduationCap },
+  { href: '/dashboard/student/credentials', label: 'Certificates', icon: Award },
+  { href: '/dashboard/pathways', label: 'Pathways', icon: Route },
+  { href: '/dashboard/instructor', label: 'Instructor', icon: Presentation, instructorOnly: true },
+  { href: '/admin', label: 'Admin', icon: Shield, adminOnly: true },
+];
 
 export function LMSContextPanel() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut } = useAuth();
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const isAdmin = user?.roles?.includes('admin') ?? false;
+  const isInstructor = isAdmin || (user?.roles?.includes('instructor') ?? false);
+  const section = getDashboardSectionLabel(pathname);
+
+  async function handleSignOut() {
+    await signOut();
+    router.push('/login');
+  }
+
   return (
     <aside
-      className="scrollbar-glass relative z-10 flex min-h-screen w-[220px] flex-shrink-0 flex-col overflow-y-auto"
+      className="scrollbar-glass z-10 hidden h-screen max-h-screen w-[min(100%,240px)] shrink-0 flex-col overflow-hidden overscroll-none border-r border-white/6 md:flex md:flex-col"
       style={{
-        background: 'rgba(8, 12, 24, 0.75)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderRight: '1px solid rgba(255, 255, 255, 0.06)',
+        background: 'rgba(8, 12, 24, 0.82)',
+        backdropFilter: 'blur(20px) saturate(160%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(160%)',
       }}
     >
-      {/* Header */}
-      <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-        <p
-          className="text-[10px] font-semibold tracking-[0.2em] uppercase"
-          style={{ color: 'rgba(255, 255, 255, 0.3)' }}
-        >
-          CARSI Learning
-        </p>
+      {/* Fixed header — does not scroll */}
+      <div className="shrink-0 border-b border-white/6 px-4 py-5">
+        <p className="text-[10px] font-semibold tracking-[0.2em] text-white/35 uppercase">CARSI</p>
+        <p className="mt-1.5 text-[15px] font-semibold tracking-tight text-white/95">{section}</p>
+        <p className="mt-1 text-xs leading-snug text-white/40">Learning workspace</p>
       </div>
 
-      {/* Main nav */}
-      <div
-        className="space-y-0.5 px-2 py-3"
-        style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}
-      >
-        <NavLink href="/dashboard/student">My Learning</NavLink>
-        <NavLink href="/dashboard/student/credentials">Certificates</NavLink>
-        <NavLink href="/dashboard/courses">All Courses</NavLink>
-        <NavLink href="/dashboard/pathways">Pathways</NavLink>
-      </div>
-
-      {/* IICRC Disciplines */}
-      <div className="px-2 py-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-        <CollapsibleSection title="IICRC Disciplines">
-          {disciplines.map((d) => (
-            <Link
-              key={d.code}
-              href={`/dashboard/courses?discipline=${d.code}`}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all duration-200"
-              style={{ border: '1px solid transparent', color: 'rgba(255, 255, 255, 0.5)' }}
-            >
-              <span
-                className="h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                style={{ backgroundColor: d.color, boxShadow: `0 0 6px ${d.color}` }}
-              />
-              <span
-                className="flex-shrink-0 font-mono text-[11px] font-bold"
-                style={{ color: d.color }}
+      {/* Scrollable: menu + filters only; sidebar shell stays fixed */}
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 py-4 [scrollbar-gutter:stable]">
+        <nav className="flex flex-col gap-0.5" aria-label="Section navigation">
+          <p className="mb-2 px-2 text-[10px] font-semibold tracking-wider text-white/30 uppercase">Menu</p>
+          {primaryNav.map((item) => {
+            if (item.adminOnly && !isAdmin) return null;
+            if (item.instructorOnly && !isInstructor) return null;
+            const active = isDashboardNavActive(pathname, item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150"
+                style={
+                  active
+                    ? {
+                        background: 'rgba(36, 144, 237, 0.14)',
+                        color: '#7ec5ff',
+                        border: '1px solid rgba(36, 144, 237, 0.22)',
+                      }
+                    : {
+                        color: 'rgba(255, 255, 255, 0.62)',
+                        border: '1px solid transparent',
+                      }
+                }
               >
-                {d.code}
-              </span>
-              <span className="truncate text-xs leading-tight">{d.label}</span>
-            </Link>
-          ))}
-        </CollapsibleSection>
+                <Icon className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {active ? (
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#2490ed]" aria-hidden />
+                ) : null}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="mt-6 border-t border-white/6 pt-4">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((v) => !v)}
+            className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[10px] font-semibold tracking-wider text-white/35 uppercase transition hover:bg-white/4"
+          >
+            <span>Filter by discipline</span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform ${filtersOpen ? 'rotate-180' : ''}`}
+              aria-hidden
+            />
+          </button>
+          {filtersOpen ? (
+            <div className="mt-2 max-h-40 space-y-1 overflow-y-auto pl-1 pr-1">
+              {disciplines.map((d) => (
+                <Link
+                  key={d.code}
+                  href={`/dashboard/courses?discipline=${d.code}`}
+                  className="flex items-center gap-2 rounded-md px-2 py-1.5 text-xs text-white/55 transition hover:bg-white/4 hover:text-white/80"
+                >
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: d.color }} />
+                  <span className="font-mono text-[10px] font-bold" style={{ color: d.color }}>
+                    {d.code}
+                  </span>
+                  <span className="truncate">{d.label}</span>
+                </Link>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      {/* Industries */}
-      <div className="px-2 py-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-        <CollapsibleSection title="Industries" defaultOpen={false}>
-          {industries.map((ind) => (
-            <NavLink
-              key={ind.slug}
-              href={`/industries/${ind.slug}`}
-              activePrefix={`/industries/${ind.slug}`}
-            >
-              <span
-                className="mr-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full"
-                style={{ backgroundColor: ind.color, boxShadow: `0 0 6px ${ind.color}` }}
-              />
-              <span className="mr-2 text-sm">{ind.icon}</span>
-              <span className="truncate text-xs leading-tight">{ind.label}</span>
-            </NavLink>
-          ))}
-        </CollapsibleSection>
-      </div>
-
-      {/* My Progress */}
-      <div className="px-2 py-3">
-        <CollapsibleSection title="My Progress" defaultOpen={false}>
-          <NavLink href="/dashboard/student?filter=in_progress">In Progress</NavLink>
-          <NavLink href="/dashboard/student?filter=completed">Completed</NavLink>
-        </CollapsibleSection>
+      {/* Fixed footer — sign out always visible */}
+      <div className="shrink-0 border-t border-white/6 px-2 py-3">
+        <button
+          type="button"
+          onClick={() => void handleSignOut()}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-white/70 transition-colors hover:bg-white/6 hover:text-white"
+          title={user?.email ? `Sign out (${user.email})` : 'Sign out'}
+        >
+          <LogOut className="h-4 w-4 shrink-0 opacity-90" aria-hidden />
+          <span className="min-w-0 truncate">Sign out</span>
+        </button>
       </div>
     </aside>
   );
