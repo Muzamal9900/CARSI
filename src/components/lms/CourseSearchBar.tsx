@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X, Loader2 } from 'lucide-react';
+import { useCourseBrowseBase } from '@/components/lms/CourseBrowseContext';
 import { getBackendOrigin } from '@/lib/env/public-url';
 
 interface SearchResult {
@@ -23,6 +24,7 @@ export function CourseSearchBar({
   placeholder = 'Search courses, disciplines, or topics\u2026',
 }: CourseSearchBarProps) {
   const router = useRouter();
+  const { courseLinkBase } = useCourseBrowseBase();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,9 +87,9 @@ export function CourseSearchBar({
     (slug: string) => {
       setOpen(false);
       setQuery('');
-      router.push(`/courses/${slug}`);
+      router.push(`${courseLinkBase}/${slug}`);
     },
-    [router]
+    [router, courseLinkBase]
   );
 
   // Close dropdown on outside click
