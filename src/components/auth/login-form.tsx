@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { useToast } from '@/hooks/use-toast';
 
 import {
   Form,
@@ -15,6 +16,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 
 const formSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -25,8 +27,10 @@ type FormData = z.infer<typeof formSchema>;
 
 export function LoginForm() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -34,11 +38,52 @@ export function LoginForm() {
       email: '',
       password: '',
     },
+    mode: 'onChange',
   });
+
+  /**
+   * Browsers often autofill email/password without firing React change events, so RHF state
+   * can stay empty while the DOM has values. Read from FormData as source of truth on submit.
+   */
+  function getCredentialsFromForm(values: FormData): { email: string; password: string } {
+    const el = formRef.current;
+    let email = values.email?.trim() ?? '';
+    let password = values.password ?? '';
+
+    if (el) {
+      const fd = new FormData(el);
+      const domEmail = fd.get('email');
+      const domPassword = fd.get('password');
+      if (typeof domEmail === 'string' && domEmail.trim()) {
+        email = domEmail.trim();
+      }
+      if (typeof domPassword === 'string' && domPassword.length > 0) {
+        password = domPassword;
+      }
+    }
+
+    return { email, password };
+  }
 
   async function onSubmit(values: FormData) {
     setIsLoading(true);
     setError(null);
+
+    const { email, password } = getCredentialsFromForm(values);
+
+    const parsed = formSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      setIsLoading(false);
+      const first = parsed.error.flatten().fieldErrors;
+      const msg =
+        first.email?.[0] || first.password?.[0] || 'Please enter a valid email and password.';
+      setError(msg);
+      toast({ title: msg, variant: 'destructive' });
+      return;
+    }
+
+    form.setValue('email', parsed.data.email, { shouldDirty: true });
+    form.setValue('password', parsed.data.password, { shouldDirty: true });
 
     try {
       const response = await fetch('/api/auth/login', {
@@ -47,8 +92,8 @@ export function LoginForm() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: values.email,
-          password: values.password,
+          email: parsed.data.email,
+          password: parsed.data.password,
         }),
       });
 
@@ -56,23 +101,35 @@ export function LoginForm() {
 
       if (!response.ok) {
         setError(data.error || 'Login failed');
+        toast({ title: data.error || 'Login failed', variant: 'destructive' });
         setIsLoading(false);
         return;
       }
 
       // Server-side login succeeded, cookies are set — redirect to next or student dashboard
       const next =
-        searchParams.get('next') ?? searchParams.get('redirect') ?? '/student';
-      window.location.href = next;
+        searchParams.get('next') ?? searchParams.get('redirect') ?? '/dashboard/student';
+      toast({ title: 'Signed in successfully' });
+      // Allow the toast to render before navigation.
+      window.setTimeout(() => {
+        window.location.href = next;
+      }, 250);
     } catch (_err) {
       setError('Failed to connect to server');
+      toast({ title: 'Failed to connect to server', variant: 'destructive' });
       setIsLoading(false);
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        ref={formRef}
+        id="login-form"
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-4"
+        autoComplete="on"
+      >
         <FormField
           control={form.control}
           name="email"
@@ -81,8 +138,10 @@ export function LoginForm() {
               <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
+                  type="email"
+                  inputMode="email"
                   placeholder="name@example.com"
-                  autoComplete="email"
+                  autoComplete="username"
                   aria-describedby={error ? 'login-error' : undefined}
                   {...field}
                 />
@@ -98,8 +157,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
+                <PasswordInput
                   autoComplete="current-password"
                   aria-describedby={error ? 'login-error' : undefined}
                   {...field}
