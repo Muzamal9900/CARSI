@@ -1,13 +1,8 @@
 /**
- * API Client for FastAPI Backend
- *
- * Direct fetch calls to the FastAPI backend.
- * Handles JWT authentication via cookies, request timeout,
- * and exponential backoff retry for transient failures.
+ * API client — same-origin requests to this Next.js app’s `/api/*` routes.
  */
 
-/** Empty = same-origin relative URLs to this Next.js app (no separate Python API). */
-const BACKEND_URL = (process.env.NEXT_PUBLIC_BACKEND_URL || '').trim();
+const API_BASE = '';
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 const MAX_RETRIES = 3;
@@ -107,7 +102,7 @@ async function fetchApi<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = endpoint.startsWith('http') ? endpoint : `${BACKEND_URL}${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
 
   // Abort controller for timeout
   const controller = new AbortController();
