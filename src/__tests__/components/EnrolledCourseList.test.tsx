@@ -7,7 +7,7 @@ const mockEnrollments = [
     id: 'enr-1',
     course_id: 'crs-1',
     course_title: 'Water Damage Restoration Fundamentals',
-    course_slug: 'water-damage-restoration-fundamentals',
+    course_slug: 'wrt-water-damage-essentials',
     status: 'active',
     enrolled_at: '2026-03-01T10:00:00Z',
     completion_percentage: 40,
@@ -30,21 +30,23 @@ describe('EnrolledCourseList', () => {
     expect(screen.getByText('Carpet and Rug Cleaning Techniques')).toBeInTheDocument();
   });
 
-  it('renders the correct number of courses', () => {
+  it('renders one list item per course', () => {
     render(<EnrolledCourseList enrollments={mockEnrollments} />);
-    const links = screen.getAllByRole('link');
-    expect(links).toHaveLength(2);
+    expect(screen.getAllByRole('listitem')).toHaveLength(2);
   });
 
-  it('shows an empty state when there are no enrolments', () => {
-    render(<EnrolledCourseList enrollments={[]} />);
-    expect(screen.getByText(/no courses yet/i)).toBeInTheDocument();
+  it('renders nothing when there are no enrolments', () => {
+    const { container } = render(<EnrolledCourseList enrollments={[]} />);
+    expect(container.firstChild).toBeNull();
   });
 
-  it('links each course to the correct detail page', () => {
+  it('links each course to the learn URL for that course', () => {
     render(<EnrolledCourseList enrollments={mockEnrollments} />);
     const links = screen.getAllByRole('link');
-    expect(links[0]).toHaveAttribute('href', '/courses/water-damage-restoration-fundamentals');
+    expect(links[0]).toHaveAttribute(
+      'href',
+      '/dashboard/learn/wrt-water-damage-essentials'
+    );
   });
 
   it('shows the completed badge for finished courses', () => {
