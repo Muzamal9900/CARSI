@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Outfit, DM_Sans } from 'next/font/google';
 import './globals.css';
-import { Toaster } from '@/components/ui/toast';
+import { AppToastProvider } from '@/hooks/use-toast';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { OrganizationSchema, WebsiteSchema } from '@/components/seo';
@@ -112,12 +112,11 @@ export default function RootLayout({
             <ServiceWorkerRegistration />
             <a
               href="#main-content"
-              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-black focus:shadow-lg"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-9999 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-black focus:shadow-lg"
             >
               Skip to main content
             </a>
-            {children}
-            <Toaster />
+            <AppToastProvider>{children}</AppToastProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>
