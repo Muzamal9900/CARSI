@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 const DISCIPLINE_COLORS: Record<string, string> = {
   WRT: '#2490ed',
   CRT: '#26c4a0',
@@ -39,15 +41,15 @@ export function CertificatePreview({
       <div
         className="rounded-sm p-1"
         style={{
-          background: `linear-gradient(135deg, ${discColor}40 0%, ${discColor}15 50%, ${discColor}40 100%)`,
+          background: `linear-gradient(135deg, ${discColor}35 0%, ${discColor}12 50%, ${discColor}30 100%)`,
         }}
       >
-        {/* Inner certificate card */}
+        {/* Inner certificate card — dark surface */}
         <div
-          className="relative rounded-sm bg-[#fefdf8] p-8 text-center"
+          className="relative rounded-sm bg-[#0a0e14] p-8 text-center"
           style={{
-            border: `2px solid ${discColor}50`,
-            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+            border: `2px solid ${discColor}55`,
+            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
           }}
         >
           {/* Corner decorations */}
@@ -68,22 +70,22 @@ export function CertificatePreview({
             style={{ borderColor: discColor }}
           />
 
-          {/* CARSI Logo mark */}
-          <div className="mx-auto mb-4 flex items-center justify-center gap-2">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-sm text-lg font-bold text-white"
-              style={{ backgroundColor: '#2490ed' }}
-            >
-              C
-            </div>
-            <span className="text-sm font-semibold tracking-[0.25em] text-[#1a1a1a] uppercase">
-              CARSI
-            </span>
+          {/* Brand: logo image only (no text mark) */}
+          <div className="mx-auto mb-4 flex justify-center">
+            <Image
+              src="/logo/logo1.png"
+              alt=""
+              width={220}
+              height={64}
+              className="h-14 w-auto max-w-[min(100%,220px)] object-contain object-center"
+              priority
+              aria-hidden
+            />
           </div>
 
           {/* Heading */}
           <h2
-            className="mb-1 text-2xl font-light tracking-wide text-[#1a1a1a]"
+            className="mb-1 text-2xl font-light tracking-wide text-white/95"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             Certificate of Completion
@@ -91,18 +93,18 @@ export function CertificatePreview({
           <div className="mx-auto mb-6 h-px w-32" style={{ backgroundColor: discColor }} />
 
           {/* Certification text */}
-          <p className="mb-2 text-xs tracking-wide text-[#666] uppercase">This certifies that</p>
+          <p className="mb-2 text-xs tracking-wide text-white/45 uppercase">This certifies that</p>
           <p
-            className="mb-2 text-xl text-[#1a1a1a]"
+            className="mb-2 text-xl text-[#7ec5ff]"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif', fontStyle: 'italic' }}
           >
             {studentName}
           </p>
-          <p className="mb-1 text-xs tracking-wide text-[#666] uppercase">
+          <p className="mb-1 text-xs tracking-wide text-white/45 uppercase">
             has successfully completed
           </p>
           <p
-            className="mb-5 text-base font-semibold text-[#1a1a1a]"
+            className="mb-5 text-base font-semibold text-white/90"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
             {courseName}
@@ -116,12 +118,12 @@ export function CertificatePreview({
             >
               {discipline}
             </span>
-            <span className="text-xs text-[#888]">Discipline</span>
+            <span className="text-xs text-white/40">Discipline</span>
           </div>
 
           {/* Date + IICRC stamp */}
           <div className="mx-auto mb-6 flex items-center justify-center gap-6">
-            <p className="text-xs text-[#666]">{completedDate}</p>
+            <p className="text-xs text-white/50">{completedDate}</p>
             <div
               className="rounded-sm border px-3 py-1 text-[10px] font-bold tracking-wider uppercase"
               style={{
@@ -133,18 +135,16 @@ export function CertificatePreview({
             </div>
           </div>
 
-          {/* Signature lines */}
-          <div className="mx-auto flex max-w-sm justify-between gap-8">
-            <div className="flex-1 text-center">
-              <div className="mb-1 border-b border-[#ccc]" />
-              <p className="text-[10px] tracking-wide text-[#888] uppercase">Course Instructor</p>
-            </div>
-            <div className="flex-1 text-center">
-              <div className="mb-1 border-b border-[#ccc]" />
-              <p className="text-[10px] tracking-wide text-[#888] uppercase">
-                CARSI Training Director
-              </p>
-            </div>
+          {/* Signature line — Training Director only */}
+          <div className="mx-auto max-w-xs text-center">
+            <p
+              className="mb-1 text-2xl text-white/85"
+              style={{ fontFamily: '"Brush Script MT", "Lucida Handwriting", cursive' }}
+            >
+              Philip McGurk
+            </p>
+            <div className="mb-1 border-b border-white/20" />
+            <p className="text-[10px] tracking-wide text-white/40 uppercase">Training Director</p>
           </div>
         </div>
       </div>
