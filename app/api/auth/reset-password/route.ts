@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { verifyPasswordResetToken } from '@/lib/auth/session-jwt';
+import { hashPassword } from '@/lib/server/lms-auth';
+import { prisma } from '@/lib/prisma';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -13,32 +17,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const externalBackend =
-      process.env.NEXT_PUBLIC_BACKEND_URL?.trim() || process.env.BACKEND_URL?.trim();
-    if (!externalBackend) {
-      return NextResponse.json({ message: 'Password updated successfully.' });
-    }
-
-    const backendResponse = await fetch(
-      `${externalBackend.replace(/\/$/, '')}/api/lms/auth/reset-password`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: newPassword }),
-      }
-    );
-    const data = await backendResponse.json().catch(() => ({}));
-
-    if (!backendResponse.ok) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
-        { error: (data as { detail?: string }).detail || 'Reset failed' },
-        { status: backendResponse.status }
+        { error: 'Password must be at least 6 characters' },
+        { status: 400 }
       );
     }
 
-    return NextResponse.json({
-      message: (data as { message?: string }).message || 'Password updated successfully.',
+    if (!process.env.DATABASE_URL?.trim()) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 503 });
+    }
+
+    const userId = await verifyPasswordResetToken(token);
+    if (!userId) {
+      return NextResponse.json({ error: 'Invalid or expired reset link' }, { status: 400 });
+    }
+
+    const user = await prisma.lmsUser.findUnique({ where: { id: userId } });
+    if (!user) {
+      return NextResponse.json({ error: 'Invalid or expired reset link' }, { status: 400 });
+    }
+
+    await prisma.lmsUser.update({
+      where: { id: userId },
+      data: { hashedPassword: await hashPassword(newPassword) },
     });
+
+    return NextResponse.json({ message: 'Password updated successfully.' });
   } catch (error) {
     return NextResponse.json(
       {
@@ -49,4 +54,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
