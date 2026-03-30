@@ -14,6 +14,8 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { isDashboardNavActive } from '@/lib/dashboard-nav-active';
+
 interface NavItem {
   icon: typeof LayoutDashboard;
   href: string;
@@ -28,7 +30,7 @@ const topNav: NavItem[] = [
   { icon: BookOpen, href: '/dashboard/student', label: 'My Learning' },
   { icon: Award, href: '/dashboard/student/credentials', label: 'Credentials' },
   { icon: GraduationCap, href: '/dashboard/instructor', label: 'Instructor', instructorOnly: true },
-  { icon: Shield, href: '/dashboard/admin', label: 'Admin', adminOnly: true },
+  { icon: Shield, href: '/admin', label: 'Admin', adminOnly: true },
 ];
 
 export function LMSIconRail() {
@@ -55,7 +57,7 @@ export function LMSIconRail() {
 
   return (
     <aside
-      className="relative z-20 flex min-h-screen w-14 flex-shrink-0 flex-col items-center gap-1 py-3"
+      className="relative z-20 flex h-screen max-h-screen w-14 shrink-0 flex-col overflow-hidden overscroll-none py-3"
       style={{
         background: 'rgba(6, 10, 20, 0.9)',
         backdropFilter: 'blur(20px) saturate(160%)',
@@ -67,7 +69,7 @@ export function LMSIconRail() {
       <Link
         href="/"
         title="CARSI Home"
-        className="mb-3 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg transition-all duration-200 hover:scale-105"
+        className="mb-3 flex h-9 w-9 shrink-0 items-center justify-center self-center rounded-lg transition-all duration-200 hover:scale-105"
         style={{
           background: 'linear-gradient(135deg, #2490ed 0%, #38a8ff 100%)',
           boxShadow: '0 0 20px rgba(36, 144, 237, 0.4)',
@@ -76,16 +78,16 @@ export function LMSIconRail() {
         <span className="text-sm leading-none font-bold text-white">C</span>
       </Link>
 
-      {/* Top nav */}
+      {/* Top nav — scrolls if needed; rail shell stays fixed height */}
       <nav
         aria-label="Main navigation"
-        className="flex w-full flex-col items-center gap-0.5 px-1.5"
+        className="flex min-h-0 flex-1 flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden px-1.5 [scrollbar-width:thin]"
       >
         {topNav.map((item) => {
           if (item.adminOnly && !isAdmin) return null;
           if (item.instructorOnly && !isInstructor) return null;
 
-          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const isActive = isDashboardNavActive(pathname, item.href);
 
           return (
             <Link
@@ -127,10 +129,8 @@ export function LMSIconRail() {
         })}
       </nav>
 
-      <div className="flex-1" />
-
-      {/* Bottom nav */}
-      <div className="flex w-full flex-col items-center gap-0.5 px-1.5">
+      {/* Bottom nav — fixed to bottom; middle nav scrolls above */}
+      <div className="flex w-full shrink-0 flex-col items-center gap-0.5 border-t border-white/6 px-1.5 pt-2">
         <NotificationBell />
         <Link
           href="/dashboard/settings"
@@ -138,7 +138,7 @@ export function LMSIconRail() {
           aria-label="Settings"
           className="flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200"
           style={{
-            color: pathname.startsWith('/dashboard/settings')
+            color: isDashboardNavActive(pathname, '/dashboard/settings')
               ? '#2490ed'
               : 'rgba(255, 255, 255, 0.35)',
             border: '1px solid transparent',
