@@ -1,6 +1,14 @@
+import { createRequire } from 'node:module';
+import path from 'node:path';
+
 import type { NextConfig } from 'next';
 
+const require = createRequire(import.meta.url);
 const withPWA = require('next-pwa');
+
+function reactPackageDir(pkg: 'react' | 'react-dom'): string {
+  return path.dirname(require.resolve(`${pkg}/package.json`));
+}
 
 const pwaConfig = withPWA({
   dest: 'public',
@@ -23,6 +31,23 @@ const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
   transpilePackages: ['@shared'],
+  /**
+   * Force one React instance in the client bundle. Without this, pnpm + next-pwa/webpack can
+   * resolve duplicate `react` copies → "Cannot read properties of undefined (reading 'ReactCurrentDispatcher')".
+   */
+  webpack: (config) => {
+    const reactDir = reactPackageDir('react');
+    const reactDomDir = reactPackageDir('react-dom');
+    config.resolve = config.resolve ?? {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      react: reactDir,
+      'react-dom': reactDomDir,
+      'react/jsx-runtime': path.join(reactDir, 'jsx-runtime'),
+      'react/jsx-dev-runtime': path.join(reactDir, 'jsx-dev-runtime'),
+    };
+    return config;
+  },
   turbopack: {},
   experimental: {
     // Typed routes disabled - requires full route type generation to be configured
@@ -68,8 +93,8 @@ const nextConfig: NextConfig = {
       : "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://js.stripe.com";
 
     const appOrigin = (
-      process.env.NEXT_PUBLIC_BACKEND_URL ||
       process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
       'http://localhost:3000'
     ).trim();
     const connectParts = [
