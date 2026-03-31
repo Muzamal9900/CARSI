@@ -10,6 +10,21 @@ function reactPackageDir(pkg: 'react' | 'react-dom'): string {
   return path.dirname(require.resolve(`${pkg}/package.json`));
 }
 
+function webpackReactAliases(config: { resolve?: { alias?: Record<string, string | string[] | boolean> } }) {
+  const reactDir = reactPackageDir('react');
+  const reactDomDir = reactPackageDir('react-dom');
+  config.resolve = config.resolve ?? {};
+  config.resolve.alias = {
+    ...config.resolve.alias,
+    react: reactDir,
+    'react-dom': reactDomDir,
+    // Use resolved entry files so Next/RSC and the app share one React (fixes invalid hook / duplicate React).
+    'react/jsx-runtime': require.resolve('react/jsx-runtime'),
+    'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime'),
+  };
+  return config;
+}
+
 const pwaConfig = withPWA({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
@@ -35,19 +50,7 @@ const nextConfig: NextConfig = {
    * Force one React instance in the client bundle. Without this, pnpm + next-pwa/webpack can
    * resolve duplicate `react` copies → "Cannot read properties of undefined (reading 'ReactCurrentDispatcher')".
    */
-  webpack: (config) => {
-    const reactDir = reactPackageDir('react');
-    const reactDomDir = reactPackageDir('react-dom');
-    config.resolve = config.resolve ?? {};
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      react: reactDir,
-      'react-dom': reactDomDir,
-      'react/jsx-runtime': path.join(reactDir, 'jsx-runtime'),
-      'react/jsx-dev-runtime': path.join(reactDir, 'jsx-dev-runtime'),
-    };
-    return config;
-  },
+  webpack: (config) => webpackReactAliases(config),
   turbopack: {},
   experimental: {
     // Typed routes disabled - requires full route type generation to be configured
