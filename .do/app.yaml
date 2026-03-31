@@ -1,0 +1,48 @@
+# DigitalOcean App Platform — CARSI (Next.js + Prisma)
+#
+# Fixes: invalid runtime "typescript:default" → use Node (nodejs:20 + node-js buildpack).
+# Sync env vars here with App → Settings so the repo spec matches the dashboard.
+#
+# Set secret values in the control panel (do not commit real credentials).
+
+name: carsi
+region: syd
+features:
+  - buildpack-stack=ubuntu-22
+
+ingress:
+  rules:
+    - component:
+        name: web
+      match:
+        path:
+          prefix: /
+
+services:
+  - name: web
+    # Supported runtimes include nodejs:18, nodejs:20, nodejs:22, nodejs:24 (see DO build logs)
+    runtime: nodejs:20
+    environment_slug: node-js
+    github:
+      repo: CleanExpo/CARSI
+      branch: main
+      deploy_on_push: true
+    build_command: npm run build
+    run_command: npm start
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    source_dir: /
+    envs:
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: NEXT_PUBLIC_FRONTEND_URL
+        scope: RUN_AND_BUILD_TIME
+        value: https://carsi.com.au
