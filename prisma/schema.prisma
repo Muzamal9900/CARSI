@@ -1,12 +1,12 @@
 // LMS tables used by WordPress migration (`scripts/wp-migrate.ts` + SQL loaders). Run `pnpm prisma:pull` when your DB is up to sync with production.
 // When your Postgres is running, run `pnpm prisma:pull` (or `npx prisma db pull`) to replace this with an exact introspection of your database.
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model LmsRole {

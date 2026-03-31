@@ -99,3 +99,6 @@ ai-review/screenshots/
 .env*.local
 # WordPress migration export (regenerate with: pnpm wp:migrate)
 data/wordpress-export/
+
+# Prisma 7 generated client (`npm run postinstall` / `prisma generate`)
+src/generated/prisma/
