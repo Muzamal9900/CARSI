@@ -1,12 +1,3 @@
-# DigitalOcean App Platform — apply with: doctl apps update <app-id> --spec project.yml
-# (or App → Settings → App Spec → Edit → paste this file)
-#
-# Why Docker: without `dockerfile_path`, App Platform may auto-detect TypeScript and use
-# buildpack runtime `typescript:default`, which is not supported (use Node or Docker).
-#
-# After changing this file: set secret values in the DO dashboard for each SECRET key
-# (Database → Environment Variables), or export your spec from DO, merge, and re-apply.
-
 name: carsi2
 region: syd
 
@@ -34,41 +25,30 @@ services:
       - key: NODE_ENV
         value: production
         scope: RUN_TIME
-        type: GENERAL
 
-      # Required for `npm run build` (prisma migrate) and runtime. Set the real URL in DO (Encrypt).
       - key: DATABASE_URL
         scope: RUN_AND_BUILD_TIME
-        type: SECRET
 
-      # Set in DO (Encrypt). Used for auth cookies / JWT.
       - key: JWT_SECRET
         scope: RUN_TIME
-        type: SECRET
 
       - key: STRIPE_SECRET_KEY
         scope: RUN_TIME
-        type: SECRET
 
       - key: STRIPE_WEBHOOK_SECRET
         scope: RUN_TIME
-        type: SECRET
 
       - key: OPENAI_API_KEY
         scope: RUN_TIME
-        type: SECRET
 
       - key: NEXT_PUBLIC_FRONTEND_URL
         value: https://carsi.com.au
         scope: RUN_AND_BUILD_TIME
-        type: GENERAL
 
       - key: NEXT_PUBLIC_APP_URL
         value: https://carsi.com.au
         scope: RUN_AND_BUILD_TIME
-        type: GENERAL
 
       - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
         value: pk_live_REPLACE_IN_DO_UI
         scope: RUN_AND_BUILD_TIME
-        type: GENERAL
