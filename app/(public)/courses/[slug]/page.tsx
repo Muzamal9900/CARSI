@@ -6,7 +6,7 @@ import { EnrolButton } from '@/components/lms/EnrolButton';
 import { CourseThumbnail } from '@/components/lms/CourseThumbnail';
 import { CourseHubContext } from '@/components/lms/CourseHubContext';
 import { CourseSchema, BreadcrumbSchema } from '@/components/seo';
-import { getBackendOrigin } from '@/lib/env/public-url';
+import { getBackendOrigin, getPublicSiteUrl } from '@/lib/env/public-url';
 import {
   inferDisciplineFromWpExport,
   loadWpExportCourses,
@@ -33,7 +33,7 @@ interface CourseDetail {
 }
 
 const backendUrl = getBackendOrigin();
-const siteUrl = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+const siteUrl = getPublicSiteUrl();
 
 function resolveAssetUrl(url?: string | null): string | null {
   if (!url) return null;

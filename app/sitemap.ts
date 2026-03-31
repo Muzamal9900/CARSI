@@ -1,10 +1,10 @@
 import { MetadataRoute } from 'next';
-import { getBackendOrigin } from '@/lib/env/public-url';
+import { getBackendOrigin, getPublicSiteUrl } from '@/lib/env/public-url';
 import { loadWpExportCourses } from '@/lib/wordpress-export-courses';
 
 export const dynamic = 'force-dynamic';
 
-const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+const baseUrl = getPublicSiteUrl();
 
 // Static pages with their priorities and change frequencies
 const staticPages = [

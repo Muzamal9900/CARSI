@@ -2,10 +2,10 @@ import type { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { FAQSchema, ArticleSchema, BreadcrumbSchema } from '@/components/seo';
-import { getBackendOrigin } from '@/lib/env/public-url';
+import { getBackendOrigin, getPublicSiteUrl } from '@/lib/env/public-url';
 
 const BACKEND_URL = getBackendOrigin();
-const SITE_URL = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+const SITE_URL = getPublicSiteUrl();
 
 interface FaqItem {
   question: string;

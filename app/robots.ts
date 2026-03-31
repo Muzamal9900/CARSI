@@ -1,7 +1,8 @@
 import { MetadataRoute } from 'next';
+import { getPublicSiteUrl } from '@/lib/env/public-url';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+  const baseUrl = getPublicSiteUrl();
 
   return {
     rules: [

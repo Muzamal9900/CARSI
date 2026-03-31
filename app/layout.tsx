@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { OrganizationSchema, WebsiteSchema } from '@/components/seo';
 import { ServiceWorkerRegistration } from '@/components/lms/ServiceWorkerRegistration';
+import { getPublicSiteUrl } from '@/lib/env/public-url';
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -19,7 +20,7 @@ const dmSans = DM_Sans({
   display: 'swap',
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_FRONTEND_URL ?? 'https://carsi.com.au';
+const siteUrl = getPublicSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
