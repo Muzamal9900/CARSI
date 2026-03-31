@@ -1,0 +1,76 @@
+# DigitalOcean App Platform — MUST use Docker (see root Dockerfile).
+# If `dockerfile_path` is missing, DO uses buildpacks and may pick unsupported `typescript:default`.
+#
+# Apply after push: App → Settings → App Spec → paste, or:
+#   doctl apps update <APP_ID> --spec project.yml
+#
+# Set DATABASE_URL (and other secrets) in the UI with RUN_AND_BUILD_TIME scope for Prisma during `npm run build`.
+
+name: carsi2
+region: syd
+
+services:
+  - name: web
+    github:
+      repo: CleanExpo/CARSI
+      branch: main
+      deploy_on_push: true
+
+    dockerfile_path: Dockerfile
+    http_port: 8080
+    instance_count: 1
+    instance_size_slug: basic-xxs
+
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+
+    envs:
+      - key: NODE_ENV
+        value: production
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+        type: GENERAL
+
+      - key: DATABASE_URL
+        scope: RUN_AND_BUILD_TIME
+        type: SECRET
+
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: STRIPE_SECRET_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: STRIPE_WEBHOOK_SECRET
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: OPENAI_API_KEY
+        scope: RUN_TIME
+        type: SECRET
+
+      - key: NEXT_PUBLIC_FRONTEND_URL
+        value: https://carsi.com.au
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://carsi.com.au
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        value: pk_live_REPLACE_IN_DO_UI
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL

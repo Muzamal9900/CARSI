@@ -1,0 +1,14 @@
+# Faster Docker build; smaller context for DigitalOcean
+node_modules
+.next
+.git
+.turbo
+coverage
+*.log
+.env
+.env.*
+!.env.example
+playwright-report
+test-results
+.worktrees
+.DS_Store
