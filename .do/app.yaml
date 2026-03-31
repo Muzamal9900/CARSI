@@ -1,15 +1,12 @@
-# DigitalOcean App Platform — App Spec (use this path only).
-# Do not add a repo-root `project.yml` for App Spec: DO parses `project.yml` as a
-# different schema (e.g. Functions) and rejects App Spec keys like `name`.
+# DigitalOcean App Platform — App Spec
 #
-# Apply: App → Settings → App Spec → Edit, or `doctl apps update --spec .do/app.yaml`
+# The repo includes a root Dockerfile. App Platform uses it when `dockerfile_path` is set,
+# which avoids buildpack auto-detection that can select an invalid `typescript:default` runtime.
 #
-# Set secret values in the control panel (do not commit real credentials).
+# Apply in: App → Settings → App Spec → Edit (paste this file), then Save & redeploy.
 
 name: carsi
 region: syd
-features:
-  - buildpack-stack=ubuntu-22
 
 ingress:
   rules:
@@ -21,15 +18,11 @@ ingress:
 
 services:
   - name: web
-    # Supported runtimes include nodejs:18, nodejs:20, nodejs:22, nodejs:24 (see DO build logs)
-    runtime: nodejs:20
-    environment_slug: node-js
+    dockerfile_path: Dockerfile
     github:
       repo: CleanExpo/CARSI
       branch: main
       deploy_on_push: true
-    build_command: npm run build
-    run_command: npm start
     http_port: 8080
     instance_count: 1
     instance_size_slug: basic-xxs

@@ -23,6 +23,8 @@ export const WP_EXPORT_COURSES_PATH = path.join(
 /** Row shape from `data/wordpress-export/courses.json`. */
 export interface WpExportCourse {
   slug: string;
+  /** Optional; used for sitemap lastModified when present in export or API rows. */
+  updated_at?: string;
   title: string;
   description?: string;
   short_description?: string;
@@ -40,6 +42,7 @@ export interface WpExportCourse {
     wp_id?: number;
     wp_categories?: Array<{ id?: number; name?: string; slug?: string }>;
     wp_tags?: unknown[];
+    pricing?: string;
   };
 }
 
