@@ -1,7 +1,8 @@
-# DigitalOcean App Platform — CARSI (Next.js + Prisma)
+# DigitalOcean App Platform — App Spec (use this path only).
+# Do not add a repo-root `project.yml` for App Spec: DO parses `project.yml` as a
+# different schema (e.g. Functions) and rejects App Spec keys like `name`.
 #
-# Fixes: invalid runtime "typescript:default" → use Node (nodejs:20 + node-js buildpack).
-# Sync env vars here with App → Settings so the repo spec matches the dashboard.
+# Apply: App → Settings → App Spec → Edit, or `doctl apps update --spec .do/app.yaml`
 #
 # Set secret values in the control panel (do not commit real credentials).
 
