@@ -1,7 +1,7 @@
 {
   "name": "CARSI",
   "version": "1.0.0",
-  "description": "Production-ready monorepo for AI-powered applications with Next.js, LangGraph, and Claude",
+  "description": "CARSI — learning platform for courses, enrollments, and progress. Next.js, Prisma, PostgreSQL, and Stripe.",
   "author": "Philip McGurk",
   "contributors": ["Rana Muzamil (Technical Lead & Manager)"],
   "license": "MIT",
