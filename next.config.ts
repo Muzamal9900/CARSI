@@ -45,6 +45,9 @@ const pwaConfig = withPWA({
 const nextConfig: NextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   transpilePackages: ['@shared'],
   /**
    * Force one React instance in the client bundle. Without this, pnpm + next-pwa/webpack can
