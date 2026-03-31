@@ -1,15 +1,19 @@
-# DigitalOcean App Platform: this file MUST exist and `project.yml` must set `dockerfile_path: Dockerfile`.
+# DigitalOcean App Platform: use `app.yaml` (app spec) with `dockerfile_path: Dockerfile` — not `project.yml` (that name is for DO Functions).
 # Otherwise App Platform auto-detects TypeScript and uses unsupported runtime `typescript:default`.
 
-FROM node:20-bookworm-slim AS deps
+# Prisma 7 + @prisma/* packages expect Node >= 22 for some tooling (e.g. streams-local).
+FROM node:22-bookworm-slim AS deps
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
+# prisma.config.ts uses env("DATABASE_URL"); postinstall runs `prisma generate` — DO must pass RUN_AND_BUILD_TIME DATABASE_URL as build-arg.
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 RUN npm ci
 
-FROM node:20-bookworm-slim AS builder
+FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 RUN apt-get update -y && apt-get install -y openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
@@ -30,7 +34,7 @@ ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
 
 RUN npm run build
 
-FROM node:20-bookworm-slim AS runner
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
