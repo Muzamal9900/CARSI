@@ -13,9 +13,9 @@
   "type": "module",
   "scripts": {
     "postinstall": "prisma generate",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && next build",
     "dev": "next dev",
-    "start": "next start",
+    "start": "prisma migrate deploy && next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy",

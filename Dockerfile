@@ -30,6 +30,8 @@ ENV NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
 
 RUN npm run build
+# Apply migrations while Prisma CLI and DB URL are available (managed DB must be reachable from build network).
+RUN npx prisma migrate deploy
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
