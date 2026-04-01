@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -38,7 +38,6 @@ const formSchema = z
 type FormData = z.infer<typeof formSchema>;
 
 export function RegisterForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -92,7 +91,7 @@ export function RegisterForm() {
           if (checkout.enrolled) {
             toast({ title: 'You’re enrolled — welcome!' });
             window.setTimeout(() => {
-              router.push(`/dashboard/student?course=${encodeURIComponent(slug)}`);
+              window.location.href = `/dashboard/student?course=${encodeURIComponent(slug)}`;
             }, 200);
             return;
           }
@@ -125,7 +124,7 @@ export function RegisterForm() {
 
       toast({ title: 'Account created successfully' });
       window.setTimeout(() => {
-        router.push(safePath);
+        window.location.href = safePath;
       }, 200);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');

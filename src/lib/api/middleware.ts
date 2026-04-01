@@ -6,6 +6,8 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { verifySessionToken } from '@/lib/auth/session-jwt';
+
 interface User {
   id: string;
   email: string;
@@ -14,25 +16,19 @@ interface User {
 }
 
 /**
- * Verify JWT token via same-origin /api/auth/me (TypeScript, no Python).
+ * Verify JWT in Edge middleware without a same-origin fetch. On DigitalOcean and other hosts,
+ * internal fetch from middleware to `/api/auth/me` often fails or returns 401, which incorrectly
+ * sent users back to `/login?next=...` after a successful login.
  */
-async function verifyToken(token: string, request: NextRequest): Promise<User | null> {
-  try {
-    const response = await fetch(`${request.nextUrl.origin}/api/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      return null;
-    }
-
-    return response.json();
-  } catch {
-    return null;
-  }
+async function verifyToken(token: string): Promise<User | null> {
+  const claims = await verifySessionToken(token);
+  if (!claims) return null;
+  return {
+    id: claims.sub,
+    email: claims.email,
+    roles: [claims.role],
+    is_active: true,
+  };
 }
 
 /**
@@ -47,7 +43,7 @@ export async function updateSession(request: NextRequest) {
 
   let user: User | null = null;
   if (token) {
-    user = await verifyToken(token, request);
+    user = await verifyToken(token);
 
     if (!user) {
       response.cookies.delete('auth_token');
