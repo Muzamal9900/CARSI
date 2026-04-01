@@ -1,0 +1,365 @@
+import { randomUUID } from 'node:crypto';
+
+import { Prisma } from '@/generated/prisma/client';
+
+import { prisma } from '@/lib/prisma';
+import {
+  courseWithCurriculum,
+  DEFAULT_INSTRUCTOR_ID,
+  ensureCatalogInstructor,
+  type CourseWithCurriculum,
+} from '@/lib/server/course-catalog-sync';
+
+export type AdminModuleInput = {
+  id?: string;
+  title: string;
+  textContent?: string;
+  videoUrl?: string;
+};
+
+export type AdminCourseWriteInput = {
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  slug?: string;
+  isFree: boolean;
+  priceAud: number;
+  published: boolean;
+  modules: AdminModuleInput[];
+};
+
+function escapeHtml(s: string) {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function slugify(title: string): string {
+  const base = title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+  return base || 'course';
+}
+
+async function uniqueSlug(preferred: string): Promise<string> {
+  let candidate = preferred;
+  for (let i = 0; i < 20; i += 1) {
+    const clash = await prisma.lmsCourse.findUnique({ where: { slug: candidate } });
+    if (!clash) return candidate;
+    candidate = `${preferred}-${randomUUID().slice(0, 8)}`;
+  }
+  return `${preferred}-${randomUUID().replace(/-/g, '').slice(0, 12)}`;
+}
+
+function looksLikeHtml(s: string) {
+  return /<[a-z][\s\S]*>/i.test(s);
+}
+
+function plainTextToHtmlBlocks(text: string): string {
+  return text
+    .split(/\n\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br/>')}</p>`)
+    .join('');
+}
+
+function normalizeModuleText(raw: string | undefined): string | undefined {
+  const t = raw?.trim();
+  if (!t) return undefined;
+  return looksLikeHtml(t) ? t : plainTextToHtmlBlocks(t);
+}
+
+function normalizeModules(modules: AdminModuleInput[]): AdminModuleInput[] {
+  return modules
+    .map((m) => ({
+      id: m.id,
+      title: m.title.trim(),
+      textContent: normalizeModuleText(m.textContent),
+      videoUrl: m.videoUrl?.trim() || undefined,
+    }))
+    .filter((m) => m.title.length > 0);
+}
+
+type LessonDesired = {
+  contentType: string;
+  contentBody: string | null;
+  title: string;
+};
+
+function buildDesiredLessons(moduleTitle: string, textContent?: string, videoUrl?: string): LessonDesired[] {
+  const out: LessonDesired[] = [];
+  if (textContent) {
+    out.push({
+      contentType: 'text',
+      contentBody: textContent,
+      title: `${moduleTitle} — Reading`,
+    });
+  }
+  if (videoUrl) {
+    out.push({
+      contentType: 'video',
+      contentBody: videoUrl,
+      title: `${moduleTitle} — Video`,
+    });
+  }
+  if (out.length === 0) {
+    out.push({
+      contentType: 'text',
+      contentBody: `<p>${escapeHtml(moduleTitle)}</p>`,
+      title: moduleTitle,
+    });
+  }
+  return out;
+}
+
+async function syncModuleLessons(
+  tx: Prisma.TransactionClient,
+  moduleId: string,
+  moduleTitle: string,
+  textContent: string | undefined,
+  videoUrl: string | undefined,
+  existingLessons: { id: string; orderIndex: number }[],
+  firstModule: boolean
+) {
+  const desired = buildDesiredLessons(moduleTitle, textContent, videoUrl);
+  const sortedExisting = [...existingLessons].sort((a, b) => a.orderIndex - b.orderIndex);
+
+  for (let i = 0; i < desired.length; i += 1) {
+    const d = desired[i];
+    const ex = sortedExisting[i];
+    const isPreview = firstModule && i === 0;
+    if (ex) {
+      await tx.lmsLesson.update({
+        where: { id: ex.id },
+        data: {
+          title: d.title,
+          contentType: d.contentType,
+          contentBody: d.contentBody,
+          orderIndex: i,
+          isPreview,
+        },
+      });
+    } else {
+      await tx.lmsLesson.create({
+        data: {
+          id: randomUUID(),
+          moduleId,
+          title: d.title,
+          contentType: d.contentType,
+          contentBody: d.contentBody,
+          orderIndex: i,
+          isPreview,
+        },
+      });
+    }
+  }
+  for (let j = desired.length; j < sortedExisting.length; j += 1) {
+    await tx.lmsLesson.delete({ where: { id: sortedExisting[j].id } });
+  }
+}
+
+export function courseToAdminDto(course: CourseWithCurriculum) {
+  return {
+    id: course.id,
+    slug: course.slug,
+    title: course.title,
+    description: course.description ?? '',
+    thumbnailUrl: course.thumbnailUrl ?? '',
+    isFree: course.isFree,
+    priceAud: Number(course.priceAud),
+    published: course.isPublished === true || course.status === 'published',
+    modules: course.modules.map((mod) => {
+      const lessons = [...mod.lessons].sort((a, b) => a.orderIndex - b.orderIndex);
+      const text = lessons.find((l) => l.contentType === 'text');
+      const video = lessons.find((l) => l.contentType === 'video');
+      return {
+        id: mod.id,
+        title: mod.title,
+        textContent: text?.contentBody ?? '',
+        videoUrl: video?.contentBody ?? '',
+        orderIndex: mod.orderIndex,
+      };
+    }),
+    updatedAt: course.updatedAt.toISOString(),
+  };
+}
+
+export async function adminListCourses() {
+  const rows = await prisma.lmsCourse.findMany({
+    orderBy: { updatedAt: 'desc' },
+    include: {
+      _count: { select: { modules: true } },
+    },
+  });
+  return rows.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    title: c.title,
+    thumbnailUrl: c.thumbnailUrl,
+    moduleCount: c._count.modules,
+    isFree: c.isFree,
+    priceAud: Number(c.priceAud),
+    published: c.isPublished === true || c.status === 'published',
+    updatedAt: c.updatedAt.toISOString(),
+  }));
+}
+
+export async function adminGetCourse(id: string): Promise<CourseWithCurriculum | null> {
+  return prisma.lmsCourse.findUnique({
+    where: { id },
+    include: courseWithCurriculum,
+  });
+}
+
+export async function adminCreateCourse(input: AdminCourseWriteInput): Promise<CourseWithCurriculum> {
+  const modules = normalizeModules(input.modules);
+  if (modules.length === 0) {
+    throw new Error('MODULES_REQUIRED');
+  }
+
+  await ensureCatalogInstructor();
+
+  const slug = await uniqueSlug(slugify(input.slug?.trim() || input.title));
+  const courseId = randomUUID();
+  const priceAud = new Prisma.Decimal(Number.isFinite(input.priceAud) ? input.priceAud : 0);
+  const published = Boolean(input.published);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.lmsCourse.create({
+      data: {
+        id: courseId,
+        slug,
+        title: input.title.trim(),
+        description: input.description?.trim() || null,
+        shortDescription: null,
+        thumbnailUrl: input.thumbnailUrl?.trim() || null,
+        instructorId: DEFAULT_INSTRUCTOR_ID,
+        status: published ? 'published' : 'draft',
+        priceAud,
+        isFree: Boolean(input.isFree),
+        level: null,
+        category: null,
+        isPublished: published,
+      },
+    });
+
+    for (let i = 0; i < modules.length; i += 1) {
+      const m = modules[i];
+      const moduleId = randomUUID();
+      await tx.lmsModule.create({
+        data: {
+          id: moduleId,
+          courseId,
+          title: m.title,
+          orderIndex: i,
+        },
+      });
+      await syncModuleLessons(tx, moduleId, m.title, m.textContent, m.videoUrl, [], i === 0);
+    }
+  });
+
+  return prisma.lmsCourse.findUniqueOrThrow({
+    where: { id: courseId },
+    include: courseWithCurriculum,
+  });
+}
+
+export async function adminUpdateCourse(
+  id: string,
+  input: AdminCourseWriteInput
+): Promise<CourseWithCurriculum> {
+  const existing = await prisma.lmsCourse.findUnique({
+    where: { id },
+    include: courseWithCurriculum,
+  });
+  if (!existing) {
+    throw new Error('NOT_FOUND');
+  }
+
+  const modules = normalizeModules(input.modules);
+  if (modules.length === 0) {
+    throw new Error('MODULES_REQUIRED');
+  }
+
+  const priceAud = new Prisma.Decimal(Number.isFinite(input.priceAud) ? input.priceAud : 0);
+  const published = Boolean(input.published);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.lmsCourse.update({
+      where: { id },
+      data: {
+        title: input.title.trim(),
+        description: input.description?.trim() || null,
+        thumbnailUrl: input.thumbnailUrl?.trim() || null,
+        status: published ? 'published' : 'draft',
+        priceAud,
+        isFree: Boolean(input.isFree),
+        isPublished: published,
+      },
+    });
+
+    const existingById = new Map(existing.modules.map((m) => [m.id, m]));
+    const keptIds = new Set<string>();
+
+    for (let i = 0; i < modules.length; i += 1) {
+      const m = modules[i];
+      let moduleId: string;
+      const prev = m.id && existingById.get(m.id);
+
+      if (prev) {
+        moduleId = prev.id;
+        keptIds.add(moduleId);
+        await tx.lmsModule.update({
+          where: { id: moduleId },
+          data: { title: m.title, orderIndex: i },
+        });
+        const lessons = await tx.lmsLesson.findMany({ where: { moduleId } });
+        await syncModuleLessons(
+          tx,
+          moduleId,
+          m.title,
+          m.textContent,
+          m.videoUrl,
+          lessons.map((l) => ({ id: l.id, orderIndex: l.orderIndex })),
+          i === 0
+        );
+      } else {
+        moduleId = randomUUID();
+        await tx.lmsModule.create({
+          data: {
+            id: moduleId,
+            courseId: id,
+            title: m.title,
+            orderIndex: i,
+          },
+        });
+        await syncModuleLessons(tx, moduleId, m.title, m.textContent, m.videoUrl, [], i === 0);
+      }
+    }
+
+    for (const mod of existing.modules) {
+      if (!keptIds.has(mod.id)) {
+        await tx.lmsModule.delete({ where: { id: mod.id } });
+      }
+    }
+  });
+
+  return prisma.lmsCourse.findUniqueOrThrow({
+    where: { id },
+    include: courseWithCurriculum,
+  });
+}
+
+export async function adminDeleteCourse(id: string): Promise<void> {
+  const existing = await prisma.lmsCourse.findUnique({ where: { id } });
+  if (!existing) {
+    throw new Error('NOT_FOUND');
+  }
+  await prisma.lmsCourse.delete({ where: { id } });
+}

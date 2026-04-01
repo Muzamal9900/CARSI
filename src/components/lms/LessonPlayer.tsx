@@ -75,14 +75,77 @@ export function LessonPlayer({ lesson, resources = [], footer }: LessonPlayerPro
   );
 }
 
+function youtubeEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url.trim());
+    if (u.hostname === 'youtu.be') {
+      const id = u.pathname.replace(/^\//, '').split('/')[0];
+      return id ? `https://www.youtube-nocookie.com/embed/${id}` : null;
+    }
+    if (u.hostname.includes('youtube.com')) {
+      const v = u.searchParams.get('v');
+      if (v) return `https://www.youtube-nocookie.com/embed/${v}`;
+      const m = u.pathname.match(/\/embed\/([^/]+)/);
+      if (m?.[1]) return `https://www.youtube-nocookie.com/embed/${m[1]}`;
+      const s = u.pathname.match(/\/shorts\/([^/]+)/);
+      if (s?.[1]) return `https://www.youtube-nocookie.com/embed/${s[1]}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function vimeoEmbedUrl(url: string): string | null {
+  try {
+    const u = new URL(url.trim());
+    if (!u.hostname.includes('vimeo.com')) return null;
+    const m = u.pathname.match(/\/(?:video\/)?(\d+)/);
+    return m?.[1] ? `https://player.vimeo.com/video/${m[1]}` : null;
+  } catch {
+    return null;
+  }
+}
+
 function renderContent(lesson: Lesson) {
   switch (lesson.content_type) {
-    case 'video':
+    case 'video': {
+      const src = lesson.content_body?.trim() ?? '';
+      if (!src) return <p className="text-white/50">No video URL configured.</p>;
+      const yt = youtubeEmbedUrl(src);
+      if (yt) {
+        return (
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+            <iframe
+              title="Video lesson"
+              src={yt}
+              className="h-full w-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
+      const vm = vimeoEmbedUrl(src);
+      if (vm) {
+        return (
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-black">
+            <iframe
+              title="Video lesson"
+              src={vm}
+              className="h-full w-full"
+              allow="autoplay; fullscreen; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        );
+      }
       return (
-        <video controls className="w-full rounded-lg bg-black" src={lesson.content_body ?? undefined}>
+        <video controls className="w-full rounded-lg bg-black" src={src}>
           Your browser does not support video playback.
         </video>
       );
+    }
 
     case 'pdf':
       return (
