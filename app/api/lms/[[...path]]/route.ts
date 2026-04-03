@@ -7,8 +7,52 @@ import { NextRequest, NextResponse } from 'next/server';
 
 type Ctx = { params: Promise<{ path?: string[] }> };
 
+function inferDisciplineFromCourseSlug(slug: string): string {
+  const s = slug.toLowerCase();
+  if (/(odou?r|odor|deodor|smell|air-quality)/.test(s)) return 'OCT';
+  if (/(water|flood|moisture|wrt|drying|psychrom)/.test(s)) return 'WRT';
+  if (/(mould|mold|microbial|amrt|bio)/.test(s)) return 'AMRT';
+  if (/(fire|smoke|soot|fsrt)/.test(s)) return 'FSRT';
+  if (/(carpet.*repair|crt|\bcrt\b)/.test(s)) return 'CRT';
+  if (/(carpet.*clean|commercial.*clean|cct)/.test(s)) return 'CCT';
+  if (/(structural.*dry|asd\b)/.test(s)) return 'ASD';
+  return 'WRT';
+}
+
+const HUB_KEYWORDS: Record<string, string[]> = {
+  OCT: [
+    'Odour control technician',
+    'Deodorisation specialist',
+    'Indoor air quality',
+    'Restoration technician',
+  ],
+  WRT: ['Water damage technician', 'Restoration technician', 'Flood response'],
+  AMRT: ['Mould remediation technician', 'Microbial remediation'],
+  FSRT: ['Fire restoration technician', 'Smoke damage specialist'],
+  CRT: ['Carpet repair technician', 'Flooring restoration'],
+  CCT: ['Commercial carpet cleaning', 'Carpet cleaning technician'],
+  ASD: ['Structural drying technician', 'Water restoration'],
+};
+
 function localStub(method: string, segments: string[]): NextResponse | null {
   const key = segments.join('/');
+
+  if (
+    method === 'GET' &&
+    segments[0] === 'hub' &&
+    segments[1] === 'course-context' &&
+    segments.length >= 3
+  ) {
+    const slug = segments.slice(2).join('/');
+    const discipline = inferDisciplineFromCourseSlug(slug);
+    const job_keywords = HUB_KEYWORDS[discipline] ?? HUB_KEYWORDS.WRT;
+    return NextResponse.json({
+      discipline,
+      job_keywords,
+      related_disciplines: [discipline],
+      pathway_name: `IICRC ${discipline} training pathway`,
+    });
+  }
 
   if (method === 'GET' && key === 'recommendations/next-course') {
     return NextResponse.json([]);
