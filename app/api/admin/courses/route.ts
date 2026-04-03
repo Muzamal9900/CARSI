@@ -20,7 +20,14 @@ export async function GET() {
 
   try {
     const courses = await adminListCourses();
-    return NextResponse.json({ courses });
+    return NextResponse.json(
+      { courses },
+      {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      }
+    );
   } catch (e) {
     console.error('[admin/courses GET]', e);
     return NextResponse.json({ detail: 'Failed to list courses' }, { status: 500 });
@@ -61,6 +68,8 @@ function parseBody(body: unknown): AdminCourseWriteInput | null {
     title,
     description: typeof o.description === 'string' ? o.description : undefined,
     thumbnailUrl: typeof o.thumbnailUrl === 'string' ? o.thumbnailUrl : undefined,
+    introVideoUrl: typeof o.introVideoUrl === 'string' ? o.introVideoUrl : undefined,
+    introThumbnailUrl: typeof o.introThumbnailUrl === 'string' ? o.introThumbnailUrl : undefined,
     slug: typeof o.slug === 'string' ? o.slug : undefined,
     isFree: Boolean(o.isFree),
     priceAud: Number.isFinite(priceAud) ? priceAud : 0,
