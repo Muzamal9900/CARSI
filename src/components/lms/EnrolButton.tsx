@@ -14,6 +14,13 @@ interface EnrolButtonProps {
   isFree?: boolean;
 }
 
+type PricingApi = {
+  payableAud: number;
+  listPriceAud: number;
+  hasDiscount?: boolean;
+  isFree?: boolean;
+};
+
 type SubState = 'checking' | 'subscribed' | 'none';
 
 interface SubStatusResponse {
@@ -32,6 +39,7 @@ export function EnrolButton({ slug, priceAud = 0, isFree = false }: EnrolButtonP
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subState, setSubState] = useState<SubState>('checking');
+  const [pricing, setPricing] = useState<PricingApi | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -47,13 +55,41 @@ export function EnrolButton({ slug, priceAud = 0, isFree = false }: EnrolButtonP
       .catch(() => setSubState('none'));
   }, [user]);
 
-  const isPaid = !isFree && priceAud > 0;
+  useEffect(() => {
+    if (!user?.id) {
+      setPricing(null);
+      return;
+    }
+    let cancelled = false;
+    apiClient
+      .get<PricingApi>(`/api/lms/courses/${encodeURIComponent(slug)}/pricing`)
+      .then((data) => {
+        if (!cancelled) setPricing(data);
+      })
+      .catch(() => {
+        if (!cancelled) setPricing(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, slug]);
+
+  const effectivePrice = pricing?.payableAud ?? priceAud;
+  const effectiveFree = pricing != null ? Boolean(pricing.isFree) : isFree;
+  const showDiscountHint = Boolean(pricing?.hasDiscount && !pricing.isFree);
+
+  const isPaid = !effectiveFree && effectivePrice > 0;
 
   function getLabel() {
     if (loading) return 'Processing…';
     if (subState === 'checking') return '…';
     if (subState === 'subscribed') return 'Access Course — Included in Pro';
-    return isPaid ? `Enrol — $${priceAud.toFixed(0)} AUD` : 'Enrol Free';
+    if (showDiscountHint && pricing) {
+      return isPaid
+        ? `Enrol — $${effectivePrice.toFixed(0)} AUD (was $${pricing.listPriceAud.toFixed(0)})`
+        : 'Enrol Free';
+    }
+    return isPaid ? `Enrol — $${effectivePrice.toFixed(0)} AUD` : 'Enrol Free';
   }
 
   async function handleEnrol() {
