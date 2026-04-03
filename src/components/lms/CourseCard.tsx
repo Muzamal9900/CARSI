@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
 import { BookOpen, Clock } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useState } from 'react';
 
 import { useCourseBrowseBase } from '@/components/lms/CourseBrowseContext';
+import { bypassNextImageOptimizer, normalizePublicAssetUrl } from '@/lib/remote-image';
 
 interface CourseCardProps {
   course: {
@@ -213,10 +214,9 @@ export function CourseCard({ course }: CourseCardProps) {
   const { courseLinkBase } = useCourseBrowseBase();
 
   // Determine thumbnail: API URL > local fallback > none (show gradient)
+  const storedThumb = normalizePublicAssetUrl(course.thumbnail_url);
   const thumbnailUrl =
-    !imageError && course.thumbnail_url
-      ? course.thumbnail_url
-      : getFallbackThumbnail(course.slug, course.title);
+    !imageError && storedThumb ? storedThumb : getFallbackThumbnail(course.slug, course.title);
 
   return (
     <motion.div
@@ -224,21 +224,22 @@ export function CourseCard({ course }: CourseCardProps) {
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.25, ease: smoothEase }}
     >
-      {/* Image / gradient header */}
+      {/* Image / gradient header — taller 16:9 frame, object-contain so the full thumb fits */}
       <div
-        className={`relative h-32 w-full bg-gradient-to-br ${ds.grad} flex-shrink-0 overflow-hidden`}
+        className={`relative aspect-video w-full shrink-0 overflow-hidden bg-gradient-to-br ${ds.grad}`}
       >
         {thumbnailUrl && (
           <Image
             src={thumbnailUrl}
             alt={course.title}
             fill
-            className="object-cover opacity-80 transition-opacity duration-300 group-hover:opacity-100"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+            unoptimized={bypassNextImageOptimizer(thumbnailUrl)}
+            className="object-cover opacity-90 transition-opacity duration-300 group-hover:opacity-100"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             onError={() => setImageError(true)}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/20" />
         {discipline && (
           <span
             className="absolute top-2 left-2 rounded-md px-2 py-0.5 font-mono text-xs font-bold"
