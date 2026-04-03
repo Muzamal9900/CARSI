@@ -28,9 +28,11 @@ export function CourseHubContext({ slug }: CourseHubContextProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const backendUrl = getBackendOrigin();
+    const backendUrl = getBackendOrigin().replace(/\/$/, '');
+    const path = `/api/lms/hub/course-context/${encodeURIComponent(slug)}`;
+    const url = backendUrl ? `${backendUrl}${path}` : path;
 
-    fetch(`${backendUrl}/api/lms/hub/course-context/${slug}`)
+    fetch(url)
       .then((res) => (res.ok ? res.json() : null))
       .then((json: HubContextData | null) => setData(json))
       .catch(() => setData(null))
