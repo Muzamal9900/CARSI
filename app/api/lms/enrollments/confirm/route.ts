@@ -4,9 +4,12 @@ import { getStripeClient } from '@/lib/api/stripe';
 import { getSessionClaimsFromRequest } from '@/lib/server/auth-from-request';
 import { enrollStudentInCourse } from '@/lib/server/enrollment-service';
 import { findCourseInExport } from '@/lib/server/local-course-checkout';
+import { computeDiscountedAud, findActiveUserDiscount } from '@/lib/server/user-discounts';
+import { getOrCreateCourseBySlug } from '@/lib/server/course-catalog-sync';
 
 /**
- * Finalise enrolment after Stripe Checkout (session_id) or confirm free enrolment.
+ * Finalise enrolment after Stripe Checkout (session_id) or confirm free enrolment
+ * (catalog free, or admin "100% free" discount).
  */
 export async function POST(request: NextRequest) {
   const claims = await getSessionClaimsFromRequest(request);
@@ -25,6 +28,8 @@ export async function POST(request: NextRequest) {
 
   let slug = typeof json.slug === 'string' ? json.slug.trim().toLowerCase() : '';
   const sessionId = typeof json.session_id === 'string' ? json.session_id.trim() : '';
+
+  let paymentReference: string;
 
   if (sessionId) {
     if (!process.env.STRIPE_SECRET_KEY?.trim()) {
@@ -53,18 +58,43 @@ export async function POST(request: NextRequest) {
       console.error('[enrollments/confirm] stripe', e);
       return NextResponse.json({ detail: 'Invalid checkout session' }, { status: 400 });
     }
+    paymentReference = sessionId;
   } else {
     if (!slug) {
       return NextResponse.json({ detail: 'slug or session_id required' }, { status: 400 });
     }
+
     const wp = findCourseInExport(slug);
     const price = wp ? Number(wp.price_aud) : NaN;
-    const isFree = wp?.is_free === true || !Number.isFinite(price) || price <= 0;
-    if (!isFree) {
-      return NextResponse.json(
-        { detail: 'Paid courses require a valid Stripe session_id' },
-        { status: 403 }
-      );
+    const isFreeCatalog = wp?.is_free === true || !Number.isFinite(price) || price <= 0;
+
+    if (isFreeCatalog) {
+      paymentReference = 'free';
+    } else {
+      let dbCourse: { id: string; priceAud: unknown };
+      try {
+        dbCourse = await getOrCreateCourseBySlug(slug);
+      } catch {
+        return NextResponse.json({ detail: 'Course not found' }, { status: 404 });
+      }
+      const disc = await findActiveUserDiscount(claims.sub, dbCourse.id);
+      if (disc) {
+        const listAud = Number(dbCourse.priceAud);
+        const finalAud = computeDiscountedAud(listAud, disc);
+        if (disc.discountType === 'free' || finalAud <= 0) {
+          paymentReference = `discount:${disc.id}`;
+        } else {
+          return NextResponse.json(
+            { detail: 'Paid courses require a valid Stripe session_id' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { detail: 'Paid courses require a valid Stripe session_id' },
+          { status: 403 }
+        );
+      }
     }
   }
 
@@ -73,7 +103,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await enrollStudentInCourse(claims, slug, sessionId || 'free');
+    const result = await enrollStudentInCourse(claims, slug, paymentReference);
     if (result === 'already_enrolled') {
       return NextResponse.json({ ok: true, already_enrolled: true });
     }
