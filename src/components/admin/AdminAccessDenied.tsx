@@ -51,7 +51,8 @@ export function AdminAccessDenied() {
           <div className="space-y-1">
             <h1 className="text-2xl font-bold text-white">Access Denied</h1>
             <p className="text-sm text-white/60">
-              Enter the admin email/password to open the dashboard.
+              If you already signed in at the main login with an admin-capable account, try opening
+              /admin again. Otherwise enter the dedicated admin email and password below.
             </p>
           </div>
 

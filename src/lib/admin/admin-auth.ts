@@ -1,5 +1,7 @@
 import { jwtVerify, SignJWT } from 'jose';
 
+import type { SessionClaims } from '@/lib/auth/session-jwt';
+
 export const ADMIN_COOKIE_NAME = 'admin_session';
 
 const DEFAULT_ADMIN_EMAIL = 'mmlrana00@gmail.com';
@@ -19,6 +21,30 @@ export function getAdminPassword(): string {
   const v = process.env.ADMIN_PASSWORD;
   if (typeof v === 'string' && v.trim()) return v.trim();
   return DEFAULT_ADMIN_PASSWORD;
+}
+
+/**
+ * Emails that may open `/admin` after a normal LMS login (`auth_token`), in addition to users
+ * whose JWT `role` is `admin`. Always includes `ADMIN_EMAIL`. Set `ADMIN_PANEL_EMAILS` to a
+ * comma-separated list (e.g. `ops@example.com,support@example.com`).
+ */
+export function getAdminPanelAllowedEmails(): Set<string> {
+  const out = new Set<string>();
+  out.add(getAdminEmail().toLowerCase());
+  const raw = process.env.ADMIN_PANEL_EMAILS;
+  if (typeof raw === 'string' && raw.trim()) {
+    for (const part of raw.split(',')) {
+      const e = part.trim().toLowerCase();
+      if (e) out.add(e);
+    }
+  }
+  return out;
+}
+
+/** LMS session may access the admin dashboard if role is admin or email is allowlisted. */
+export function isLmsClaimsAllowedAdminPanel(claims: SessionClaims): boolean {
+  if (claims.role.trim().toLowerCase() === 'admin') return true;
+  return getAdminPanelAllowedEmails().has(claims.email.trim().toLowerCase());
 }
 
 /**
