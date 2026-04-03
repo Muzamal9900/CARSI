@@ -7,6 +7,8 @@ import { CourseThumbnail } from '@/components/lms/CourseThumbnail';
 import { CourseHubContext } from '@/components/lms/CourseHubContext';
 import { CourseSchema, BreadcrumbSchema } from '@/components/seo';
 import { getBackendOrigin, getPublicSiteUrl } from '@/lib/env/public-url';
+import { normalizePublicAssetUrl } from '@/lib/remote-image';
+import { getPublishedCourseDetailBySlugFromDatabase } from '@/lib/server/public-courses-list';
 import {
   inferDisciplineFromWpExport,
   loadWpExportCourses,
@@ -36,12 +38,11 @@ const backendUrl = getBackendOrigin();
 const siteUrl = getPublicSiteUrl();
 
 function resolveAssetUrl(url?: string | null): string | null {
-  if (!url) return null;
-  const trimmed = url.trim();
-  if (!trimmed) return null;
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
-  if (trimmed.startsWith('/')) return `${backendUrl}${trimmed}`;
-  return `${backendUrl}/${trimmed}`;
+  const normalized = normalizePublicAssetUrl(url);
+  if (!normalized) return null;
+  if (normalized.startsWith('http://') || normalized.startsWith('https://')) return normalized;
+  const path = normalized.startsWith('/') ? normalized : `/${normalized}`;
+  return `${backendUrl}${path}`;
 }
 
 function mapWpExportToCourseDetail(row: WpExportCourse): CourseDetail {
@@ -66,6 +67,15 @@ function mapWpExportToCourseDetail(row: WpExportCourse): CourseDetail {
 async function getCourse(slug: string): Promise<CourseDetail | null> {
   const targetSlug = decodeURIComponent(slug).trim().toLowerCase();
 
+  if (process.env.DATABASE_URL?.trim()) {
+    try {
+      const fromDb = await getPublishedCourseDetailBySlugFromDatabase(slug);
+      if (fromDb) return fromDb;
+    } catch (e) {
+      console.error('[courses/[slug]] Failed to load course from database', e);
+    }
+  }
+
   // Prefer local WordPress export when available so /courses/[slug] matches listing cards.
   const exported = loadWpExportCourses();
   if (exported && exported.length > 0) {
@@ -73,8 +83,11 @@ async function getCourse(slug: string): Promise<CourseDetail | null> {
     if (match) return mapWpExportToCourseDetail(match);
   }
 
+  const base = backendUrl.replace(/\/$/, '');
+  if (!base) return null;
+
   try {
-    const res = await fetch(`${backendUrl}/api/lms/courses/${slug}`, {
+    const res = await fetch(`${base}/api/lms/courses/${encodeURIComponent(slug)}`, {
       next: { revalidate: 60 },
     });
     if (res.status === 404) return null;
