@@ -35,6 +35,7 @@ model LmsUser {
   userRoles         LmsUserRole[]
   enrollments       LmsEnrollment[] @relation("EnrollmentStudent")
   coursesInstructing LmsCourse[]     @relation("CourseInstructor")
+  userDiscounts     UserDiscount[]
 
   @@map("lms_users")
 }
@@ -76,8 +77,36 @@ model LmsCourse {
   instructor  LmsUser         @relation("CourseInstructor", fields: [instructorId], references: [id])
   modules     LmsModule[]
   enrollments LmsEnrollment[]
+  userDiscounts UserDiscount[]
 
   @@map("lms_courses")
+}
+
+enum DiscountType {
+  percentage
+  flat
+  free
+  custom
+}
+
+/// Per-user, per-course pricing overrides managed in admin (`/admin/discounts`).
+model UserDiscount {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  courseId       String       @map("course_id") @db.Uuid
+  discountType   DiscountType @map("discount_type")
+  /// Percentage (0–100), flat AUD off, custom AUD price; null when `free`.
+  discountValue  Decimal?     @map("discount_value") @db.Decimal(12, 2)
+  expiryDate     DateTime?    @map("expiry_date") @db.Timestamptz(6)
+  note           String?      @db.Text
+  isActive       Boolean      @default(true) @map("is_active")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user   LmsUser   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course LmsCourse @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, courseId])
+  @@map("user_discounts")
 }
 
 model LmsModule {
