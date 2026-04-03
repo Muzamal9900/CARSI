@@ -5,6 +5,7 @@ import path from 'node:path';
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getAdminSessionOrNull } from '@/lib/admin/admin-session';
+import { isCloudinaryConfigured, uploadCourseThumbnailToCloudinary } from '@/lib/server/cloudinary-upload';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -45,6 +46,20 @@ export async function POST(request: NextRequest) {
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
+
+  if (isCloudinaryConfigured()) {
+    try {
+      const { url } = await uploadCourseThumbnailToCloudinary(buf, mime);
+      return NextResponse.json({ url, storage: 'cloudinary' as const });
+    } catch (e) {
+      console.error('[admin/upload] Cloudinary failed:', e);
+      return NextResponse.json(
+        { detail: e instanceof Error ? e.message : 'Cloudinary upload failed' },
+        { status: 502 }
+      );
+    }
+  }
+
   const dir = path.join(process.cwd(), 'public', 'uploads', 'admin-courses');
   await mkdir(dir, { recursive: true });
   const name = `${randomUUID()}.${extForMime(mime)}`;
@@ -52,5 +67,5 @@ export async function POST(request: NextRequest) {
   await writeFile(fsPath, buf);
 
   const publicPath = `/uploads/admin-courses/${name}`;
-  return NextResponse.json({ url: publicPath });
+  return NextResponse.json({ url: publicPath, storage: 'local' as const });
 }
