@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { getLmsSeedExportRows } from '@/lib/lms-seed-catalog';
+import { normalizePublicAssetUrl } from '@/lib/remote-image';
 
 /** U+2028/U+2029 break JS string embedding in some bundlers; strip from user-facing text. */
 function sanitizeCourseText(s: string | null | undefined): string {
@@ -122,7 +123,7 @@ export function mapWpExportToCourseListItem(row: WpExportCourse): CourseListItem
     price_aud: row.price_aud,
     is_free: row.is_free,
     discipline: inferDisciplineFromWpExport(row),
-    thumbnail_url: row.thumbnail_url ?? null,
+    thumbnail_url: normalizePublicAssetUrl(row.thumbnail_url),
     level: row.level != null ? sanitizeCourseText(row.level) : null,
     category: row.category != null ? sanitizeCourseText(row.category) : null,
     lesson_count: row.lesson_count ?? null,
