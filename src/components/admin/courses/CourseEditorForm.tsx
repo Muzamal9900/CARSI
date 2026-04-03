@@ -1,15 +1,16 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp, Loader2, Plus, Trash2, Upload } from 'lucide-react';
+import { ChevronDown, ChevronUp, DollarSign, Loader2, Plus, Trash2, Upload } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 type Mod = {
   key: string;
@@ -37,6 +38,14 @@ type CourseDto = {
   }[];
 };
 
+const panelClass = cn(
+  'rounded-2xl border border-white/10 bg-white/[0.035]',
+  'shadow-[0_1px_0_rgba(255,255,255,0.05)_inset]',
+  'transition-[border-color,box-shadow] duration-300 hover:border-white/[0.12]'
+);
+
+const fieldClass = 'border-white/12 bg-black/35 text-white placeholder:text-white/35 focus-visible:ring-[#2490ed]/40';
+
 function newModuleKey(): string {
   if (typeof globalThis !== 'undefined' && globalThis.crypto?.randomUUID) {
     return globalThis.crypto.randomUUID();
@@ -46,6 +55,12 @@ function newModuleKey(): string {
 
 function emptyModule(): Mod {
   return { key: newModuleKey(), title: '', textContent: '', videoUrl: '' };
+}
+
+function SectionTitle({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="text-[11px] font-semibold tracking-[0.2em] text-white/45 uppercase">{children}</h2>
+  );
 }
 
 export function CourseEditorForm({ courseId }: { courseId?: string }) {
@@ -78,7 +93,7 @@ export function CourseEditorForm({ courseId }: { courseId?: string }) {
       setDescription(c.description);
       setThumbnailUrl(c.thumbnailUrl);
       setIsFree(c.isFree);
-      setPriceAud(String(c.priceAud));
+      setPriceAud(String(Number(c.priceAud)));
       setPublished(c.published);
       setModules(
         c.modules.length > 0
@@ -145,12 +160,13 @@ export function CourseEditorForm({ courseId }: { courseId?: string }) {
     setSaving(true);
     try {
       const price = Number.parseFloat(priceAud);
+      const resolvedPrice = isFree ? 0 : Number.isFinite(price) ? price : 0;
       const payload = {
         title: title.trim(),
         description: description.trim(),
         thumbnailUrl: thumbnailUrl.trim(),
         isFree,
-        priceAud: Number.isFinite(price) ? price : 0,
+        priceAud: resolvedPrice,
         published,
         modules: modules.map((m) => ({
           id: m.id,
@@ -167,6 +183,11 @@ export function CourseEditorForm({ courseId }: { courseId?: string }) {
       }
       if (!payload.modules.some((m) => m.title)) {
         toast({ title: 'Each module needs a title', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      if (!isFree && resolvedPrice <= 0) {
+        toast({ title: 'Set a price greater than zero, or mark the course as free', variant: 'destructive' });
         setSaving(false);
         return;
       }
@@ -198,221 +219,303 @@ export function CourseEditorForm({ courseId }: { courseId?: string }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[50vh] items-center justify-center gap-2 text-white/50">
-        <Loader2 className="h-6 w-6 animate-spin" />
-        Loading…
+      <div className="flex min-h-[50vh] w-full items-center justify-center gap-3 text-white/50">
+        <Loader2 className="h-7 w-7 animate-spin text-[#2490ed]" />
+        <span className="text-sm font-medium">Loading course…</span>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="mx-auto max-w-3xl space-y-8">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+    <div className="w-full min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
+      <form onSubmit={onSubmit} className="w-full max-w-none space-y-8">
+        <header className="flex flex-col gap-4 border-b border-white/10 pb-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0 space-y-2">
             <Link
               href="/admin/courses"
-              className="text-xs font-medium text-white/40 transition-colors hover:text-white/70"
+              className="inline-flex text-xs font-medium text-white/45 transition-colors hover:text-[#7ec5ff]"
             >
               ← Back to courses
             </Link>
-            <h1 className="mt-2 text-2xl font-bold text-white/95">
-              {courseId ? 'Edit course' : 'New course'}
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+              {courseId ? 'Edit course' : 'Create course'}
             </h1>
+            <p className="max-w-2xl text-sm leading-relaxed text-white/50">
+              Full-width editor — set catalogue copy, pricing in AUD, thumbnail, and ordered modules. Paid courses require a
+              price; free courses ignore the price field on save.
+            </p>
             {slugReadOnly ? (
-              <p className="mt-1 font-mono text-xs text-white/35">Slug: {slugReadOnly}</p>
+              <p className="font-mono text-xs text-white/40">
+                Slug: <span className="text-white/60">{slugReadOnly}</span>
+              </p>
             ) : null}
           </div>
-        </div>
-
-        <form onSubmit={onSubmit} className="space-y-8">
-          <section
-            className="space-y-4 rounded-xl border border-white/8 p-5"
-            style={{ background: 'rgba(255,255,255,0.03)' }}
-          >
-            <h2 className="text-sm font-semibold tracking-wide text-white/80 uppercase">Details</h2>
-            <div className="space-y-2">
-              <Label className="text-white/70">Title</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="border-white/10 bg-black/30 text-white"
-                placeholder="e.g. Water Damage Restoration Essentials"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white/70">Description</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                className="border-white/10 bg-black/30 text-white"
-                placeholder="Short summary shown on catalogue cards"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-white/70">Thumbnail URL</Label>
-              <Input
-                value={thumbnailUrl}
-                onChange={(e) => setThumbnailUrl(e.target.value)}
-                className="border-white/10 bg-black/30 text-white"
-                placeholder="https://… or /uploads/…"
-              />
-              <div className="flex flex-wrap items-center gap-2">
-                <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="hidden" onChange={onUploadFile} />
-                <button
-                  type="button"
-                  disabled={uploading}
-                  onClick={() => fileRef.current?.click()}
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-3 py-2 text-xs font-medium text-white/80 hover:bg-white/5 disabled:opacity-50"
-                >
-                  {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                  Upload image
-                </button>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-8">
-              <div className="flex items-center gap-2">
-                <Switch id="free" checked={isFree} onCheckedChange={setIsFree} />
-                <Label htmlFor="free" className="text-white/70">
-                  Free course
-                </Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch id="pub" checked={published} onCheckedChange={setPublished} />
-                <Label htmlFor="pub" className="text-white/70">
-                  Published
-                </Label>
-              </div>
-            </div>
-            {!isFree && (
-              <div className="space-y-2">
-                <Label className="text-white/70">Price (AUD)</Label>
-                <Input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={priceAud}
-                  onChange={(e) => setPriceAud(e.target.value)}
-                  className="max-w-xs border-white/10 bg-black/30 text-white"
-                />
-              </div>
-            )}
-          </section>
-
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold tracking-wide text-white/80 uppercase">Modules</h2>
-              <button
-                type="button"
-                onClick={() => setModules((m) => [...m, emptyModule()])}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white"
-                style={{ background: '#2490ed' }}
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add module
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {modules.map((mod, idx) => (
-                <div
-                  key={mod.key}
-                  className="space-y-3 rounded-xl border border-white/8 p-4"
-                  style={{ background: 'rgba(255,255,255,0.03)' }}
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-white/45">Module {idx + 1}</span>
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
-                        onClick={() => moveModule(idx, -1)}
-                        disabled={idx === 0}
-                        aria-label="Move up"
-                      >
-                        <ChevronUp className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-white/50 hover:bg-white/10 hover:text-white"
-                        onClick={() => moveModule(idx, 1)}
-                        disabled={idx === modules.length - 1}
-                        aria-label="Move down"
-                      >
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        className="rounded p-1 text-red-400/80 hover:bg-red-500/15"
-                        onClick={() => setModules((m) => m.filter((_, i) => i !== idx))}
-                        disabled={modules.length <= 1}
-                        aria-label="Remove module"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white/70">Module title</Label>
-                    <Input
-                      value={mod.title}
-                      onChange={(e) =>
-                        setModules((m) => m.map((x, i) => (i === idx ? { ...x, title: e.target.value } : x)))
-                      }
-                      required
-                      className="border-white/10 bg-black/30 text-white"
-                      placeholder="Required"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white/70">Reading / text (optional)</Label>
-                    <Textarea
-                      value={mod.textContent}
-                      onChange={(e) =>
-                        setModules((m) => m.map((x, i) => (i === idx ? { ...x, textContent: e.target.value } : x)))
-                      }
-                      rows={5}
-                      className="border-white/10 bg-black/30 font-mono text-sm text-white"
-                      placeholder="Plain text or HTML. Plain text becomes paragraphs automatically."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-white/70">Video URL (optional)</Label>
-                    <Input
-                      value={mod.videoUrl}
-                      onChange={(e) =>
-                        setModules((m) => m.map((x, i) => (i === idx ? { ...x, videoUrl: e.target.value } : x)))
-                      }
-                      className="border-white/10 bg-black/30 text-white"
-                      placeholder="YouTube, Vimeo, or direct .mp4 URL"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <div className="flex flex-wrap gap-3">
+          <div className="flex shrink-0 flex-wrap gap-3">
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex min-w-[140px] items-center justify-center gap-2 rounded-lg py-3 text-sm font-semibold text-white disabled:opacity-50"
-              style={{ background: '#ed9d24' }}
+              className="inline-flex min-w-[148px] items-center justify-center gap-2 rounded-xl bg-[#ed9d24] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_28px_-8px_rgba(237,157,36,0.55)] transition-[transform,box-shadow] duration-200 hover:shadow-[0_12px_32px_-8px_rgba(237,157,36,0.65)] disabled:opacity-50"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               {saving ? 'Saving…' : 'Save course'}
             </button>
             <Link
               href="/admin/courses"
-              className="inline-flex items-center justify-center rounded-lg border border-white/15 px-5 py-3 text-sm text-white/70 hover:bg-white/5"
+              className="inline-flex items-center justify-center rounded-xl border border-white/15 px-6 py-3 text-sm font-medium text-white/75 transition-colors hover:border-white/25 hover:bg-white/5"
             >
               Cancel
             </Link>
           </div>
-        </form>
-      </div>
+        </header>
+
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-12 xl:gap-10">
+          <div className="space-y-8 xl:col-span-7">
+            <section className={cn(panelClass, 'space-y-5 p-5 sm:p-6')}>
+              <SectionTitle>Course details</SectionTitle>
+              <div className="space-y-2">
+                <Label htmlFor="course-title" className="text-white/65">
+                  Title
+                </Label>
+                <Input
+                  id="course-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  className={cn('h-11', fieldClass)}
+                  placeholder="e.g. Water Damage Restoration Essentials"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="course-desc" className="text-white/65">
+                  Description
+                </Label>
+                <Textarea
+                  id="course-desc"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={5}
+                  className={cn('min-h-[120px] resize-y', fieldClass)}
+                  placeholder="Summary shown on catalogue cards and SEO snippets"
+                />
+              </div>
+            </section>
+
+            <section className={cn(panelClass, 'space-y-5 p-5 sm:p-6')}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <SectionTitle>Pricing</SectionTitle>
+                  <p className="mt-2 max-w-md text-xs leading-relaxed text-white/45">
+                    Price is always stored in Australian dollars. When &quot;Free course&quot; is on, the saved price is set to
+                    zero; you can still enter a draft price before switching to paid.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5">
+                  <Switch id="free" checked={isFree} onCheckedChange={setIsFree} />
+                  <Label htmlFor="free" className="cursor-pointer text-sm text-white/75">
+                    Free course
+                  </Label>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price-aud" className="flex items-center gap-2 text-white/65">
+                  <DollarSign className="h-3.5 w-3.5 text-emerald-400/90" aria-hidden />
+                  Price (AUD)
+                </Label>
+                <div className="relative max-w-md">
+                  <span
+                    className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-sm font-semibold text-white/35"
+                    aria-hidden
+                  >
+                    $
+                  </span>
+                  <Input
+                    id="price-aud"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    inputMode="decimal"
+                    value={priceAud}
+                    onChange={(e) => setPriceAud(e.target.value)}
+                    disabled={isFree}
+                    className={cn('h-12 pl-8 text-base tabular-nums', fieldClass, isFree && 'cursor-not-allowed opacity-50')}
+                    aria-describedby="price-hint"
+                  />
+                </div>
+                <p id="price-hint" className="text-xs text-white/40">
+                  {isFree
+                    ? 'Disabled while the course is free. Turn off “Free course” to set a list price.'
+                    : 'Shown to learners at checkout. Use two decimals for cents (e.g. 295.00).'}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-5">
+                <div className="flex items-center gap-2">
+                  <Switch id="pub" checked={published} onCheckedChange={setPublished} />
+                  <Label htmlFor="pub" className="cursor-pointer text-sm text-white/75">
+                    Published (visible in catalogue when live)
+                  </Label>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="space-y-8 xl:col-span-5">
+            <section className={cn(panelClass, 'space-y-4 p-5 sm:p-6')}>
+              <SectionTitle>Thumbnail</SectionTitle>
+              <div className="space-y-2">
+                <Label htmlFor="thumb-url" className="text-white/65">
+                  Image URL
+                </Label>
+                <Input
+                  id="thumb-url"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  className={cn('h-11 font-mono text-sm', fieldClass)}
+                  placeholder="https://… or /uploads/…"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={onUploadFile}
+                />
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileRef.current?.click()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-white/85 transition-colors hover:bg-white/[0.08] disabled:opacity-50"
+                >
+                  {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  Upload image
+                </button>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40">
+                {thumbnailUrl.trim() ? (
+                  <img
+                    src={thumbnailUrl.trim()}
+                    alt=""
+                    className="aspect-video w-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <div className="flex aspect-video items-center justify-center text-xs text-white/35">Preview appears here</div>
+                )}
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <section className={cn(panelClass, 'space-y-5 p-5 sm:p-6')}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <SectionTitle>Modules</SectionTitle>
+            <button
+              type="button"
+              onClick={() => setModules((m) => [...m, emptyModule()])}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#2490ed] px-4 py-2 text-xs font-semibold text-white shadow-[0_6px_20px_-6px_rgba(36,144,237,0.55)] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <Plus className="h-4 w-4" />
+              Add module
+            </button>
+          </div>
+
+          <div className="space-y-5">
+            {modules.map((mod, idx) => (
+              <div key={mod.key} className={cn(panelClass, 'space-y-4 border-white/[0.08] p-4 sm:p-5')}>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs font-bold tracking-wide text-white/50 uppercase">Module {idx + 1}</span>
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+                      onClick={() => moveModule(idx, -1)}
+                      disabled={idx === 0}
+                      aria-label="Move up"
+                    >
+                      <ChevronUp className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+                      onClick={() => moveModule(idx, 1)}
+                      disabled={idx === modules.length - 1}
+                      aria-label="Move down"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-lg p-2 text-red-400/85 transition-colors hover:bg-red-500/15"
+                      onClick={() => setModules((m) => m.filter((_, i) => i !== idx))}
+                      disabled={modules.length <= 1}
+                      aria-label="Remove module"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/65">Module title</Label>
+                  <Input
+                    value={mod.title}
+                    onChange={(e) =>
+                      setModules((m) => m.map((x, i) => (i === idx ? { ...x, title: e.target.value } : x)))
+                    }
+                    required
+                    className={cn('h-11', fieldClass)}
+                    placeholder="Required"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/65">Reading / text (optional)</Label>
+                  <Textarea
+                    value={mod.textContent}
+                    onChange={(e) =>
+                      setModules((m) => m.map((x, i) => (i === idx ? { ...x, textContent: e.target.value } : x)))
+                    }
+                    rows={5}
+                    className={cn('font-mono text-sm', fieldClass)}
+                    placeholder="Plain text or HTML"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/65">Video URL (optional)</Label>
+                  <Input
+                    value={mod.videoUrl}
+                    onChange={(e) =>
+                      setModules((m) => m.map((x, i) => (i === idx ? { ...x, videoUrl: e.target.value } : x)))
+                    }
+                    className={cn('h-11', fieldClass)}
+                    placeholder="YouTube, Vimeo, or direct .mp4"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="flex flex-wrap gap-3 border-t border-white/10 pt-8">
+          <button
+            type="submit"
+            disabled={saving}
+            className="inline-flex min-w-[148px] items-center justify-center gap-2 rounded-xl bg-[#ed9d24] px-6 py-3 text-sm font-semibold text-white shadow-[0_8px_28px_-8px_rgba(237,157,36,0.55)] transition-[transform,box-shadow] duration-200 hover:shadow-[0_12px_32px_-8px_rgba(237,157,36,0.65)] disabled:opacity-50"
+          >
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            {saving ? 'Saving…' : 'Save course'}
+          </button>
+          <Link
+            href="/admin/courses"
+            className="inline-flex items-center justify-center rounded-xl border border-white/15 px-6 py-3 text-sm font-medium text-white/75 hover:bg-white/5"
+          >
+            Cancel
+          </Link>
+        </div>
+      </form>
     </div>
   );
 }
