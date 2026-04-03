@@ -6,12 +6,15 @@ import {
 } from '@/components/landing/AnimatedHero';
 import { PublicFooter } from '@/components/landing/PublicFooter';
 import { PublicNavbar } from '@/components/landing/PublicNavbar';
+import { CourseBrowseProvider } from '@/components/lms/CourseBrowseContext';
+import { CourseCard } from '@/components/lms/CourseCard';
 import { CertificatePreview } from '@/components/lms/diagrams/CertificatePreview';
 import { IICRCDisciplineMap } from '@/components/lms/diagrams/IICRCDisciplineMap';
 import { StudentJourneyMap } from '@/components/lms/diagrams/StudentJourneyMap';
 import { FAQSchema } from '@/components/seo/JsonLd';
 import { AcronymTooltip } from '@/components/ui/AcronymTooltip';
 import { getBackendOrigin } from '@/lib/env/public-url';
+import { getPublishedCourseListItemsFromDatabase } from '@/lib/server/public-courses-list';
 import {
   loadWpExportCourses,
   mapWpExportToCourseListItem,
@@ -30,7 +33,6 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 // ---------------------------------------------------------------------------
 // Types
@@ -56,8 +58,22 @@ async function getFeaturedCoursesFromBackend(): Promise<Course[]> {
   }
 }
 
-/** Prefer local WordPress export; fall back to LMS API when the file is absent (e.g. CI). */
+/**
+ * Popular / featured strip: same catalogue source as `/courses` — Postgres when configured,
+ * then WordPress export, then legacy LMS API stub.
+ */
 async function getFeaturedCourses(): Promise<Course[]> {
+  if (process.env.DATABASE_URL?.trim()) {
+    try {
+      const items = await getPublishedCourseListItemsFromDatabase();
+      if (items.length > 0) {
+        return items.slice(0, 3);
+      }
+    } catch (e) {
+      console.error('[home] Failed to load featured courses from database', e);
+    }
+  }
+
   const data = loadWpExportCourses();
   if (data && data.length > 0) {
     return pickFeaturedFromExport(data, 3).map(mapWpExportToCourseListItem);
@@ -171,66 +187,6 @@ const faqs = [
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
-
-function CourseCard({ course }: { course: Course }) {
-  const priceNum =
-    typeof course.price_aud === 'string' ? parseFloat(course.price_aud) : course.price_aud;
-  const isFree = course.is_free || priceNum === 0;
-
-  return (
-    <Link
-      href={`/courses/${course.slug}`}
-      className="group block overflow-hidden rounded-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/5"
-      style={{
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.08)',
-      }}
-    >
-      <div className="relative h-40 overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900">
-        {course.thumbnail_url && (
-          <Image
-            src={course.thumbnail_url}
-            alt={course.title}
-            fill
-            className="object-cover opacity-80 transition-all duration-300 group-hover:scale-105 group-hover:opacity-100"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
-        )}
-        {course.discipline && (
-          <span
-            className="absolute top-3 left-3 rounded-sm px-2 py-0.5 font-mono text-[10px] font-bold tracking-wide uppercase"
-            style={{
-              background: 'rgba(0,0,0,0.7)',
-              color: '#2490ed',
-              border: '1px solid rgba(36,144,237,0.3)',
-            }}
-          >
-            {course.discipline}
-          </span>
-        )}
-      </div>
-      <div className="p-4">
-        <h3
-          className="mb-2 line-clamp-2 text-sm leading-snug font-semibold"
-          style={{ color: 'rgba(255,255,255,0.9)' }}
-        >
-          {course.title}
-        </h3>
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-medium" style={{ color: isFree ? '#00FF88' : '#ed9d24' }}>
-            {isFree ? 'Free' : `$${priceNum.toFixed(0)} AUD`}
-          </span>
-          <span
-            className="text-xs opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-            style={{ color: '#2490ed' }}
-          >
-            View course →
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
 
 function SkeletonCard() {
   return (
@@ -352,19 +308,21 @@ export default async function Home() {
           </Link>
         }
       >
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredCourses.length > 0
-            ? featuredCourses.map((course, i) => (
-                <AnimatedCard key={course.id} index={i}>
-                  <CourseCard course={course} />
-                </AnimatedCard>
-              ))
-            : [1, 2, 3].map((i) => (
-                <AnimatedCard key={i} index={i}>
-                  <SkeletonCard />
-                </AnimatedCard>
-              ))}
-        </div>
+        <CourseBrowseProvider courseLinkBase="/courses">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredCourses.length > 0
+              ? featuredCourses.map((course, i) => (
+                  <AnimatedCard key={course.id} index={i}>
+                    <CourseCard course={course} />
+                  </AnimatedCard>
+                ))
+              : [1, 2, 3].map((i) => (
+                  <AnimatedCard key={i} index={i}>
+                    <SkeletonCard />
+                  </AnimatedCard>
+                ))}
+          </div>
+        </CourseBrowseProvider>
       </AnimatedSection>
 
       {/* ── Industries ─────────────────────────────────────────────────────── */}
